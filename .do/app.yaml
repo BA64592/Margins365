@@ -1,12 +1,13 @@
-# DigitalOcean App Platform — MarginOS
+# DigitalOcean App Platform — Margins 365
 # Web Service required so /api/auth/send-verification can call Amazon SES.
 # Set SECRET values in the DO control panel or Apps API — do not commit secrets.
+# Source must be BA64592/Margins365 (repo renamed from MarginOS) — keep DO App Spec in sync.
 name: marginos
 region: lon
 services:
   - name: marginos
     github:
-      repo: BA64592/MarginOS
+      repo: BA64592/Margins365
       branch: main
       deploy_on_push: true
     build_command: npm ci && npm run build
