@@ -121,3 +121,22 @@ See `DESIGN-DEV-RESPONSE-v20.md`.
 **Priority:** P1 (ops)  
 **Test case:** EML-22–25 / exit criterion 8 & 16  
 **Actual:** No SPF TXT on `margins365.com`; DMARC is `p=none` only; MAIL FROM subdomain present.  
+
+
+---
+
+## K86 SES proof update — 11 Nov 2026 evening Europe/London
+
+Akthar supplied AWS + GoDaddy screenshots (archived under `docs/qa/v20/evidence/k86-ses/`).
+
+| Item | Status |
+|------|--------|
+| Domain identity Verified (eu-north-1) | Proven |
+| Easy DKIM Successful | Proven (live DNS matches) |
+| MAIL FROM `mail.margins365.com` Successful | Proven (live DNS matches) |
+| DMARC `p=none` | Present (monitoring only) |
+| Apex SPF on `margins365.com` | **Still open** — add TXT `@` `v=spf1 include:amazonses.com ~all` (or include existing senders) |
+| SES production access | **Still open** — console screenshot not in pack |
+| External header proofs | **Still open** |
+
+DEF-EML-K86 remains **partially open** until apex SPF + production access + header proofs.
