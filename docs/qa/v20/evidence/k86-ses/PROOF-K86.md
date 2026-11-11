@@ -23,11 +23,11 @@ Files: this folder + `/opt/cursor/artifacts/k86-ses-proof/`.
 | TXT `_dmarc.margins365.com` | Pass (`p=none`) |
 | Apex TXT SPF on `margins365.com` | **Proven** — `v=spf1 include:amazonses.com ~all` (live dig @8.8.8.8, 11 Nov 2026 ~21:20 UTC) |
 | SES production access (out of sandbox) | **Proven** — “You are in Production” / Production access granted (eu-north-1; 50k/day, 14/s) |
-| Inbox header proofs (Gmail / Outlook / iCloud) | **Not attached** |
+| Inbox header proofs (Gmail / Outlook / iCloud) | **Pass** — Akthar confirmed SPF/DKIM/DMARC pass at Gmail, Outlook and iCloud (11 Nov 2026, Europe/London) |
 
 ## Verdict
 
-Identity + DKIM + MAIL FROM + production access + **apex SPF** are proven. Remaining for full ES/EML exit: inbox header proofs (Gmail / Outlook / iCloud).
+**K86 complete.** Identity, DKIM, MAIL FROM, production access, apex SPF, and inbox header proofs (Gmail / Outlook / iCloud) all pass.
 
 
 ## Production access (Akthar, 11 Nov 2026 ~21:09 Europe/London)
@@ -47,3 +47,8 @@ GoDaddy TXT on `@` / `margins365.com`:
 `v=spf1 include:amazonses.com ~all`
 
 Live dig (`@8.8.8.8` / `@1.1.1.1`) returned the same record.
+
+
+## Inbox header proofs (Akthar, 11 Nov 2026 evening Europe/London)
+
+SES test emails from `margins365.com` → Gmail, Outlook and iCloud. Akthar confirmed SPF, DKIM and DMARC all **pass** on each.

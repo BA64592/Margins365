@@ -137,6 +137,6 @@ Akthar supplied AWS + GoDaddy screenshots (archived under `docs/qa/v20/evidence/
 | DMARC `p=none` | Present (monitoring only) |
 | Apex SPF on `margins365.com` | **Proven** (live TXT `v=spf1 include:amazonses.com ~all`, 11 Nov ~21:20) |
 | SES production access | **Proven** (eu-north-1 Production access granted, 11 Nov ~21:09) |
-| External header proofs | **Still open** |
+| External header proofs | **Pass** (Gmail / Outlook / iCloud — Akthar, 11 Nov) |
 
-DEF-EML-K86 remains **partially open** until apex SPF + production access + header proofs.
+DEF-EML-K86 **closed** — apex SPF, production access and header proofs all complete.
