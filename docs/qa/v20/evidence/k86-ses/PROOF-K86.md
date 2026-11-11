@@ -27,7 +27,7 @@ Files: this folder + `/opt/cursor/artifacts/k86-ses-proof/`.
 
 ## Verdict
 
-Identity + DKIM + MAIL FROM are proven. ES / EML exit criteria still need: apex SPF on `@`, production-access screenshot, and at least one external delivery header pass per provider.
+Identity + DKIM + MAIL FROM + **production access** are proven. Remaining for full ES/EML exit: apex SPF on `@`, and at least one external delivery header pass per provider (Gmail / Outlook / iCloud).
 
 
 ## Production access (Akthar, 11 Nov 2026 ~21:09 Europe/London)
