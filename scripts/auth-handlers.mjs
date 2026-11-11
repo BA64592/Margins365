@@ -153,14 +153,14 @@ async function sendVerifyEmail(to, verifyUrl) {
       Destination: { ToAddresses: [to] },
       Content: {
         Simple: {
-          Subject: { Data: 'Verify your Margins 365 email', Charset: 'UTF-8' },
+          Subject: { Data: 'Verify your Margins365 email', Charset: 'UTF-8' },
           Body: {
             Text: {
-              Data: `Verify your Margins 365 email.\n\nOpen this link within 24 hours (any device — your other signed-in devices will update automatically):\n${verifyUrl}\n\nNo code is required. Do not reply to this email.\n`,
+              Data: `Verify your Margins365 email.\n\nOpen this link within 24 hours (any device — your other signed-in devices will update automatically):\n${verifyUrl}\n\nNo code is required. Do not reply to this email.\n`,
               Charset: 'UTF-8',
             },
             Html: {
-              Data: `<p>Verify your <strong>Margins 365</strong> email address.</p><p><a href="${verifyUrl}">Confirm email</a></p><p style="color:#555;font-size:14px">Open the link on any device. Your other signed-in sessions update automatically — there is no code to type.</p><p style="color:#555;font-size:14px">${verifyUrl}</p>`,
+              Data: `<p>Verify your <strong>Margins365</strong> email address.</p><p><a href="${verifyUrl}">Confirm email</a></p><p style="color:#555;font-size:14px">Open the link on any device. Your other signed-in sessions update automatically — there is no code to type.</p><p style="color:#555;font-size:14px">${verifyUrl}</p>`,
               Charset: 'UTF-8',
             },
           },
@@ -505,6 +505,49 @@ export async function handleAuthLogoutAll(req) {
   }
 }
 
+/** K65 — public Help centre Contact us form → info.marginos@gmail.com + visitor copy. */
+export async function handleContactForm(req, body) {
+  const name = String(body?.name || '').trim()
+  const phone = String(body?.phone || '').trim()
+  const businessName = String(body?.businessName || '').trim()
+  const email = String(body?.email || '')
+    .trim()
+    .toLowerCase()
+  const country = String(body?.country || '').trim().toUpperCase()
+  const message = String(body?.message || '').trim()
+  const ip = req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() || 'local'
+  if (!rateLimit(`contact:${ip}`, 5, 60 * 60 * 1000)) {
+    return { status: 429, body: { ok: false, message: 'Please wait before sending another message.' } }
+  }
+  if (!name || !email.includes('@') || !message) {
+    return { status: 400, body: { ok: false, message: 'Name, email and message are required.' } }
+  }
+  if (message.length > 4000) {
+    return { status: 400, body: { ok: false, message: 'Keep your message under 4,000 characters.' } }
+  }
+  const inbox = process.env.CONTACT_INBOX || 'info.marginos@gmail.com'
+  const subject = `Margins365 contact — ${name}`
+  const text = `Name: ${name}\nPhone: ${phone || '—'}\nBusiness: ${businessName || '—'}\nEmail: ${email}\nCountry: ${country || '—'}\n\n${message}\n`
+  const html = `<p><strong>Name:</strong> ${name}</p><p><strong>Phone:</strong> ${phone || '—'}</p><p><strong>Business:</strong> ${businessName || '—'}</p><p><strong>Email:</strong> ${email}</p><p><strong>Country:</strong> ${country || '—'}</p><p>${message.replace(/\n/g, '<br/>')}</p>`
+  const toInbox = await sendSesSimple(inbox, subject, text, html)
+  if (!toInbox.ok) {
+    return {
+      status: 502,
+      body: { ok: false, message: 'Could not send your message. Try again shortly.' },
+    }
+  }
+  await sendSesSimple(
+    email,
+    'We received your Margins365 message',
+    `Thanks ${name}. We have your message to Margins365.\n\nWe read every message but do not promise a reply time. This is not a cancellation route — cancel only in Plan & billing.\n\n— Margins365\n`,
+    `<p>Thanks ${name}. We have your message to <strong>Margins365</strong>.</p><p>We read every message but do not promise a reply time. This is not a cancellation route — cancel only in Plan &amp; billing.</p><p>— Margins365</p>`,
+  )
+  return {
+    status: 200,
+    body: { ok: true, message: 'Thanks — we have your message. A copy is on its way to your inbox.' },
+  }
+}
+
 /** Authenticated feature suggestion (max 1000 chars). */
 export async function handleFeatureSuggestion(req, body) {
   if (!dbConfigured()) {
@@ -606,23 +649,23 @@ async function sendSesSimple(to, subject, text, html) {
 }
 
 async function sendPasswordResetEmail(to, resetUrl) {
-  const subject = 'Reset your Margins 365 password'
-  const text = `Reset your Margins 365 password.\n\nSet a new password within ${RESET_MINUTES} minutes:\n${resetUrl}\n\nIf you did not ask for this, you can ignore this email.\n`
-  const html = `<p>Reset your Margins 365 password.</p><p><a href="${resetUrl}">Set a new password</a></p><p style="color:#555;font-size:14px">This link expires in ${RESET_MINUTES} minutes.</p><p style="color:#555;font-size:14px">${resetUrl}</p><p style="color:#555;font-size:14px">If you did not ask for this, you can ignore this email.</p>`
+  const subject = 'Reset your Margins365 password'
+  const text = `Reset your Margins365 password.\n\nSet a new password within ${RESET_MINUTES} minutes:\n${resetUrl}\n\nIf you did not ask for this, you can ignore this email.\n`
+  const html = `<p>Reset your Margins365 password.</p><p><a href="${resetUrl}">Set a new password</a></p><p style="color:#555;font-size:14px">This link expires in ${RESET_MINUTES} minutes.</p><p style="color:#555;font-size:14px">${resetUrl}</p><p style="color:#555;font-size:14px">If you did not ask for this, you can ignore this email.</p>`
   return sendSesSimple(to, subject, text, html)
 }
 
 async function sendGoogleOnlyResetEmail(to) {
-  const subject = 'Your Margins 365 sign-in'
-  const text = `You asked about a password for this Margins 365 account. This account uses Google to sign in. Use Continue with Google on the sign-in screen — there is no password to reset. If you didn’t ask for this, you can ignore this email.\n`
-  const html = `<p>You asked about a password for this <strong>Margins 365</strong> account.</p><p>This account uses Google to sign in. Use <strong>Continue with Google</strong> on the sign-in screen — there is no password to reset.</p><p style="color:#555;font-size:14px">If you didn’t ask for this, you can ignore this email.</p>`
+  const subject = 'Your Margins365 sign-in'
+  const text = `You asked about a password for this Margins365 account. This account uses Google to sign in. Use Continue with Google on the sign-in screen — there is no password to reset. If you didn’t ask for this, you can ignore this email.\n`
+  const html = `<p>You asked about a password for this <strong>Margins365</strong> account.</p><p>This account uses Google to sign in. Use <strong>Continue with Google</strong> on the sign-in screen — there is no password to reset.</p><p style="color:#555;font-size:14px">If you didn’t ask for this, you can ignore this email.</p>`
   return sendSesSimple(to, subject, text, html)
 }
 
 async function sendPasswordChangedEmail(to) {
   const subject = 'Your password was changed'
-  const text = `Your Margins 365 password was changed.\n\nAll other signed-in sessions were signed out. If you did not make this change, reply to this email or contact support from the privacy policy contact address.\n`
-  const html = `<p>Your Margins 365 password was changed.</p><p>All other signed-in sessions were signed out.</p><p style="color:#555;font-size:14px">If you did not make this change, reply to this email or use the privacy policy contact address.</p>`
+  const text = `Your Margins365 password was changed.\n\nAll other signed-in sessions were signed out. If you did not make this change, reply to this email or contact support from the privacy policy contact address.\n`
+  const html = `<p>Your Margins365 password was changed.</p><p>All other signed-in sessions were signed out.</p><p style="color:#555;font-size:14px">If you did not make this change, reply to this email or use the privacy policy contact address.</p>`
   return sendSesSimple(to, subject, text, html)
 }
 

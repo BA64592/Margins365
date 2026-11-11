@@ -1,5 +1,5 @@
 /**
- * Create Margins 365 subscription products + tax-inclusive GBP prices (v19 / K42).
+ * Create Margins365 subscription products + tax-inclusive GBP prices (v19 / K42).
  *
  * Usage:
  *   STRIPE_SECRET_KEY=sk_... node scripts/stripe-bootstrap-products.mjs
@@ -25,28 +25,28 @@ const stripe = new Stripe(secret, {
 const TIERS = [
   {
     id: 'starter',
-    name: 'Margins 365 Starter',
+    name: 'Margins365 Starter',
     description: 'Starter plan — 500 orders/month, 1 platform, 3-month history.',
     monthlyGbp: 3900,
     annualGbp: 39000,
   },
   {
     id: 'growth',
-    name: 'Margins 365 Growth',
+    name: 'Margins365 Growth',
     description: 'Growth plan — 2,000 orders/month, up to 2 platforms, 12-month history.',
     monthlyGbp: 7900,
     annualGbp: 79000,
   },
   {
     id: 'pro',
-    name: 'Margins 365 Pro',
+    name: 'Margins365 Pro',
     description: 'Pro plan — 5,000 orders/month, all platforms, 24-month history, 2 seats.',
     monthlyGbp: 12900,
     annualGbp: 129000,
   },
   {
     id: 'scale',
-    name: 'Margins 365 Scale',
+    name: 'Margins365 Scale',
     description: 'Scale plan — 15,000 orders/month, 3 shops, 5 seats, full history.',
     monthlyGbp: 19900,
     annualGbp: 199000,

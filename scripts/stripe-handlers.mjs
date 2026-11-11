@@ -6,6 +6,12 @@ import Stripe from 'stripe'
 import { setUserPlan, setUserPlanByEmail, userFromRequest } from './auth-handlers.mjs'
 import { dbConfigured, query } from './db.mjs'
 import {
+  confirmFoundingPlace,
+  foundingCouponId,
+  releaseFoundingPlace,
+  reserveFoundingPlace,
+} from './founding.mjs'
+import {
   normalizeInterval,
   normalizePlanId,
   priceIdForPlan,
@@ -101,7 +107,7 @@ export async function createCheckoutSession(body, req) {
   if (!ALLOWED.has(country)) {
     return {
       status: 400,
-      body: { ok: false, message: "Margins 365 isn't available in your country yet." },
+      body: { ok: false, message: "Margins365 isn't available in your country yet." },
     }
   }
 
@@ -118,6 +124,16 @@ export async function createCheckoutSession(body, req) {
     }
   }
 
+  // K72 — reserve founding place server-side; apply coupon only when reserved
+  const wantFounding = body.founding !== false
+  let foundingReserved = false
+  let foundingPlacesLeft = 0
+  if (wantFounding && accountId) {
+    const reservation = await reserveFoundingPlace(accountId, planId, interval)
+    foundingReserved = Boolean(reservation.reserved)
+    foundingPlacesLeft = Number(reservation.placesLeft || 0)
+  }
+
   const origin = defaultOriginUrl()
   const trialDays = Number(body.trialDays || TRIAL_DAYS)
   const meta = {
@@ -127,7 +143,12 @@ export async function createCheckoutSession(body, req) {
     marginos_plan: planId,
     margins365_interval: interval,
     billing_country: country,
+    margins365_founding: foundingReserved ? '1' : '0',
   }
+
+  const discounts = foundingReserved
+    ? [{ coupon: foundingCouponId(interval) }]
+    : undefined
 
   const base = {
     mode: 'subscription',
@@ -141,6 +162,7 @@ export async function createCheckoutSession(body, req) {
       metadata: meta,
     },
     metadata: meta,
+    ...(discounts ? { discounts } : { allow_promotion_codes: false }),
     expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
   }
 
@@ -154,10 +176,44 @@ export async function createCheckoutSession(body, req) {
     }
     return {
       status: 200,
-      body: { ok: true, url: session.url, sessionId: session.id, planId, interval },
+      body: {
+        ok: true,
+        url: session.url,
+        sessionId: session.id,
+        planId,
+        interval,
+        founding: foundingReserved,
+        foundingPlacesLeft,
+      },
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Checkout failed'
+    // If coupon missing, retry without discount rather than blocking checkout
+    if (foundingReserved && /coupon|discount/i.test(String(message))) {
+      try {
+        const { discounts: _d, ...noDisc } = base
+        const session = await stripe.checkout.sessions.create({
+          ...noDisc,
+          managed_payments: { enabled: true },
+        })
+        return {
+          status: 200,
+          body: {
+            ok: true,
+            url: session.url,
+            sessionId: session.id,
+            planId,
+            interval,
+            founding: false,
+            foundingPlacesLeft,
+            message:
+              'Founding coupon not configured in Stripe — checkout continued at full price. Set STRIPE_COUPON_FOUNDING_MONTHLY / STRIPE_COUPON_FOUNDING_ANNUAL.',
+          },
+        }
+      } catch {
+        // fall through
+      }
+    }
     if (String(message).toLowerCase().includes('managed_payments')) {
       try {
         const stripe2 = stripeClient()
@@ -170,18 +226,22 @@ export async function createCheckoutSession(body, req) {
             sessionId: session.id,
             planId,
             interval,
+            founding: foundingReserved,
+            foundingPlacesLeft,
             managedPayments: false,
             message:
               'Checkout created without managed_payments (enable SMP in Stripe Dashboard when eligible).',
           },
         }
       } catch (err2) {
+        if (foundingReserved && accountId) await releaseFoundingPlace(accountId)
         return {
           status: 502,
           body: { ok: false, message: err2 instanceof Error ? err2.message : message },
         }
       }
     }
+    if (foundingReserved && accountId) await releaseFoundingPlace(accountId)
     return { status: 502, body: { ok: false, message } }
   }
 }
@@ -224,6 +284,12 @@ async function applyCheckoutCompleted(session) {
   )
   if (accountId) await setUserPlan(accountId, planId, licenceState, billingInterval)
   else if (email) await setUserPlanByEmail(email, planId, licenceState, billingInterval)
+  // K72 — confirm founding reservation once Checkout completes (trial or paid)
+  if (accountId && session.metadata?.margins365_founding === '1') {
+    if (licenceState === 'active' || licenceState === 'trialing') {
+      await confirmFoundingPlace(accountId)
+    }
+  }
 }
 
 async function applyRefundOrDispute(object) {
@@ -285,9 +351,29 @@ export async function handleStripeWebhook(rawBody, signature) {
       const sub = event.data.object
       const accountId =
         sub.metadata?.margins365_account_id || sub.metadata?.marginos_account_id || ''
-      if (accountId) await setUserPlan(accountId, 'free', 'canceled')
+      if (accountId) {
+        await setUserPlan(accountId, 'free', 'canceled')
+        // K72 — release founding place if still reserved/confirmed on cancel before first pay settles as used
+        if (sub.status === 'trialing' || sub.metadata?.margins365_founding === '1') {
+          await releaseFoundingPlace(accountId)
+        }
+      }
+    } else if (event.type === 'invoice.payment_failed') {
+      const inv = event.data.object
+      // Release reservation when the first post-trial invoice finally fails
+      if (inv.billing_reason === 'subscription_cycle' && inv.attempt_count >= 3) {
+        const accountId =
+          inv.subscription_details?.metadata?.margins365_account_id ||
+          inv.metadata?.margins365_account_id ||
+          ''
+        if (accountId) await releaseFoundingPlace(accountId)
+      }
     } else if (event.type === 'charge.refunded') {
       await applyRefundOrDispute(event.data.object)
+      const metaAccount =
+        event.data.object.metadata?.margins365_account_id ||
+        event.data.object.metadata?.marginos_account_id
+      if (metaAccount) await releaseFoundingPlace(metaAccount)
     } else if (event.type === 'charge.dispute.closed') {
       const d = event.data.object
       if (d.status === 'lost') await applyRefundOrDispute(d)

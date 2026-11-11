@@ -1,5 +1,5 @@
 /**
- * Postgres pool + schema migrate for Margins 365 auth / licences.
+ * Postgres pool + schema migrate for Margins365 auth / licences.
  */
 import pg from 'pg'
 
@@ -110,6 +110,19 @@ export async function migrate() {
     CREATE UNIQUE INDEX IF NOT EXISTS users_google_sub_uidx
       ON users (google_sub)
       WHERE google_sub IS NOT NULL;
+  `)
+  // K72 founding counter
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS founding_places (
+      user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      status TEXT NOT NULL CHECK (status IN ('reserved', 'confirmed', 'released')),
+      reserved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      confirmed_at TIMESTAMPTZ,
+      released_at TIMESTAMPTZ,
+      plan_id TEXT,
+      interval TEXT
+    );
+    CREATE INDEX IF NOT EXISTS founding_places_status_idx ON founding_places(status);
   `)
   return true
 }

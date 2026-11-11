@@ -1,0 +1,222 @@
+Margins365 — Privacy Policy
+Version 20.1 · Effective date: 11 November 2026 · Approved (v20.1 adds optional, consent-
+based analytics; it is published in the release that turns analytics on)
+This policy explains how Margins365 uses personal data, under the UK GDPR, the Data Protection Act 
+2018 and, where it applies, the EU GDPR.
+1. Who we are and how to contact us
+Margins365 (“we”). We are the controller for the personal data described in section 3. For privacy 
+questions or to use your rights, write to info.marginos@gmail.com or use the Contact us form at 
+margins365.com/help. You do not need an account to contact us.
+2. Our two roles
+• Controller: for your account, team, billing, support and security data. 
+• Processor: for personal data inside the shop files you upload. You (our business customer) are 
+the controller of that data and our Data Processing Agreement applies. 
+3. What we collect and why
+Data Examples Why Legal basis
+Account and 
+sign-in
+Email, password hash or Google ID and 
+verified email, sign-in times
+Create and secure 
+your account
+Contract
+Business profile 
+(Info)
+Your name, business name, country, home 
+currency, time zone; optional phone, 
+business address, VAT number, website
+Run the account, 
+show your business 
+name, apply the right 
+tax and currency 
+settings, contact you 
+about the account
+Contract; optional 
+fields: legitimate 
+interests (you 
+choose to give 
+them)
+Team
+Names and emails of people the owner 
+invites, role, invite status
+Give team members 
+access
+Contract with the 
+owner; legitimate 
+interests for 
+invitees
+Subscription 
+and billing Plan, trial dates, founding place, payment 
+status, invoice and refund references (from 
+Provide the plan, the 
+founding offer and 
+Contract; legal 
+obligation for tax 
+Data Examples Why Legal basis
+Stripe/Link) billing records
+Cancellation 
+reason
+The optional reason and comment you give 
+when cancelling
+Understand why 
+customers leave and 
+improve the product
+Legitimate 
+interests
+Contact form
+Name, phone number, business name, 
+email, country, message
+Answer your 
+message and send 
+you a copy
+Legitimate 
+interests 
+(answering you); 
+contract where it 
+concerns your 
+account
+Legal 
+acceptance
+Which Terms version you accepted and 
+when
+Show what was 
+agreed
+Contract; legal 
+obligation
+Security and 
+technical
+IP address, browser, session cookie, 
+Cloudflare __cf_bm security cookie, error 
+logs without file contents
+Keep the service 
+secure and working
+Legitimate 
+interests
+Website 
+analytics (only if 
+you click 
+"Accept 
+analytics")
+Pages viewed on our public site, the 
+referring site, country, device type, 
+browser and operating system, and a few 
+actions (for example "calculator used"). 
+Your IP address and browser details are 
+used only to make a daily-changing 
+anonymous count and are not stored. 
+Nothing you type into calculators or forms 
+is sent
+See which pages help 
+people and improve 
+the site
+Consent 
+(withdraw at any 
+time in Cookie 
+settings)
+Your analytics 
+choice
+Accepted or rejected, the Cookie notice 
+version and the date, stored in your 
+browser
+Remember your 
+choice so we respect 
+it
+Legitimate 
+interests (we 
+need it to honour 
+your choice)
+Shop data. Your uploads contain orders, products, amounts, fees, refunds and buyer country/region. 
+Buyer names, emails, phone numbers, addresses and similar details are removed at import and never 
+stored. Original files are deleted as soon as an import finishes, fails or is cancelled (abandoned 
+imports after 1 hour). Please do not upload special category data or card details.
+We do not sell personal data, show adverts, use advertising or cross-site tracking cookies, or send 
+marketing emails. We use privacy-friendly analytics only if you agree (section 7). We do not make 
+decisions about you based solely on automated processing that have legal or similarly significant 
+effects.
+4. Who receives data
+Recipient What for Where
+DigitalOcean Hosting the app, database and backups London, UK
+Cloudflare, Inc.
+Content delivery, reverse proxy and site security (the 
+essential __cf_bm cookie)
+Global
+Amazon Web 
+Services (Amazon 
+SES)
+Sending account emails, invites, reminders, contact-form 
+notifications and copies
+Stockholm, EU (eu-
+north-1)
+Stripe / Link (Sold 
+through Link, LLC)
+Checkout, payments, receipts, invoices, fraud prevention, 
+tax; acts as merchant of record and as an independent 
+controller for payment data
+UK/EU and the 
+United States
+Plausible Analytics 
+(Plausible Insights 
+OÜ)
+Website analytics, only if you accept; no cookies, no stored 
+IP addresses
+EU only (Germany 
+and Finland)
+Google
+“Continue with Google” sign-in (independent controller for 
+your Google account); the info.marginos@gmail.com 
+mailbox that receives contact-form messages
+Global, including 
+the United States
+We may also share data with professional advisers or authorities where the law requires. Full 
+processor list: our DPA & subprocessors page.
+International transfers. Where data goes outside the UK or EEA (for example to the United States), 
+we rely on adequacy regulations (including the UK–US data bridge and EU–US Data Privacy Framework 
+where the recipient is certified) or the UK International Data Transfer Addendum / EU Standard 
+Contractual Clauses in the provider's data processing terms.
+5. How long we keep data
+Data Kept until
+Product and shop data
+Your access ends (trial or paid period end after cancelling, final failed 
+payment or a first-payment refund); backups within 7 days
+Data Kept until
+Account, profile, team 
+and invites
+Account closure (invites: 30 days after they expire or are used)
+Cancellation reason
+Linked to your account until access ends, then kept only without any link to 
+you
+Contact-form messages 12 months after we receive them
+Founding place Account closure; we keep only a count with no personal data
+Invoices, payments and 
+tax records
+6 years from the end of the financial year they relate to, as UK tax law 
+requires
+Security logs 30 days
+Website analytics 
+statistics
+Aggregate statistics that can't identify you, deleted after 24 months
+Your analytics choice 12 months in your browser, or until the Cookie notice changes
+When the owner cancels, the account is closed and the login removed when access ends. A later sign-
+up is a new, empty account.
+6. Your rights
+You can ask to access, correct, delete, restrict or move your data, and object to processing based on 
+legitimate interests. Download my data (CSV) is in the app while your account is active. We reply 
+within one month (extendable by two months for complex requests, with notice). Deletion has limits 
+where we must keep records by law. If your data is in a customer's shop files, we will pass your 
+request to that customer and help them answer it.
+You can complain to the Information Commissioner's Office (ico.org.uk/make-a-complaint) or, in the 
+EU, your local data protection authority. We would like the chance to help first.
+7. Cookies
+We use essential cookies and browser storage needed to sign you in and run the app. On our public 
+pages we use Plausible Analytics, which sets no cookies, only if you click "Accept analytics"; 
+rejecting or closing the banner means it never loads, and you can change your choice at any time in 
+Cookie settings. It is never used in the signed-in app. See our Cookie notice.
+8. Security
+Data is encrypted in transit and at rest, access is limited to people who need it, passwords are 
+hashed, and sign-in and forms are rate-limited. No system is perfectly secure; if a breach affects you 
+we will tell you and the ICO as the law requires.
+9. Children
+Margins365 is for businesses and is not intended for anyone under 18.
+10. Changes
+We will post updates here with a new version number and date, and email account owners about 
+significant changes.

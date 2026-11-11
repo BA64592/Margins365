@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import { PRODUCT_NAME } from '../lib/brand'
 import { en } from '../i18n/en'
 import {
+  FOUNDING_MONTHS,
   PLANS,
   PLAN_ORDER,
   PRIMARY_TRIAL_CTA,
@@ -11,6 +12,9 @@ import {
   TIKTOK_COMING_SOON,
   TRIAL_DAYS,
   formatGbp,
+  foundingAnnualGbp,
+  foundingOfferLine,
+  planPriceLabel,
   trialChargeDateLabel,
   type BillingInterval,
   type PlanId,
@@ -176,7 +180,7 @@ const FAQ = [
   },
   {
     q: 'What happens after the 14-day trial?',
-    a: `Starter, Growth and Pro trials include full Pro features for those ${TRIAL_DAYS} days; Scale trials include Scale. Unless you cancel in Plan & billing, we charge your chosen plan on day 15 — not the Pro price unless you chose Pro or used Keep Pro. Cancel any time before then in one click.`,
+    a: `Your trial includes the plan you choose — its features and order limit — for ${TRIAL_DAYS} days. Unless you cancel in Plan & billing, we charge that plan on day 15. Cancel any time before then in one click.`,
   },
   {
     q: 'What are shops?',
@@ -188,7 +192,7 @@ const FAQ = [
   },
   {
     q: 'What happens if I hit my order limit?',
-    a: 'We warn at 80% of your unique-order allowance and name the next plan. If a file would take you over the limit, we import nothing and show the overage — there is no partial import. During a Starter, Growth or Pro trial the Pro 5,000-order limit applies. Re-uploading the same order IDs does not use allowance again.',
+    a: 'We warn at 80% of your unique-order allowance and name the next plan. If a file would take you over the limit, we import nothing and show the overage — there is no partial import. Your trial uses your chosen plan’s order limit. Re-uploading the same order IDs does not use allowance again.',
   },
   {
     q: 'Is my data safe, and where is it stored?',
@@ -200,7 +204,7 @@ const FAQ = [
   },
   {
     q: 'Can I change plan?',
-    a: 'Yes. Choose a different plan from Pricing or Plan & billing. Upgrades take effect for the next billing period according to the checkout terms shown. During a trial you can also use Keep Pro to stay on Pro features when the trial ends (you are then charged the Pro price).',
+    a: 'Yes. Choose a different plan from Pricing or Plan & billing. During a trial you may change plan; the trial end date stays the same and you are not charged today. Paid upgrades follow the checkout terms shown.',
   },
   {
     q: 'Does the price include VAT?',
@@ -208,7 +212,7 @@ const FAQ = [
   },
   {
     q: 'How do order limits work?',
-    a: 'Orders count once per billing month — re-uploading the same orders does not use allowance again. During a Starter/Growth/Pro trial the Pro 5,000-order limit applies. We warn at 80% and name the next plan. If a file would take you over, we import nothing and show the overage.',
+    a: 'Orders count once per billing month — re-uploading the same orders does not use allowance again. Your trial uses your chosen plan’s order limit. We warn at 80% and name the next plan. If a file would take you over, we import nothing and show the overage.',
   },
   {
     q: 'What happens on annual plans?',
@@ -217,10 +221,12 @@ const FAQ = [
 ]
 
 export function PricingPage() {
-  const { setUpgradeOpen, setRoute, setAuthOpen, user } = useApp()
+  const { setUpgradeOpen, setRoute, setAuthOpen, user, foundingLeft } = useApp()
   const [interval, setInterval] = useState<BillingInterval>('month')
 
   const chargeHint = useMemo(() => trialChargeDateLabel(), [])
+  const foundingLine = foundingOfferLine(foundingLeft)
+  const showFounding = foundingLeft > 0
 
   return (
     <main>
@@ -239,9 +245,14 @@ export function PricingPage() {
           <p className="mt-4 max-w-2xl text-base text-subtle sm:text-lg">
             14 days free, then your chosen plan. You won’t be charged until{' '}
             <span className="font-semibold text-ink">{chargeHint}</span>. Cancel any time before then in
-            one click in Plan &amp; billing. All prices include VAT. Every trial includes Pro features
+            one click in Plan &amp; billing. All prices include VAT. Your trial includes the plan you choose
             (Scale trials include Scale). {TIKTOK_COMING_SOON}.
           </p>
+          {foundingLine ? (
+            <p className="mt-4 max-w-2xl rounded-[12px] border border-accent/30 bg-accent-soft/50 px-4 py-3 text-sm text-ink">
+              {foundingLine}
+            </p>
+          ) : null}
 
           <div className="mt-8 inline-flex rounded-[10px] bg-muted p-1">
             {(['month', 'year'] as BillingInterval[]).map((iv) => (
@@ -290,6 +301,8 @@ export function PricingPage() {
           {PLAN_ORDER.map((id) => {
             const def = PLANS[id]
             const price = interval === 'year' ? def.annualGbp : def.monthlyGbp
+            const foundingPrice =
+              interval === 'year' ? foundingAnnualGbp(id) : def.foundingMonthlyGbp
             return (
               <div
                 key={id}
@@ -322,13 +335,22 @@ export function PricingPage() {
                   ) : null}
                 </div>
                 <p className="mt-4 font-display text-3xl font-bold text-navy">
-                  {formatGbp(price)}
+                  {formatGbp(showFounding ? foundingPrice : price)}
                   <span className="text-sm font-medium text-subtle">
                     {interval === 'year' ? '/year' : '/month'}
                   </span>
                 </p>
+                {showFounding ? (
+                  <p className="mt-1 text-xs text-subtle">
+                    Founding · first {interval === 'year' ? 'year' : `${FOUNDING_MONTHS} months`}, then{' '}
+                    {planPriceLabel(id, interval, false)}
+                  </p>
+                ) : null}
                 <p className="mt-2 text-xs leading-relaxed text-subtle">
-                  14 days free, then {formatGbp(price)} {interval === 'year' ? 'a year' : 'a month'}{' '}
+                  14 days free, then{' '}
+                  {showFounding
+                    ? `${formatGbp(foundingPrice)} founding (${interval === 'year' ? '25% off year 1' : `50% off ${FOUNDING_MONTHS} months`}), then ${formatGbp(price)}`
+                    : `${formatGbp(price)} ${interval === 'year' ? 'a year' : 'a month'}`}{' '}
                   including VAT. You won’t be charged until {chargeHint}. Cancel any time before then in
                   one click.
                 </p>
@@ -363,7 +385,7 @@ export function PricingPage() {
           </h2>
           <p className="mt-2 text-sm text-subtle sm:text-base">
             Every plan includes true profit, Health Score, six leaks with £ impact and calculators.
-            Every trial includes Pro features. {TIKTOK_COMING_SOON}.
+            Your trial matches the plan you choose. {TIKTOK_COMING_SOON}.
           </p>
           <div className="mt-8 overflow-x-auto">
             <p className="mb-2 text-xs text-subtle lg:hidden">Swipe sideways to see all plans →</p>

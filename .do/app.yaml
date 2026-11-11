@@ -1,12 +1,13 @@
-# DigitalOcean App Platform — MarginOS
+# DigitalOcean App Platform — Margins365
 # Web Service required so /api/auth/send-verification can call Amazon SES.
 # Set SECRET values in the DO control panel or Apps API — do not commit secrets.
+# Source must be BA64592/Margins365 (repo renamed from MarginOS) — keep DO App Spec in sync.
 name: marginos
 region: lon
 services:
   - name: marginos
     github:
-      repo: BA64592/MarginOS
+      repo: BA64592/Margins365
       branch: main
       deploy_on_push: true
     build_command: npm ci && npm run build
@@ -18,8 +19,12 @@ services:
     routes:
       - path: /
     # Add SECRET envs in the DO UI / Apps API (never commit values):
-    # AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+    # AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, STRIPE_SECRET_KEY, DATABASE_URL, …
     envs:
+      - key: APP_ORIGIN
+        scope: RUN_TIME
+        type: GENERAL
+        value: https://margins365.com
       - key: AWS_REGION
         scope: RUN_TIME
         type: GENERAL
@@ -31,11 +36,15 @@ services:
       - key: SES_FROM_EMAIL
         scope: RUN_TIME
         type: GENERAL
-        value: noreply@marginos.online
+        value: noreply@margins365.com
       - key: SES_FROM_ADDRESS
         scope: RUN_TIME
         type: GENERAL
-        value: noreply@marginos.online
+        value: noreply@margins365.com
+      - key: VITE_PRODUCT_DOMAIN
+        scope: BUILD_TIME
+        type: GENERAL
+        value: margins365.com
       - key: VITE_AUTH_MODE
         scope: BUILD_TIME
         type: GENERAL

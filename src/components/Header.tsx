@@ -1,4 +1,5 @@
-import { Sparkles, User } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
+import { AccountMenu } from './AccountMenu'
 import { useApp } from '../context/AppContext'
 import { PRODUCT_NAME } from '../lib/brand'
 import { isDemoHarnessEnabled } from '../lib/demoFlags'
@@ -9,7 +10,8 @@ import { Badge, Button } from './ui'
 
 function planBadgeLabel(plan: string, access: string, trialEntitlement: string | null | undefined) {
   if (access === 'trial' && trialEntitlement) {
-    return `Trying ${PLANS[trialEntitlement as 'pro' | 'scale'].name}`
+    const id = trialEntitlement as 'starter' | 'growth' | 'pro' | 'scale'
+    return `Trying ${PLANS[id].name}`
   }
   if (plan === 'legacy') return 'Pro (lifetime)'
   if (plan === 'starter' || plan === 'growth' || plan === 'pro' || plan === 'scale') {
@@ -46,7 +48,12 @@ export function Header({
         className={`mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 sm:px-6 ${compact ? 'py-2.5' : 'py-3'}`}
       >
         <div className="flex min-w-0 items-center gap-3">
-          <button type="button" className="min-w-0" onClick={() => setRoute('app')} aria-label={PRODUCT_NAME}>
+          <button
+            type="button"
+            className="min-w-0"
+            onClick={() => setRoute(user && subscribed ? 'app' : 'home')}
+            aria-label={PRODUCT_NAME}
+          >
             <BrandLockup />
           </button>
           <Badge tone={subscribed ? 'pro' : 'neutral'}>
@@ -55,13 +62,16 @@ export function Header({
         </div>
 
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" className="hidden sm:inline-flex" onClick={() => setRoute('home')}>
+            Home
+          </Button>
           <Button
             variant="ghost"
             size="sm"
             className="hidden sm:inline-flex"
-            onClick={() => setRoute('home')}
+            onClick={() => setRoute('sample')}
           >
-            Home
+            Sample shop
           </Button>
           <Button
             variant="ghost"
@@ -71,23 +81,14 @@ export function Header({
           >
             Pricing
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1.5 px-2"
-            onClick={() => setAuthOpen(true)}
-            aria-label={user ? 'Account' : 'Sign in'}
-          >
-            <User className="h-4 w-4" />
-            <span className="hidden max-w-[9rem] truncate sm:inline">
-              {user ? user.fullName || user.email.split('@')[0] || 'Account' : 'Sign in'}
-            </span>
-          </Button>
+          <AccountMenu variant="app" />
           {!subscribed ? (
             <Button size="sm" onClick={() => setUpgradeOpen(true)}>
               <Sparkles className="h-4 w-4" />
-              <span className="hidden sm:inline">{PRIMARY_TRIAL_CTA}</span>
-              <span className="sm:hidden">Trial</span>
+              <span className="hidden sm:inline">
+                {user ? 'Choose a plan' : PRIMARY_TRIAL_CTA}
+              </span>
+              <span className="sm:hidden">{user ? 'Plans' : 'Trial'}</span>
             </Button>
           ) : isDemoHarnessEnabled() ? (
             <Button size="sm" variant="secondary" onClick={switchToFree}>
@@ -106,15 +107,12 @@ export function Header({
       ) : null}
       {user && user.emailVerified && !isProfileComplete(user) ? (
         <div className="border-t border-accent/30 bg-accent-soft px-4 py-2 text-center text-xs text-accent sm:px-6">
-          Finish your profile (name, business, phone) and choose your platform(s).{' '}
-          <button type="button" className="font-semibold underline" onClick={() => setAuthOpen(true)}>
-            Open Account
+          Finish your Info (name and business) and choose your platform(s).{' '}
+          <button type="button" className="font-semibold underline" onClick={() => setRoute('account-info')}>
+            Open Info
           </button>
         </div>
       ) : null}
-      <select className="hidden" aria-hidden="true" defaultValue="en">
-        <option value="en">English</option>
-      </select>
     </header>
   )
 }

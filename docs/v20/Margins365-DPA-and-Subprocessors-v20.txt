@@ -1,0 +1,128 @@
+Margins365 — Data Processing Agreement and subprocessors
+Version 20.1 · Effective date: 11 November 2026 · Approved (v20.1 adds optional, consent-
+based analytics; it is published in the release that turns analytics on)
+This Data Processing Agreement (“DPA”) forms part of the Margins365 Terms between the customer 
+(“Customer”, the controller) and Margins365 (“Margins365”, the processor). It applies when 
+Margins365 processes personal data on the Customer's behalf, and meets Article 28 of the UK GDPR 
+and the EU GDPR. It takes effect when the Customer accepts the Terms.
+1. Processing details
+Item Details
+Subject matter 
+and purpose
+Importing, cleaning, storing, analysing and presenting the Customer's sales data to 
+provide the Margins365 service; exports; support; deletion
+Duration The subscription term until access ends, then deletion (section 7)
+Nature Receiving, filtering, storing, calculating, displaying, exporting and erasing
+Personal data
+Order and line identifiers, dates, amounts, products, fees, refunds, buyer 
+country/region; buyer names, emails, phones and addresses present in raw files only 
+until removed at import; names and emails of Customer team members
+Data subjects The Customer's buyers; the Customer's staff and team members; sole traders
+Special 
+category data
+Not intended; the Customer must not upload it
+2. Customer instructions
+Margins365 processes personal data only on the Customer's documented instructions — these Terms, 
+this DPA and the Customer's use of the service — unless the law requires otherwise, in which case it 
+tells the Customer first unless the law forbids it. Margins365 tells the Customer if it believes an 
+instruction breaks data protection law. The Customer is responsible for having a lawful basis and 
+giving notices to its buyers.
+3. Confidentiality and security
+Everyone authorised to process the data is bound by confidentiality. Margins365 keeps appropriate 
+technical and organisational measures, including: encryption in transit and at rest; removal of buyer 
+contact details at import; deletion of original files after import; access limited to authorised personnel 
+with two-step sign-in; hashed passwords and secure session cookies; rate limiting; logs without file 
+contents or secrets; backups kept no longer than 7 days; regular deletion and restore tests.
+4. Breaches
+Margins365 notifies the Customer without undue delay, and in any case within 48 hours, after 
+becoming aware of a personal data breach affecting the Customer's data, with the information 
+available, and updates it as more is known. It helps the Customer meet its own reporting duties.
+5. Assistance and audits
+Margins365 helps the Customer, taking into account the nature of the processing, to answer data 
+subject requests, carry out data protection impact assessments and meet its security and breach 
+obligations. It makes available the information needed to show compliance with this DPA and allows 
+audits by the Customer or its auditor on 30 days' notice, once a year unless a breach or regulator 
+requires more, under reasonable confidentiality.
+6. Subprocessors
+The Customer gives general authorisation for the subprocessors below. Margins365 will give at least 
+30 days' notice of a new or replacement subprocessor by email to account owners and on this page; 
+the Customer may object on reasonable data protection grounds, and if no solution is found may 
+cancel and receive a pro-rata refund of prepaid fees. Margins365 puts equivalent data protection 
+terms in place with each subprocessor and stays responsible for them.
+Subprocessor Service Data Location
+DigitalOcean, LLC
+App hosting, managed database 
+and backups (App Platform, 
+Managed PostgreSQL)
+All Customer data held in the 
+service
+London, UK 
+(LON1)
+Cloudflare, Inc.
+Content delivery, reverse proxy 
+and bot management (the 
+essential __cf_bm security cookie)
+IP addresses, the __cf_bm 
+cookie, request metadata 
+and traffic as it transits the 
+proxy
+Global 
+(Cloudflare 
+network)
+Amazon Web 
+Services (Amazon 
+SES)
+Transactional email (account, 
+team invites, reminders, contact-
+form notifications and copies)
+Email addresses, names, 
+business names, message 
+content of those emails
+Stockholm, EU 
+(eu-north-1)
+Google (Gmail) Mailbox 
+info.marginos@gmail.com 
+Contact-form fields Global, including 
+the United 
+Subprocessor Service Data Location
+receiving Help centre contact-
+form messages
+States
+Service providers for Margins365's own website (not subprocessors of Customer data). 
+These process data for Margins365 as controller, not Customer data, and are listed here so the full list 
+of providers is in one place:
+Provider Service Data Location
+Plausible 
+Analytics 
+(Plausible 
+Insights OÜ, 
+Estonia)
+Website analytics on 
+public pages, only after 
+the visitor accepts; no 
+cookies; never used in 
+the signed-in service
+Page views, referrer, country, device 
+and browser type; IP address and user 
+agent used only to create a daily-
+rotating anonymous hash, not stored. 
+No Customer shop data
+EU only (Hetzner, 
+Germany; UpCloud, 
+Finland; Bunny 
+CDN, Slovenia)
+Independent controllers (not subprocessors): Stripe / Link (Sold through Link, LLC) for checkout, 
+payments, invoices and tax as merchant of record; Google for “Continue with Google” sign-in. Each 
+processes data under its own privacy terms.
+Transfers. Where a subprocessor processes data outside the UK or EEA, Margins365 relies on 
+adequacy regulations or the UK International Data Transfer Addendum / EU Standard Contractual 
+Clauses in that subprocessor's data processing terms.
+7. Return and deletion
+While access is active the Customer can download its data (CSV) at any time. When access ends 
+(after cancellation at the trial or paid-period end, final failed payment or a first-payment refund), 
+Margins365 deletes all Customer personal data in the service; backups are cleared within 7 days. 
+Margins365 keeps only what the law requires it to keep, such as billing records, and uses that only for 
+that purpose.
+8. General
+If this DPA conflicts with the Terms on data protection, this DPA wins. It is governed by the same law 
+as the Terms.

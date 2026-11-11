@@ -35,6 +35,16 @@ import { buildDemoStore, type DemoStoreId } from '../lib/demo/stores'
 import { clearAllState, loadState, saveState } from '../lib/storage'
 import { evaluateOrderImport, uniqueOrderIds } from '../lib/orders/uniqueOrders'
 import {
+  normalizePathname,
+  pageDescription,
+  pageTitle,
+  pathToRoute,
+  routeToPath,
+  type AppRoute,
+} from '../lib/routes'
+
+export type { AppRoute }
+import {
   LAUNCH_PLATFORMS,
   PLANS,
   TRIAL_DAYS,
@@ -95,8 +105,6 @@ function authUserFromSession(session: AuthSession, fallback?: AuthUser | null): 
     googleEmailVerified: fallback?.googleEmailVerified,
   }
 }
-
-type AppRoute = 'home' | 'pricing' | 'sample' | 'app' | 'legal'
 
 function normalizePlan(raw: Plan | 'free' | undefined | null): Plan {
   if (!raw || raw === 'free') return 'none'
@@ -265,7 +273,7 @@ interface AppContextValue {
   importPlatformOrders: (
     input: PlatformImportInput,
   ) => { ok: boolean; message: string }
-  /** Apply Margins 365 cost/ads template; returns Free deletion note when applicable (v16.4 F2). */
+  /** Apply Margins365 cost/ads template; returns Free deletion note when applicable (v16.4 F2). */
   replaceTemplate: (
     costs: ProductCostRow[],
     ads?: AdSpendEntry[],
@@ -317,8 +325,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     saved?.trialEntitlement ?? null,
   )
   const [accessEndsAt, setAccessEndsAt] = useState<string | null>(saved?.accessEndsAt ?? null)
-  const [foundingSold] = useState(saved?.foundingSold ?? saved?.earlyBirdSold ?? 0)
-  const [foundingEligible] = useState(saved?.foundingEligible ?? true)
+  const [foundingSold, setFoundingSold] = useState(saved?.foundingSold ?? saved?.earlyBirdSold ?? 0)
+  const [foundingEligible, setFoundingEligible] = useState(saved?.foundingEligible ?? true)
   const [trialUsed, setTrialUsed] = useState(saved?.trialUsed ?? false)
   const [theme] = useState<'light'>('light')
   const [currency, setCurrency] = useState<HomeCurrency>(saved?.currency ?? 'GBP')
@@ -360,7 +368,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [usageUniqueOrderIds, setUsageUniqueOrderIds] = useState<string[]>(
     saved?.usageUniqueOrderIds ?? [],
   )
-  const [route, setRoute] = useState<AppRoute>('home')
+  const [route, setRouteState] = useState<AppRoute>(() =>
+    typeof window !== 'undefined' ? pathToRoute(window.location.pathname) : 'home',
+  )
+
+  const setRoute = (next: AppRoute) => {
+    setRouteState(next)
+    if (typeof window === 'undefined') return
+    const path = routeToPath(next)
+    const current = normalizePathname(window.location.pathname)
+    if (current !== path) {
+      window.history.pushState({ route: next }, '', path)
+    }
+    // K62 — open every new page at the top
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    document.title = pageTitle(next)
+    const meta = document.querySelector('meta[name="description"]')
+    if (meta) meta.setAttribute('content', pageDescription(next))
+  }
+
+  // K63 — sync URL on load / back-forward; redirect /sample-report
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const syncFromLocation = (scrollTop: boolean) => {
+      const raw = window.location.pathname
+      const normalized = normalizePathname(raw)
+      if (raw.replace(/\/+$/, '') === '/sample-report' || (raw.endsWith('/') && raw !== '/')) {
+        window.history.replaceState({}, '', normalized)
+      }
+      const next = pathToRoute(window.location.pathname)
+      setRouteState(next)
+      document.title = pageTitle(next)
+      const meta = document.querySelector('meta[name="description"]')
+      if (meta) meta.setAttribute('content', pageDescription(next))
+      if (scrollTop) window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    }
+    syncFromLocation(true)
+    const onPop = () => syncFromLocation(false)
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
   const [sampleClearedNotice, setSampleClearedNotice] = useState<string | null>(null)
   const [freeClocks, setFreeClocks] = useState<FreeRetentionClock[]>(
     hasPaidAccess(initialAccess) ? [] : (saved?.freeClocks ?? []),
@@ -406,6 +453,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const foundingLeft = foundingPlacesLeft(foundingSold)
   const entitlementPlan = entitlementPlanId(access, plan, trialEntitlement)
   const orderLimit = orderLimitFor(entitlementPlan ?? plan)
+
+  // K72 — sync founding counter from server (source of truth)
+  useEffect(() => {
+    let cancelled = false
+    void fetch('/api/founding')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { sold?: number; used?: number; placesLeft?: number; eligible?: boolean } | null) => {
+        if (cancelled || !data) return
+        const sold = Number(data.sold ?? data.used ?? 0)
+        if (Number.isFinite(sold)) setFoundingSold(sold)
+        if (typeof data.eligible === 'boolean') setFoundingEligible(data.eligible)
+        else if (typeof data.placesLeft === 'number') setFoundingEligible(data.placesLeft > 0)
+      })
+      .catch(() => {
+        /* keep local fallback */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     document.documentElement.classList.remove('dark')
@@ -1424,7 +1491,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
             new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString(),
         )
         setTrialUsed(true)
-        // K42 — founding offer removed; never increment foundingSold for new checkouts
+        // K72 — mock/local: reserve a founding place when places remain
+        if (foundingEligible && foundingLeft > 0) {
+          setFoundingSold((n) => n + 1)
+        }
         setPaymentPending(false)
         setFreeClocks([])
         setFreeDataDeletedNotice(null)

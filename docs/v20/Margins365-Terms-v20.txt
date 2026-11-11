@@ -1,0 +1,110 @@
+Margins365 — Terms of Service
+Version 20 · Effective date: 11 November 2026 · Approved
+These terms are the agreement between you and us for the Margins365 service at margins365.com.
+1. Who we are
+Margins365 (“we”, “us”) provides this service. Contact us through the Contact us form in the Help 
+centre at margins365.com/help or at info.marginos@gmail.com.
+2. Who can use Margins365
+Margins365 is for businesses and sole traders who sell online. By creating an account you confirm you 
+are at least 18 and use the service for your business. If you accept these terms for a company or 
+other organisation, you confirm you can bind it. If the law treats you as a consumer, you keep the 
+rights that law gives you; nothing in these terms takes them away.
+3. What the service does
+Margins365 analyses the sales reports you upload (Shopify, Amazon and Etsy files) and the costs you 
+enter. It shows true profit, a Margin Health Score, product verdicts, ranked margin leaks with their 
+monthly cost, and calculators. TikTok Shop UK (Beta): Excel import coming soon. We never connect to 
+your store. Sample data is labelled and is for illustration only.
+Results depend on the files and costs you provide. Estimates are labelled. Margins365 is decision-
+support information, not accounting, tax, legal or financial advice, and does not guarantee any result.
+4. Plans, prices and the founding offer
+Plan Monthly Annual
+Unique orders per billing 
+month
+Shops Seats
+Starter £39 £390 500 1 1
+Growth £79 £790 2,000 1 1
+Pro £129 £1,290 5,000 1 2
+Scale £199 £1,990 15,000 Up to 3 5
+All prices include VAT. An annual plan costs ten monthly payments for twelve months; order limits still 
+reset every month. The order limit is shared across all shops in the account. If an upload would take 
+you over your limit, it is not imported and your existing results stay available; you can upgrade.
+Founding offer. The first 100 paying customers get 50% off their first 6 monthly payments: Starter 
+£19.50, Growth £39.50, Pro £64.50, Scale £99.50 a month including VAT. From the 7th monthly 
+payment the normal price applies. On an annual plan the founding offer is 25% off the first year 
+(£292.50, £592.50, £967.50 or £1,492.50), then the normal annual price. A place is held when your 
+trial starts and becomes yours when your first payment succeeds. It is released if you cancel the trial, 
+your first payment fails or is refunded. One place per account; it cannot be transferred or used again 
+after the account closes. If you change plan during the 6 months, the 50% applies to the new plan 
+until the 6 payments are used. We show the real number of places left and email you 14 days before 
+the normal price starts.
+5. Free trial and payment
+Every plan starts with a 14-day free trial of the plan you choose, with that plan's features and 
+order limit. You add a payment card at checkout; you pay nothing today. Unless you cancel before 
+the trial ends, we charge your chosen plan's price (or the founding price) automatically on 
+day 15, then every month or year until you cancel. We email you a reminder before the first charge. 
+One trial per account. You may change plan during the trial; the trial end date stays the same.
+Payments are processed by Stripe through Link (“Sold through Link”), which acts as merchant of 
+record, sends receipts and invoices and may appear on your statement as LINK.COM*. If a payment 
+fails we retry for up to 14 days and you keep access; if it finally fails, access ends and your data is 
+deleted (section 8).
+Upgrades apply at once and are charged pro rata. Downgrades on a paid plan apply at your next 
+renewal; features, shops or seats beyond the lower plan are locked, not deleted, until you upgrade 
+again.
+6. Price changes
+We may change our prices for future billing periods. We will tell you by email at least 30 days before a 
+change applies to you, and you can cancel before it does. A founding price is not changed during its 6 
+payments.
+7. Your account, team and shops
+The person who starts the subscription is the owner. Only the owner can manage billing, change 
+plan, add or remove shops, invite or remove team members and cancel. Team members can use the 
+analysis tools within the plan's seats. Keep sign-in details secure and do not share a login; each 
+person needs their own seat. Do not upload unlawful content, try to access other accounts or disrupt 
+the service.
+8. Cancelling, account closure and your data
+The owner cancels at any time in Plan & billing with one click (Cancel trial or Cancel 
+subscription). We may ask why you are cancelling; answering is optional and does not affect the 
+cancellation. We do not accept cancellation by email, and cancelling does not need contacting us.
+• Cancelling during the trial means you are not charged. You keep access until the trial end. 
+• Cancelling a paid plan stops the next renewal. You keep access until the end of the period you 
+paid for. 
+• At that date your account is closed, your login is removed and all your product data 
+is permanently deleted. Backup copies are removed within 7 days. Download your data 
+before then. Signing up again later starts a new, empty account. 
+We keep only the billing and tax records the law requires (see the Privacy Policy).
+9. Refunds
+You can ask for a full refund within 14 days of your first successful payment, including when that 
+payment follows a free trial, once per customer. Ask through the Help centre contact form. If we 
+refund your first payment, access ends at once and your data is deleted. Later payments are not 
+refunded in part. This does not affect any legal rights you have. Full details: Refunds & cancellation 
+policy.
+10. Your data and ours
+You own the data you upload. You give us permission to process it only to provide the service to you. 
+Where your files contain personal data, our Data Processing Agreement applies and forms part of 
+these terms. Do not upload special category data or payment card details. Our Privacy Policy explains 
+how we handle personal data.
+We own the Margins365 software, brand and content. You may use the service and its outputs for 
+your own business.
+11. Availability and changes to the service
+We aim to keep Margins365 available but do not promise it will be uninterrupted. We may improve or 
+change features; we will not remove a core feature of your plan during a paid period without telling 
+you and letting you cancel with a pro-rata refund for the unused time.
+12. Suspension and ending the agreement
+We may suspend or close an account that seriously or repeatedly breaks these terms, after warning 
+you where reasonable. If we close your account for a reason that is not your fault, we refund unused 
+prepaid fees.
+13. Liability
+We provide the service with reasonable care and skill. Nothing in these terms limits liability for death 
+or personal injury caused by negligence, fraud, or anything else the law does not allow us to limit. 
+Subject to that, for business customers: we are not liable for loss of profit, revenue, business or data 
+you could have kept by downloading it, or for indirect loss; and our total liability in any 12 months is 
+limited to the fees you paid us in those 12 months. If you are a consumer, we are responsible for 
+foreseeable loss caused by our breach and your legal rights are not affected.
+14. Changes to these terms
+We may update these terms. For a material change we email account owners at least 30 days before 
+it takes effect and ask you to accept the new version when you next sign in. If you do not agree, you 
+can cancel before it takes effect. Each version shows its number and effective date.
+15. Complaints, law and courts
+Tell us about any problem through the Help centre contact form. These terms are governed by the 
+law of England and Wales and the courts of England and Wales have jurisdiction. If you are a 
+consumer living elsewhere in the UK or in the EU, you keep the protection of the mandatory laws of 
+your country and may bring claims in your local courts.

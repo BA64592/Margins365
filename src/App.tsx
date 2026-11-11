@@ -1,5 +1,9 @@
+import { AccountInfoPage } from './components/account/AccountInfoPage'
+import { ShopsPage } from './components/account/ShopsPage'
+import { TeamPage } from './components/account/TeamPage'
 import { AuthModal } from './components/AuthModal'
 import { BrowserSupportBanner } from './components/BrowserSupportBanner'
+import { ConsentBanner } from './components/ConsentBanner'
 import { CalculatorsPanel } from './components/CalculatorsPanel'
 import { CostCharts } from './components/CostCharts'
 import {
@@ -13,15 +17,21 @@ import { InactivityBanner } from './components/InactivityBanner'
 import { ReverseTrialBanner } from './components/ReverseTrialBanner'
 import { LeaksPanel } from './components/LeaksPanel'
 import { MetricStrip } from './components/MetricStrip'
+import { HelpPage } from './components/marketing/HelpPage'
 import { HomePage } from './components/marketing/HomePage'
+import { LegalPage } from './components/marketing/LegalPage'
 import { MarketingChrome } from './components/marketing/MarketingChrome'
+import { NotFoundPage } from './components/marketing/NotFoundPage'
+import { LandingPage } from './components/marketing/LandingPage'
+import { PublicCalculatorPage } from './components/marketing/PublicCalculatorPage'
 import { SampleReportPage } from './components/marketing/SampleReportPage'
 import { PricingPage } from './components/PricingPage'
+import { SettingsBar } from './components/SettingsBar'
+import { LEGAL_BY_ROUTE } from './content/legal'
 import { ProductWorkspace } from './components/ProductWorkspace'
 import { RecommendationsPanel } from './components/RecommendationsPanel'
 import { SavedDatasets } from './components/SavedDatasets'
 import { ScenarioCompare } from './components/ScenarioCompare'
-import { SettingsBar } from './components/SettingsBar'
 import { UpgradeModal } from './components/UpgradeModal'
 import { Button } from './components/ui'
 import { AppProvider, useApp } from './context/AppContext'
@@ -35,7 +45,20 @@ function MarketingShell({ children }: { children: React.ReactNode }) {
       <MarketingChrome>{children}</MarketingChrome>
       <UpgradeModal />
       <AuthModal />
+      <ConsentBanner />
     </>
+  )
+}
+
+function AccountShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-bg text-ink">
+      <BrowserSupportBanner />
+      <MarketingChrome>{children}</MarketingChrome>
+      <UpgradeModal />
+      <AuthModal />
+      <ConsentBanner />
+    </div>
   )
 }
 
@@ -170,7 +193,7 @@ function DashboardMain() {
             Home
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setRoute('sample')}>
-            Sample report
+            Sample shop
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setRoute('pricing')}>
             Pricing
@@ -190,6 +213,7 @@ function ProductShell() {
       </DashboardShell>
       <UpgradeModal />
       <AuthModal />
+      <ConsentBanner />
     </div>
   )
 }
@@ -215,6 +239,99 @@ function AppShell() {
     return (
       <MarketingShell>
         <SampleReportPage />
+      </MarketingShell>
+    )
+  }
+  if (route === 'help') {
+    return (
+      <MarketingShell>
+        <HelpPage />
+      </MarketingShell>
+    )
+  }
+  if (route === 'account-info') {
+    return (
+      <AccountShell>
+        <AccountInfoPage />
+      </AccountShell>
+    )
+  }
+  if (route === 'account-billing' || route === 'account-data') {
+    return (
+      <AccountShell>
+        <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+          <SettingsBar />
+        </main>
+      </AccountShell>
+    )
+  }
+  if (route === 'app-shops') {
+    return (
+      <AccountShell>
+        <ShopsPage />
+      </AccountShell>
+    )
+  }
+  if (route === 'app-team') {
+    return (
+      <AccountShell>
+        <TeamPage />
+      </AccountShell>
+    )
+  }
+  if (route === 'calc-etsy') {
+    return (
+      <MarketingShell>
+        <PublicCalculatorPage kind="etsy" />
+      </MarketingShell>
+    )
+  }
+  if (route === 'calc-amazon') {
+    return (
+      <MarketingShell>
+        <PublicCalculatorPage kind="amazon" />
+      </MarketingShell>
+    )
+  }
+  if (route === 'calc-shopify') {
+    return (
+      <MarketingShell>
+        <PublicCalculatorPage kind="shopify" />
+      </MarketingShell>
+    )
+  }
+  if (route === 'calc-ecommerce') {
+    return (
+      <MarketingShell>
+        <PublicCalculatorPage kind="ecommerce" />
+      </MarketingShell>
+    )
+  }
+  if (route === 'landing-profit-leak') {
+    return (
+      <MarketingShell>
+        <LandingPage kind="profit-leak" />
+      </MarketingShell>
+    )
+  }
+  if (route === 'landing-multi-channel') {
+    return (
+      <MarketingShell>
+        <LandingPage kind="multi-channel" />
+      </MarketingShell>
+    )
+  }
+  if (route in LEGAL_BY_ROUTE) {
+    return (
+      <MarketingShell>
+        <LegalPage route={route} />
+      </MarketingShell>
+    )
+  }
+  if (route === 'not-found') {
+    return (
+      <MarketingShell>
+        <NotFoundPage />
       </MarketingShell>
     )
   }

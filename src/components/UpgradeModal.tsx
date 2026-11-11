@@ -6,14 +6,16 @@ import { PRODUCT_NAME } from '../lib/brand'
 import { isDemoHarnessEnabled } from '../lib/demoFlags'
 import { ALLOWED_BUYER_COUNTRIES } from '../lib/payments/provider'
 import {
+  FOUNDING_MONTHS,
   PLANS,
   PLAN_ORDER,
   PRIMARY_TRIAL_CTA,
   TRIAL_DAYS,
   formatGbp,
+  foundingAnnualGbp,
+  foundingOfferLine,
   hasPaidAccess,
   trialChargeDateLabel,
-  trialCheckoutSummary,
   trialEntitlementFor,
   type BillingInterval,
   type PlanId,
@@ -54,6 +56,7 @@ export function UpgradeModal() {
     unlockProDemo,
     user,
     access,
+    foundingLeft,
     paymentPending,
     setPaymentPending,
     failDelayedPayment,
@@ -64,10 +67,16 @@ export function UpgradeModal() {
   const [message, setMessage] = useState<string | null>(null)
 
   const chargeHint = useMemo(() => trialChargeDateLabel(), [])
-  const summary = trialCheckoutSummary(selected, interval, false)
   const entitlement = trialEntitlementFor(selected)
-  const price =
+  const showFounding = foundingLeft > 0
+  const normalPrice =
     interval === 'year' ? PLANS[selected].annualGbp : PLANS[selected].monthlyGbp
+  const foundingPrice =
+    interval === 'year'
+      ? foundingAnnualGbp(selected)
+      : PLANS[selected].foundingMonthlyGbp
+  const price = showFounding ? foundingPrice : normalPrice
+  const foundingLine = foundingOfferLine(foundingLeft)
 
   return (
     <Modal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} title={`${PRODUCT_NAME} plans`}>
@@ -75,6 +84,11 @@ export function UpgradeModal() {
         {PRIMARY_TRIAL_CTA}. You pay nothing today. Cancel any time before {chargeHint} in Plan &amp;
         billing — it takes one click.
       </p>
+      {foundingLine ? (
+        <p className="mb-3 rounded-[10px] border border-accent/30 bg-accent-soft/40 px-3 py-2 text-sm text-ink">
+          {foundingLine}
+        </p>
+      ) : null}
 
       <div className="mb-4 flex gap-2 rounded-[10px] bg-muted p-1">
         {(['month', 'year'] as BillingInterval[]).map((iv) => (
@@ -94,7 +108,10 @@ export function UpgradeModal() {
       <div className="mb-4 grid gap-3 sm:grid-cols-2">
         {PLAN_ORDER.map((id) => {
           const def = PLANS[id]
-          const cardPrice = interval === 'year' ? def.annualGbp : def.monthlyGbp
+          const cardNormal = interval === 'year' ? def.annualGbp : def.monthlyGbp
+          const cardFounding =
+            interval === 'year' ? foundingAnnualGbp(id) : def.foundingMonthlyGbp
+          const cardPrice = showFounding ? cardFounding : cardNormal
           const active = selected === id
           return (
             <button
@@ -119,6 +136,12 @@ export function UpgradeModal() {
                   {interval === 'year' ? '/year' : '/month'}
                 </span>
               </p>
+              {showFounding ? (
+                <p className="mt-0.5 text-[11px] text-subtle">
+                  then {formatGbp(cardNormal)} after{' '}
+                  {interval === 'year' ? 'year 1' : `${FOUNDING_MONTHS} months`}
+                </p>
+              ) : null}
               <p className="mt-1 text-xs text-subtle">
                 {def.orderLimit.toLocaleString('en-GB')} unique orders / month · {def.maxPlatforms} of 3
                 platforms
@@ -128,33 +151,28 @@ export function UpgradeModal() {
         })}
       </div>
 
-      {/* K43 + K52 checkout disclosure */}
+      {/* K69 + K72 checkout disclosure — trial of chosen plan (+ founding when places remain) */}
       <div className="mb-4 rounded-[12px] border border-border bg-muted/60 p-3 text-sm leading-relaxed text-ink">
-        {summary.reverseTrial ? (
-          <p>
-            You’ll try <strong>Pro</strong> free for {TRIAL_DAYS} days. Unless you cancel, your{' '}
-            <strong>{PLANS[selected].name}</strong> plan starts on {chargeHint} at{' '}
-            {formatGbp(price)} including VAT
-            {interval === 'year' ? ' per year' : ' per month'}.
-          </p>
-        ) : (
-          <p>
-            You’re starting a {PLANS[selected].name} free trial until {chargeHint}. Unless you cancel,
-            we’ll charge {formatGbp(price)} including VAT
-            {interval === 'year' ? ' per year' : ' per month'}.
-          </p>
-        )}
-        <p className="mt-2 text-subtle">
-          We’ll ask for a card now so your plan can continue after the trial if you keep it. You pay
-          nothing today. Cancel any time before {chargeHint} in Plan &amp; billing — it takes one
-          click. We’ll email you a reminder before you’re charged. There is no email cancellation
-          route.
+        <p>
+          Your {TRIAL_DAYS}-day free trial of <strong>{PLANS[selected].name}</strong> starts today.
+          We’ll ask for a card now so your plan can continue after the trial. You pay nothing today.
+          Unless you cancel, we will automatically charge {formatGbp(price)} including VAT on{' '}
+          {chargeHint}
+          {showFounding
+            ? interval === 'year'
+              ? ` (founding 25% off year 1; then ${formatGbp(normalPrice)}/year)`
+              : ` (founding 50% off for ${FOUNDING_MONTHS} months; then ${formatGbp(normalPrice)}/month)`
+            : ''}{' '}
+          for your {interval === 'year' ? 'annual' : 'monthly'} {PLANS[selected].name} plan. Cancel any
+          time before {chargeHint} in Plan &amp; billing — it takes one click. We’ll email you a reminder
+          before you’re charged.
         </p>
+        <p className="mt-2 text-subtle">There is no email cancellation route.</p>
       </div>
 
       <ul className="mb-4 space-y-1.5 text-sm text-ink">
         {[
-          `Trial entitlement: ${PLANS[entitlement].name} features for ${TRIAL_DAYS} days`,
+          `${PLANS[entitlement].name} features and order limit for ${TRIAL_DAYS} days`,
           'True profit, Health Score, six leaks with £ impact',
           'TikTok Shop UK (Beta): Excel import coming soon',
         ].map((p) => (

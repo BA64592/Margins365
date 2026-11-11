@@ -107,7 +107,7 @@ export function HomePage() {
             </p>
             <p className="mt-3 text-sm font-medium text-accent sm:text-base">{MULTI_PLATFORM_LINE}</p>
             <h1 className="mt-4 font-[family-name:var(--font-marketing)] text-[1.75rem] font-semibold leading-[1.15] tracking-tight text-navy sm:text-4xl lg:text-[2.5rem]">
-              Stop guessing your e-commerce unit economics.
+              Know your true profit and where it leaks
             </h1>
             <p className="mt-4 max-w-xl text-base text-subtle sm:text-lg">
               Connect your channels and fix margin leaks in under 60 seconds. {en.positioning}
@@ -284,8 +284,8 @@ export function HomePage() {
                 {TRIAL_DAYS} days free on every plan
               </h2>
               <p className="mt-3 max-w-xl text-base text-white/75">
-                Cancel before day {TRIAL_DAYS} and pay nothing. Starter, Growth and Pro trials include full
-                Pro features for the trial. Same charge date shown at checkout.
+                Cancel before day {TRIAL_DAYS} and pay nothing. Your trial includes the plan you choose —
+                its features and order limit. Same charge date shown at checkout.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Button
@@ -297,16 +297,16 @@ export function HomePage() {
                 <Button
                   variant="ghost"
                   className="text-white/80 hover:bg-white/10 hover:text-white"
-                  onClick={() => setRoute('pricing')}
+                  onClick={() => setRoute('sample')}
                 >
-                  Compare plans
+                  Sample shop
                 </Button>
                 <Button
                   variant="ghost"
                   className="text-white/80 hover:bg-white/10 hover:text-white"
-                  onClick={() => setRoute('sample')}
+                  onClick={() => setRoute('pricing')}
                 >
-                  Sample report
+                  Compare plans
                 </Button>
               </div>
             </div>
