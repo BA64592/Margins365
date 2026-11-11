@@ -23,7 +23,18 @@ import {
 } from './auth-handlers.mjs'
 import { dbConfigured, migrate } from './db.mjs'
 import { ensureFoundingSchema, getFoundingStatus } from './founding.mjs'
+import { securityHeaders } from './security-headers.mjs'
 import { injectHtmlMeta, normalizeSeoPath } from './seo-meta.mjs'
+import {
+  ensureShopsSchema,
+  handleCreateInvite,
+  handleCreateShop,
+  handleDeleteShop,
+  handleListShops,
+  handleListTeam,
+  handleRenameShop,
+  handleRevokeInvite,
+} from './shops-handlers.mjs'
 import {
   createCheckoutSession,
   handleStripeWebhook,
@@ -39,6 +50,7 @@ const port = Number(process.env.PORT || 8080)
 const CANONICAL_ORIGIN = String(
   process.env.APP_ORIGIN || 'https://margins365.com',
 ).replace(/\/$/, '')
+const CANONICAL_HOST = new URL(CANONICAL_ORIGIN).hostname.toLowerCase()
 
 /** Legacy hosts that permanently redirect to the canonical domain. */
 const LEGACY_HOSTS = new Set(
@@ -53,15 +65,33 @@ function requestHost(req) {
   return raw.split(',')[0].trim().split(':')[0].toLowerCase()
 }
 
-/** 301/308 legacy domain → margins365.com (preserve path + query). */
-function redirectLegacyHost(req, res) {
+function isDevOrPreviewHost(host) {
+  return (
+    !host ||
+    host === 'localhost' ||
+    host.endsWith('.localhost') ||
+    host.endsWith('.ondigitalocean.app') ||
+    /^\d+\.\d+\.\d+\.\d+$/.test(host)
+  )
+}
+
+/**
+ * DEF-SEO-001 / DEF-DOM-001 / V21 / V23 —
+ * www + legacy hosts → single apex canonical (preserve path + query).
+ */
+function redirectNonCanonicalHost(req, res) {
   const host = requestHost(req)
-  if (!LEGACY_HOSTS.has(host)) return false
+  if (isDevOrPreviewHost(host)) return false
+  const needsRedirect =
+    host !== CANONICAL_HOST && (LEGACY_HOSTS.has(host) || host === `www.${CANONICAL_HOST}`)
+  if (!needsRedirect) return false
   const target = `${CANONICAL_ORIGIN}${req.url || '/'}`
   const code = req.method === 'GET' || req.method === 'HEAD' ? 301 : 308
   res.writeHead(code, {
-    Location: target,
-    'Cache-Control': 'public, max-age=86400',
+    ...securityHeaders({
+      Location: target,
+      'Cache-Control': 'public, max-age=86400',
+    }),
   })
   res.end()
   return true
@@ -94,7 +124,11 @@ function readBodyBuffer(req) {
 }
 
 function json(res, status, body, headers = {}) {
-  const out = { 'Content-Type': 'application/json', ...headers }
+  const out = {
+    ...securityHeaders(),
+    'Content-Type': 'application/json',
+    ...headers,
+  }
   res.writeHead(status, out)
   res.end(JSON.stringify(body))
 }
@@ -118,9 +152,10 @@ function sendIndexHtml(res, reqPath, statusOverride) {
   const { html, status } = injectHtmlMeta(raw, reqPath)
   const code = statusOverride ?? status
   res.writeHead(code, {
-    'Content-Type': 'text/html; charset=utf-8',
-    'Cache-Control': 'no-cache',
-    'X-Content-Type-Options': 'nosniff',
+    ...securityHeaders({
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-cache',
+    }),
   })
   res.end(html)
 }
@@ -142,14 +177,17 @@ async function serveStatic(req, res) {
       const ext = path.extname(filePath).toLowerCase()
       const immutable = ext === '.js' || ext === '.css' || ext === '.woff2' || ext === '.woff'
       res.writeHead(200, {
-        'Content-Type': MIME[ext] || 'application/octet-stream',
-        'Cache-Control': immutable ? 'public, max-age=31536000, immutable' : 'public, max-age=3600',
-        'X-Content-Type-Options': 'nosniff',
+        ...securityHeaders({
+          'Content-Type': MIME[ext] || 'application/octet-stream',
+          'Cache-Control': immutable
+            ? 'public, max-age=31536000, immutable'
+            : 'public, max-age=3600',
+        }),
       })
       fs.createReadStream(filePath).pipe(res)
       return
     }
-    res.writeHead(404)
+    res.writeHead(404, securityHeaders())
     res.end('Not found')
     return
   }
@@ -166,7 +204,7 @@ async function parseJson(req) {
 
 const server = http.createServer(async (req, res) => {
   try {
-    if (redirectLegacyHost(req, res)) return
+    if (redirectNonCanonicalHost(req, res)) return
 
     const url = req.url?.split('?')[0] || '/'
     const qs = new URL(req.url || '/', 'http://localhost').searchParams
@@ -382,14 +420,78 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    // K68 — shops (server SoT)
+    if (req.method === 'GET' && url === '/api/shops') {
+      const result = await handleListShops(req)
+      json(res, result.status, result.body)
+      return
+    }
+    if (req.method === 'POST' && url === '/api/shops') {
+      let body = {}
+      try {
+        body = await parseJson(req)
+      } catch {
+        json(res, 400, { ok: false, message: 'Invalid JSON' })
+        return
+      }
+      const result = await handleCreateShop(req, body)
+      json(res, result.status, result.body)
+      return
+    }
+    const shopMatch = url.match(/^\/api\/shops\/([^/]+)$/)
+    if (shopMatch && req.method === 'PATCH') {
+      let body = {}
+      try {
+        body = await parseJson(req)
+      } catch {
+        json(res, 400, { ok: false, message: 'Invalid JSON' })
+        return
+      }
+      const result = await handleRenameShop(req, decodeURIComponent(shopMatch[1]), body)
+      json(res, result.status, result.body)
+      return
+    }
+    if (shopMatch && req.method === 'DELETE') {
+      const result = await handleDeleteShop(req, decodeURIComponent(shopMatch[1]))
+      json(res, result.status, result.body)
+      return
+    }
+
+    // K68 — team / seats (server SoT for invites)
+    if (req.method === 'GET' && url === '/api/team') {
+      const result = await handleListTeam(req)
+      json(res, result.status, result.body)
+      return
+    }
+    if (req.method === 'POST' && url === '/api/team/invites') {
+      let body = {}
+      try {
+        body = await parseJson(req)
+      } catch {
+        json(res, 400, { ok: false, message: 'Invalid JSON' })
+        return
+      }
+      const result = await handleCreateInvite(req, body)
+      json(res, result.status, result.body)
+      return
+    }
+    const inviteMatch = url.match(/^\/api\/team\/invites\/([^/]+)$/)
+    if (inviteMatch && req.method === 'DELETE') {
+      const result = await handleRevokeInvite(req, decodeURIComponent(inviteMatch[1]))
+      json(res, result.status, result.body)
+      return
+    }
+
     // Legacy sample-report → sample-shop (K60 / K75)
     if (
       (req.method === 'GET' || req.method === 'HEAD') &&
       (url === '/sample-report' || url === '/sample-report/')
     ) {
       res.writeHead(301, {
-        Location: '/sample-shop',
-        'Cache-Control': 'public, max-age=86400',
+        ...securityHeaders({
+          Location: '/sample-shop',
+          'Cache-Control': 'public, max-age=86400',
+        }),
       })
       res.end()
       return
@@ -400,7 +502,7 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
-    res.writeHead(405)
+    res.writeHead(405, securityHeaders())
     res.end()
   } catch (err) {
     console.error(err)
@@ -416,6 +518,11 @@ migrate()
         await ensureFoundingSchema()
       } catch (e) {
         console.warn('[margins365] founding schema', e)
+      }
+      try {
+        await ensureShopsSchema()
+      } catch (e) {
+        console.warn('[margins365] shops schema', e)
       }
     } else console.warn('[margins365] DATABASE_URL missing — auth API disabled')
     server.listen(port, '0.0.0.0', () => {

@@ -124,6 +124,34 @@ export async function migrate() {
     );
     CREATE INDEX IF NOT EXISTS founding_places_status_idx ON founding_places(status);
   `)
+  // K68 shops + seat invites (server SoT)
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS shops (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      name TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS shops_user_id_idx ON shops(user_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS shops_user_name_uidx
+      ON shops (user_id, lower(name));
+
+    CREATE TABLE IF NOT EXISTS seat_invites (
+      id TEXT PRIMARY KEY,
+      owner_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      email TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'accepted', 'revoked', 'expired')),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      expires_at TIMESTAMPTZ NOT NULL,
+      revoked_at TIMESTAMPTZ
+    );
+    CREATE INDEX IF NOT EXISTS seat_invites_owner_idx ON seat_invites(owner_user_id);
+    CREATE UNIQUE INDEX IF NOT EXISTS seat_invites_owner_email_pending_uidx
+      ON seat_invites (owner_user_id, lower(email))
+      WHERE status = 'pending';
+  `)
   return true
 }
 

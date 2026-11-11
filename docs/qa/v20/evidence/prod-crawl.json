@@ -1,0 +1,674 @@
+{
+  "meta": {
+    "origin": "https://margins365.com",
+    "whenLondon": "Wednesday, 11 November 2026 at 15:34:31 GMT",
+    "whenUtc": "2026-11-11T15:34:31.548Z",
+    "commitHint": "production DO ACTIVE after main 207716a"
+  },
+  "routes": {
+    "/": {
+      "status": 200,
+      "title": "Margins365 | True Profit &amp; Margin Leaks for Online Sellers",
+      "titleExpected": "Margins365 | True Profit & Margin Leaks for Online Sellers",
+      "titleMatch": false,
+      "description": "See your true profit across Shopify, Amazon and Etsy, and the margin leaks costing you money. 14-day free trial.",
+      "canonical": "https://margins365.com/",
+      "ogTitle": "Margins365 | True Profit &amp; Margin Leaks for Online Sellers",
+      "ogUrl": "https://margins365.com/",
+      "robots": "index, follow",
+      "h1Noscript": "Know your true profit and where it leaks",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1653
+    },
+    "/pricing": {
+      "status": 200,
+      "title": "Margins365 Pricing | Plans from £39/mo",
+      "titleExpected": "Margins365 Pricing | Plans from £39/mo",
+      "titleMatch": true,
+      "description": "Starter, Growth, Pro and Scale plans from £39 a month including VAT. 14-day free trial on every plan.",
+      "canonical": "https://margins365.com/pricing",
+      "ogTitle": "Margins365 Pricing | Plans from £39/mo",
+      "ogUrl": "https://margins365.com/pricing",
+      "robots": "index, follow",
+      "h1Noscript": "Margins365 plans — 14 days free on every tier",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1598
+    },
+    "/sample-shop": {
+      "status": 200,
+      "title": "Margins365 Sample Shop | See a Margin Diagnosis",
+      "titleExpected": "Margins365 Sample Shop | See a Margin Diagnosis",
+      "titleMatch": true,
+      "description": "Browse a sample Margins365 diagnosis: true profit, health score and ranked margin leaks.",
+      "canonical": "https://margins365.com/sample-shop",
+      "ogTitle": "Margins365 Sample Shop | See a Margin Diagnosis",
+      "ogUrl": "https://margins365.com/sample-shop",
+      "robots": "index, follow",
+      "h1Noscript": "Sample shop diagnosis",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1554
+    },
+    "/help": {
+      "status": 200,
+      "title": "Margins365 Help Centre | Limits, Billing &amp; Contact",
+      "titleExpected": "Margins365 Help Centre | Limits, Billing & Contact",
+      "titleMatch": false,
+      "description": "Hard limits &amp; billing FAQ, and a Contact us form for Margins365.",
+      "canonical": "https://margins365.com/help",
+      "ogTitle": "Margins365 Help Centre | Limits, Billing &amp; Contact",
+      "ogUrl": "https://margins365.com/help",
+      "robots": "index, follow",
+      "h1Noscript": "Help centre",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1484
+    },
+    "/legal/terms": {
+      "status": 200,
+      "title": "Margins365 Terms of Service",
+      "titleExpected": "Margins365 Terms of Service",
+      "titleMatch": true,
+      "description": "Terms of Service for Margins365 (v20).",
+      "canonical": "https://margins365.com/legal/terms",
+      "ogTitle": "Margins365 Terms of Service",
+      "ogUrl": "https://margins365.com/legal/terms",
+      "robots": "index, follow",
+      "h1Noscript": "Terms of Service",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1359
+    },
+    "/legal/privacy": {
+      "status": 200,
+      "title": "Margins365 Privacy Policy",
+      "titleExpected": "Margins365 Privacy Policy",
+      "titleMatch": true,
+      "description": "Privacy Policy for Margins365 (v20).",
+      "canonical": "https://margins365.com/legal/privacy",
+      "ogTitle": "Margins365 Privacy Policy",
+      "ogUrl": "https://margins365.com/legal/privacy",
+      "robots": "index, follow",
+      "h1Noscript": "Privacy Policy",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1351
+    },
+    "/legal/refunds-and-cancellation": {
+      "status": 200,
+      "title": "Margins365 Refunds &amp; Cancellation",
+      "titleExpected": "Margins365 Refunds & Cancellation",
+      "titleMatch": false,
+      "description": "Refunds and cancellation policy for Margins365 (v20).",
+      "canonical": "https://margins365.com/legal/refunds-and-cancellation",
+      "ogTitle": "Margins365 Refunds &amp; Cancellation",
+      "ogUrl": "https://margins365.com/legal/refunds-and-cancellation",
+      "robots": "index, follow",
+      "h1Noscript": "Refunds &amp; cancellation",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1472
+    },
+    "/legal/dpa": {
+      "status": 200,
+      "title": "Margins365 DPA &amp; Subprocessors",
+      "titleExpected": "Margins365 DPA & Subprocessors",
+      "titleMatch": false,
+      "description": "Data Processing Agreement and subprocessors for Margins365 (v20).",
+      "canonical": "https://margins365.com/legal/dpa",
+      "ogTitle": "Margins365 DPA &amp; Subprocessors",
+      "ogUrl": "https://margins365.com/legal/dpa",
+      "robots": "index, follow",
+      "h1Noscript": "DPA &amp; subprocessors",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1457
+    },
+    "/legal/cookies": {
+      "status": 200,
+      "title": "Margins365 Cookie Notice",
+      "titleExpected": "Margins365 Cookie Notice",
+      "titleMatch": true,
+      "description": "Cookie notice for Margins365 (v20.1).",
+      "canonical": "https://margins365.com/legal/cookies",
+      "ogTitle": "Margins365 Cookie Notice",
+      "ogUrl": "https://margins365.com/legal/cookies",
+      "robots": "index, follow",
+      "h1Noscript": "Cookie notice",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1351
+    },
+    "/etsy-profit-calculator-uk": {
+      "status": 200,
+      "title": "Etsy Profit Calculator UK | Margins365",
+      "titleExpected": "Etsy Profit Calculator UK | Margins365",
+      "titleMatch": true,
+      "description": "Free Etsy UK profit calculator — fees, shipping and returns. Values stay in your browser.",
+      "canonical": "https://margins365.com/etsy-profit-calculator-uk",
+      "ogTitle": "Etsy Profit Calculator UK | Margins365",
+      "ogUrl": "https://margins365.com/etsy-profit-calculator-uk",
+      "robots": "index, follow",
+      "h1Noscript": "Etsy profit calculator (UK)",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1579
+    },
+    "/amazon-fee-calculator-uk": {
+      "status": 200,
+      "title": "Amazon Fee Calculator UK | Margins365",
+      "titleExpected": "Amazon Fee Calculator UK | Margins365",
+      "titleMatch": true,
+      "description": "Free Amazon UK fee and profit calculator. Values stay in your browser.",
+      "canonical": "https://margins365.com/amazon-fee-calculator-uk",
+      "ogTitle": "Amazon Fee Calculator UK | Margins365",
+      "ogUrl": "https://margins365.com/amazon-fee-calculator-uk",
+      "robots": "index, follow",
+      "h1Noscript": "Amazon fee calculator (UK)",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1511
+    },
+    "/shopify-profit-calculator": {
+      "status": 200,
+      "title": "Shopify Profit Calculator | Margins365",
+      "titleExpected": "Shopify Profit Calculator | Margins365",
+      "titleMatch": true,
+      "description": "Free Shopify profit calculator after payment fees and costs.",
+      "canonical": "https://margins365.com/shopify-profit-calculator",
+      "ogTitle": "Shopify Profit Calculator | Margins365",
+      "ogUrl": "https://margins365.com/shopify-profit-calculator",
+      "robots": "index, follow",
+      "h1Noscript": "Shopify profit calculator",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1484
+    },
+    "/ecommerce-profit-margin-calculator": {
+      "status": 200,
+      "title": "Ecommerce Profit Margin Calculator | Margins365",
+      "titleExpected": "Ecommerce Profit Margin Calculator | Margins365",
+      "titleMatch": true,
+      "description": "Free ecommerce profit margin calculator for online sellers.",
+      "canonical": "https://margins365.com/ecommerce-profit-margin-calculator",
+      "ogTitle": "Ecommerce Profit Margin Calculator | Margins365",
+      "ogUrl": "https://margins365.com/ecommerce-profit-margin-calculator",
+      "robots": "index, follow",
+      "h1Noscript": "Ecommerce profit margin calculator",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1526
+    },
+    "/profit-leak-checklist": {
+      "status": 200,
+      "title": "Profit Leak Checklist | Margins365",
+      "titleExpected": "Profit Leak Checklist | Margins365",
+      "titleMatch": true,
+      "description": "Checklist to find where margin leaks for Shopify, Amazon and Etsy sellers.",
+      "canonical": "https://margins365.com/profit-leak-checklist",
+      "ogTitle": "Profit Leak Checklist | Margins365",
+      "ogUrl": "https://margins365.com/profit-leak-checklist",
+      "robots": "index, follow",
+      "h1Noscript": "Profit leak checklist for online sellers",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1525
+    },
+    "/multi-channel-profit": {
+      "status": 200,
+      "title": "Multi-Channel Profit | Margins365",
+      "titleExpected": "Multi-Channel Profit | Margins365",
+      "titleMatch": true,
+      "description": "True profit across Shopify, Amazon and Etsy from the CSVs you already download.",
+      "canonical": "https://margins365.com/multi-channel-profit",
+      "ogTitle": "Multi-Channel Profit | Margins365",
+      "ogUrl": "https://margins365.com/multi-channel-profit",
+      "robots": "index, follow",
+      "h1Noscript": "Multi-channel profit for Shopify, Amazon and Etsy",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1545
+    },
+    "/robots.txt": {
+      "status": 200,
+      "contentType": "text/plain; charset=utf-8",
+      "cacheControl": "public, max-age=3600",
+      "preview": "# Margins365 — K75\nUser-agent: *\nAllow: /\nDisallow: /app\nDisallow: /account\nDisallow: /welcome\nDisallow: /invite\nDisallow: /legal-pdfs/\n\nSitemap: https://margins365.com/sitemap.xml\n"
+    },
+    "/sitemap.xml": {
+      "status": 200,
+      "contentType": "application/octet-stream",
+      "cacheControl": "public, max-age=3600",
+      "preview": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url><loc>https://margins365.com/</loc></url>\n  <url><loc>https://margins365.com/sample-shop</loc></url>\n  <url><loc>https://margins365.com/pricing</loc></url>\n  <url><loc>https://margins365.com/help</loc></url>\n  <url><loc>https://margins365.com/legal/terms</loc></url>\n  <url><loc>https://margins365.com/legal/privacy</loc></url>\n  <url><loc>https://margins365.com/legal/refunds-and-cancellation<"
+    },
+    "/favicon.png": {
+      "status": 200,
+      "contentType": "image/png",
+      "cacheControl": "public, max-age=3600",
+      "preview": "[binary 965b]"
+    },
+    "/qa-unknown-path-should-404": {
+      "status": 404,
+      "title": "Page not found | Margins365",
+      "titleExpected": null,
+      "titleMatch": null,
+      "description": "That page is not on Margins365.",
+      "canonical": "https://margins365.com/qa-unknown-path-should-404",
+      "ogTitle": "Page not found | Margins365",
+      "ogUrl": "https://margins365.com/qa-unknown-path-should-404",
+      "robots": "noindex, nofollow",
+      "h1Noscript": "Page not found",
+      "aHrefCount": 0,
+      "aHrefsSample": [],
+      "brandBad": {
+        "margins365_space": false,
+        "marginos_brand": false,
+        "marginos_domain": false
+      },
+      "cacheControl": "no-cache",
+      "contentType": "text/html; charset=utf-8",
+      "securityHeaders": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      },
+      "bodyBytes": 1370
+    }
+  },
+  "apis": {
+    "/api/health": {
+      "status": 200,
+      "json": {
+        "ok": true,
+        "dbConfigured": true,
+        "stripeConfigured": true,
+        "sesConfigured": true,
+        "region": "eu-north-1"
+      }
+    },
+    "/api/founding": {
+      "status": 200,
+      "json": {
+        "ok": true,
+        "cap": 100,
+        "used": 0,
+        "sold": 0,
+        "placesLeft": 100,
+        "eligible": true
+      }
+    }
+  },
+  "redirects": {
+    "/sample-report": {
+      "status": 301,
+      "location": "/sample-shop"
+    },
+    "www.margins365.com": {
+      "status": 200,
+      "location": null,
+      "title": "Margins365 Pricing | Plans from £39/mo"
+    },
+    "marginos.online": {
+      "status": 301,
+      "location": "https://margins365.com/pricing",
+      "title": null
+    },
+    "www.marginos.online": {
+      "error": "write EPROTO C06C69D1587F0000:error:0A000410:SSL routines:ssl3_read_bytes:ssl/tls alert handshake failure:../deps/openssl/openssl/ssl/record/rec_layer_s3.c:918:SSL alert number 40\n"
+    }
+  },
+  "gaps": {
+    "G1": {
+      "status": "Pass",
+      "note": "Distinct titles per route; robots/sitemap 200; unknown path HTTP 404",
+      "tests": "NAV-10–20, ERR-01"
+    },
+    "G2": {
+      "status": "Blocked",
+      "note": "Scroll-to-top needs interactive browser evidence (computerUse)",
+      "tests": "NAV-21–27"
+    },
+    "G3": {
+      "status": "Blocked",
+      "note": "Shops/seats UI needs signed-in Scale/Pro account on staging",
+      "tests": "SHOP-, SEAT-"
+    },
+    "G4": {
+      "status": "Pass",
+      "note": "Legal + Help routes return 200 with distinct titles (footer targets exist). Client link wiring confirmed in browser suite.",
+      "tests": "FTR-, LEG-"
+    },
+    "G5": {
+      "status": "Blocked",
+      "note": "Footer copyright / removed sentence requires rendered DOM (computerUse)",
+      "tests": "FTR-02, FTR-03"
+    },
+    "G6": {
+      "status": "Pass",
+      "note": "home.title=Margins365 | True Profit &amp; Margin Leaks for Online Sellers; spaceBrand=false; marginOS=false",
+      "tests": "BR-*"
+    },
+    "G7": {
+      "status": "Blocked",
+      "note": "Server product SoT for uploads/shops/seats/cancel needs staging + admin. /api/health and /api/founding exist; shops still client-local.",
+      "tests": "SEC-, LIM-, SEAT-, DEL-"
+    },
+    "G8": {
+      "status": "Blocked",
+      "note": "Cancel Stripe round-trip needs signed-in staging + Stripe test mode",
+      "tests": "CAN-, CHK-"
+    },
+    "G9": {
+      "status": "Blocked",
+      "note": "Webhook free-plan reset needs Stripe test subscription cancel + DB read",
+      "tests": "CHK-30, DEL-*"
+    },
+    "G10": {
+      "status": "Fail",
+      "note": "Partial headers only: {\"hsts\":null,\"csp\":null,\"xfo\":null,\"nosniff\":\"nosniff\",\"referrer\":null}. Need HSTS, CSP, X-Frame-Options, Referrer-Policy on HTML.",
+      "tests": "SEC-20–24"
+    },
+    "G11": {
+      "status": "Pass",
+      "note": "founding API {\"ok\":true,\"cap\":100,\"used\":0,\"sold\":0,\"placesLeft\":100,\"eligible\":true} — founding UI still needs browser check",
+      "tests": "OFF-*, CALC-20"
+    },
+    "G12": {
+      "status": "Pass",
+      "note": "Cookie notice route status=200 title=Margins365 Cookie Notice",
+      "tests": "LEG-30–33, PRIV-10"
+    },
+    "G13": {
+      "status": "Pass",
+      "note": "canonical=https://margins365.com/; og=Margins365 | True Profit &amp; Margin Leaks for Online Sellers; robots=200; sitemap=200; 404=404",
+      "tests": "SEO-*"
+    }
+  },
+  "defects": [
+    {
+      "id": "DEF-SEC-001",
+      "priority": "P1",
+      "title": "HTML responses missing full security header set (HSTS/CSP/XFO/Referrer)",
+      "test": "G10 / SEC-20–24",
+      "actual": {
+        "hsts": null,
+        "csp": null,
+        "xfo": null,
+        "nosniff": "nosniff",
+        "referrer": null
+      }
+    }
+  ],
+  "suiteSummary": {
+    "PUB": {
+      "status": "Partial",
+      "note": "Public routes HTTP-checked; interactive link inventory + signed-in variants Blocked without accounts"
+    },
+    "SEO": {
+      "status": "Partial",
+      "note": "Server meta/robots/sitemap/404 checked; CWV/Search Console/JSON-LD still open"
+    },
+    "DOM": {
+      "status": "Partial",
+      "note": "{\"/sample-report\":{\"status\":301,\"location\":\"/sample-shop\"},\"www.margins365.com\":{\"status\":200,\"location\":null,\"title\":\"Margins365 Pricing | Plans from £39/mo\"},\"marginos.online\":{\"status\":301,\"location\":\"https://margins365.com/pricing\",\"title\":null},\"www.marginos.online\":{\"error\":\"write EPROTO C06C69D1587F0000:error:0A000410:SSL routines:ssl3_read_bytes:ssl/tls alert handshake failure:../deps/openssl/openssl/ssl/record/rec_layer_s3.c:918:SSL alert number 40\\n\"}}"
+    },
+    "OFF": {
+      "status": "Partial",
+      "note": "Counter API live; Stripe coupon/reservation E2E Blocked without test mode admin"
+    },
+    "LEG": {
+      "status": "Partial",
+      "note": "Legal HTML routes 200; PDF download + content accuracy need browser/PDF review"
+    },
+    "PCALC": {
+      "status": "Partial",
+      "note": "Calculator URLs live; PCALC figure parity vs product module needs interactive run"
+    },
+    "CONS": {
+      "status": "Blocked",
+      "note": "Needs browser for banner Accept/Reject/GPC"
+    },
+    "AUTH": {
+      "status": "Blocked",
+      "note": "Needs staging test accounts §5.1"
+    },
+    "CHK": {
+      "status": "Blocked",
+      "note": "Needs Stripe test mode + clocks"
+    },
+    "SHOP": {
+      "status": "Blocked",
+      "note": "Needs Scale owner account"
+    },
+    "SEAT": {
+      "status": "Blocked",
+      "note": "Needs Pro/Scale with invites"
+    },
+    "CAN": {
+      "status": "Blocked",
+      "note": "Needs trialing account"
+    },
+    "EML": {
+      "status": "Blocked",
+      "note": "Needs SES test inboxes + headers"
+    },
+    "SEC": {
+      "status": "Partial",
+      "note": "Header crawl done; isolation Blocked"
+    }
+  }
+}

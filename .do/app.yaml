@@ -56,3 +56,6 @@ domains:
     type: ALIAS
   - domain: marginos.online
     type: ALIAS
+  # DEF-DOM-001 — TLS + redirect for legacy www (cert issued by App Platform)
+  - domain: www.marginos.online
+    type: ALIAS
