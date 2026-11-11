@@ -4,7 +4,7 @@
  * K87 — FAQPage JSON-LD + noscript FAQ from the single Hard limits source.
  */
 
-import { HARD_LIMITS_FAQ, faqPageJsonLd } from '../src/content/hard-limits-faq.mjs'
+import { HARD_LIMITS_FAQ, faqPageJsonLd } from './hard-limits-faq.mjs'
 
 const CANONICAL = 'https://margins365.com'
 

@@ -6,7 +6,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const dir = dirname(fileURLToPath(import.meta.url))
-const data = JSON.parse(readFileSync(join(dir, 'hard-limits-faq.json'), 'utf8'))
+const data = JSON.parse(readFileSync(join(dir, '../src/content/hard-limits-faq.json'), 'utf8'))
 
 export const HARD_LIMITS_FAQ = data.HARD_LIMITS_FAQ
 export const HARD_LIMITS_FAQ_GROUPS = data.HARD_LIMITS_FAQ_GROUPS
