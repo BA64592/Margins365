@@ -279,7 +279,7 @@ export function SettingsBar() {
             ? `Access: ${access}${plan && plan !== 'none' ? ` · Plan: ${plan}` : ''}${
                 entitlementPlan ? ` · Features: ${entitlementPlan}` : ''
               }`
-            : 'Start a 14-day free trial on any plan. Cancel before day 14 and pay nothing.'}
+            : 'Start a 14-day free trial on any plan. Cancel before your trial ends (date shown at Checkout and in Plan & billing) and pay nothing.'}
         </p>
         <p className="mb-3 text-xs font-medium text-ink">{usageLine}</p>
         <div className="mb-3 flex flex-wrap gap-2">

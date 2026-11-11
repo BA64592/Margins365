@@ -284,7 +284,7 @@ export function HomePage() {
                 {TRIAL_DAYS} days free on every plan
               </h2>
               <p className="mt-3 max-w-xl text-base text-white/75">
-                Cancel before day {TRIAL_DAYS} and pay nothing. Your trial includes the plan you choose —
+                Cancel before your trial ends (date shown at Checkout and in Plan & billing) and pay nothing. Your trial includes the plan you choose —
                 its features and order limit. Same charge date shown at checkout.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">

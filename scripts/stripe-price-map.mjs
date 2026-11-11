@@ -45,3 +45,26 @@ export function normalizeInterval(interval) {
   const iv = String(interval || 'month').toLowerCase()
   return INTERVALS.has(iv) ? iv : 'month'
 }
+
+/** Reverse lookup Stripe Price ID → { planId, interval } using env map. */
+export function planFromPriceId(priceId) {
+  const id = String(priceId || '')
+  if (!id) return null
+  for (const plan of PLAN_IDS) {
+    for (const iv of ['month', 'year']) {
+      const key = `STRIPE_PRICE_${plan.toUpperCase()}_${iv === 'year' ? 'YEAR' : 'MONTH'}`
+      if (process.env[key] && process.env[key] === id) {
+        return { planId: plan, interval: iv }
+      }
+    }
+  }
+  if (
+    id === process.env.STRIPE_PRICE_FULL ||
+    id === process.env.STRIPE_PRICE_EARLY_BIRD
+  ) {
+    return { planId: 'pro', interval: 'month' }
+  }
+  return null
+}
+
+export const PLAN_RANK = { starter: 1, growth: 2, pro: 3, scale: 4 }

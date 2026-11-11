@@ -38,6 +38,7 @@ import {
 import {
   ensureBillingSchema,
   handleBillingCancel,
+  handleBillingChangePlan,
   handleBillingResubscribe,
   handleTrialStatus,
 } from './billing-handlers.mjs'
@@ -407,6 +408,19 @@ const server = http.createServer(async (req, res) => {
     }
     if (req.method === 'POST' && url === '/api/billing/resubscribe') {
       const result = await handleBillingResubscribe(req)
+      json(res, result.status, result.body)
+      return
+    }
+    // K93 / GA-08 — change plan (upgrade now / downgrade or interval at renewal)
+    if (req.method === 'POST' && url === '/api/billing/change-plan') {
+      let body = {}
+      try {
+        body = await parseJson(req)
+      } catch {
+        json(res, 400, { ok: false, message: 'Invalid JSON' })
+        return
+      }
+      const result = await handleBillingChangePlan(req, body)
       json(res, result.status, result.body)
       return
     }

@@ -18,9 +18,11 @@
 | ID | Decision | Status |
 | --- | --- | --- |
 | K91 | Pause live sign-ups / live-mode trials | **Rejected** — do not pause |
-| K92 | Stripe customer emails as stop-gap | Awaiting answer |
-| K93 | Plan-change confirmation email | Awaiting answer |
-| K94 | Self-serve “Delete my account now” | Awaiting answer (pack recommends not at launch) |
+| K92 | Stripe customer emails as stop-gap | **Yes — Live only** (saved 11 Nov 2026). **Test mode not mirrored** — do not expect Stripe receipt / fail / trial-ending / renewal mails in Test. See `docs/v20.1/K92-STRIPE-CUSTOMER-EMAILS.md`. |
+| K93 | Plan-change confirmation email | **Yes** — SES after Stripe confirms (`POST /api/billing/change-plan`). Built, awaiting QA. |
+| K94 | Self-serve “Delete my account now” | **Not at launch** — privacy contact + admin |
+
+**QA note (K92):** Stripe’s own customer emails are Live-only by Akthar. E2E in Stripe **Test** still covers app SES (cancel, trial-start, plan-change) and Stripe Dashboard behaviour; skip asserting Stripe Dashboard “Customer emails” delivery in Test.
 
 ## GAP P0 — engineering status (code vs live QA)
 

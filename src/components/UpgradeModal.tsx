@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { en } from '../i18n/en'
 import { PRODUCT_NAME } from '../lib/brand'
@@ -49,6 +49,10 @@ const BUYER_COUNTRY_OPTIONS = [...ALLOWED_BUYER_COUNTRIES].sort((a, b) =>
   (BUYER_COUNTRY_LABELS[a] ?? a).localeCompare(BUYER_COUNTRY_LABELS[b] ?? b),
 )
 
+function isPlanId(v: string | null | undefined): v is PlanId {
+  return Boolean(v && PLAN_ORDER.includes(v as PlanId))
+}
+
 export function UpgradeModal() {
   const {
     upgradeOpen,
@@ -56,19 +60,33 @@ export function UpgradeModal() {
     unlockProDemo,
     user,
     access,
+    plan,
+    billingInterval,
     foundingLeft,
     paymentPending,
     setPaymentPending,
     failDelayedPayment,
   } = useApp()
+  const changing = hasPaidAccess(access)
   const [country, setCountry] = useState('GB')
   const [interval, setInterval] = useState<BillingInterval>('month')
   const [selected, setSelected] = useState<PlanId>('growth')
   const [message, setMessage] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (!upgradeOpen) return
+    setMessage(null)
+    setBusy(false)
+    if (changing) {
+      if (isPlanId(plan)) setSelected(plan)
+      if (billingInterval === 'year' || billingInterval === 'month') setInterval(billingInterval)
+    }
+  }, [upgradeOpen, changing, plan, billingInterval])
 
   const chargeHint = useMemo(() => trialChargeDateLabel(), [])
   const entitlement = trialEntitlementFor(selected)
-  const showFounding = foundingLeft > 0
+  const showFounding = !changing && foundingLeft > 0
   const normalPrice =
     interval === 'year' ? PLANS[selected].annualGbp : PLANS[selected].monthlyGbp
   const foundingPrice =
@@ -78,13 +96,55 @@ export function UpgradeModal() {
   const price = showFounding ? foundingPrice : normalPrice
   const foundingLine = foundingOfferLine(foundingLeft)
 
+  const changePlan = async () => {
+    if (busy) return
+    setBusy(true)
+    setMessage(null)
+    try {
+      const res = await fetch('/api/billing/change-plan', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId: selected, interval }),
+      })
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        message?: string
+      }
+      if (!res.ok || !data.ok) {
+        setMessage(data.message || 'We couldn’t change your plan. Nothing has changed. Please try again.')
+        return
+      }
+      setMessage(data.message || 'Plan updated.')
+      window.setTimeout(() => {
+        window.location.reload()
+      }, 1200)
+    } catch {
+      setMessage('We couldn’t change your plan. Nothing has changed. Please try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
-    <Modal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} title={`${PRODUCT_NAME} plans`}>
-      <p className="mb-3 text-sm text-subtle">
-        {PRIMARY_TRIAL_CTA}. You pay nothing today. Cancel any time before {chargeHint} in Plan &amp;
-        billing — it takes one click.
-      </p>
-      {foundingLine ? (
+    <Modal
+      open={upgradeOpen}
+      onClose={() => setUpgradeOpen(false)}
+      title={changing ? `Change your ${PRODUCT_NAME} plan` : `${PRODUCT_NAME} plans`}
+    >
+      {changing ? (
+        <p className="mb-3 text-sm text-subtle">
+          Upgrades apply immediately (prorated when you are past trial). Downgrades and billing-interval
+          changes take effect at renewal. During a trial, any plan change is immediate with no charge
+          today — your trial end date stays the same.
+        </p>
+      ) : (
+        <p className="mb-3 text-sm text-subtle">
+          {PRIMARY_TRIAL_CTA}. You pay nothing today. Cancel any time before {chargeHint} in Plan &amp;
+          billing — it takes one click.
+        </p>
+      )}
+      {foundingLine && !changing ? (
         <p className="mb-3 rounded-[10px] border border-accent/30 bg-accent-soft/40 px-3 py-2 text-sm text-ink">
           {foundingLine}
         </p>
@@ -151,76 +211,91 @@ export function UpgradeModal() {
         })}
       </div>
 
-      {/* K69 + K72 checkout disclosure — trial of chosen plan (+ founding when places remain) */}
-      <div className="mb-4 rounded-[12px] border border-border bg-muted/60 p-3 text-sm leading-relaxed text-ink">
-        <p>
-          Your {TRIAL_DAYS}-day free trial of <strong>{PLANS[selected].name}</strong> starts today.
-          We’ll ask for a card now so your plan can continue after the trial. You pay nothing today.
-          Unless you cancel, we will automatically charge {formatGbp(price)} including VAT on{' '}
-          {chargeHint}
-          {showFounding
-            ? interval === 'year'
-              ? ` (founding 25% off year 1; then ${formatGbp(normalPrice)}/year)`
-              : ` (founding 50% off for ${FOUNDING_MONTHS} months; then ${formatGbp(normalPrice)}/month)`
-            : ''}{' '}
-          for your {interval === 'year' ? 'annual' : 'monthly'} {PLANS[selected].name} plan. Cancel any
-          time before {chargeHint} in Plan &amp; billing — it takes one click. We’ll email you a reminder
-          before you’re charged.
-        </p>
-        <p className="mt-2 text-subtle">There is no email cancellation route.</p>
-      </div>
+      {changing ? (
+        <div className="mb-4 rounded-[12px] border border-border bg-muted/60 p-3 text-sm leading-relaxed text-ink">
+          <p>
+            Selected: <strong>{PLANS[selected].name}</strong> (
+            {interval === 'year' ? 'annual' : 'monthly'}) at {formatGbp(normalPrice)} including VAT.
+            We’ll confirm the change in Stripe, then email you the old plan, new plan, effective date,
+            price in pence, proration and new order limit.
+          </p>
+        </div>
+      ) : (
+        <div className="mb-4 rounded-[12px] border border-border bg-muted/60 p-3 text-sm leading-relaxed text-ink">
+          <p>
+            Your {TRIAL_DAYS}-day free trial of <strong>{PLANS[selected].name}</strong> starts today.
+            We’ll ask for a card now so your plan can continue after the trial. You pay nothing today.
+            Unless you cancel, we will automatically charge {formatGbp(price)} including VAT on{' '}
+            {chargeHint}
+            {showFounding
+              ? interval === 'year'
+                ? ` (founding 25% off year 1; then ${formatGbp(normalPrice)}/year)`
+                : ` (founding 50% off for ${FOUNDING_MONTHS} months; then ${formatGbp(normalPrice)}/month)`
+              : ''}{' '}
+            for your {interval === 'year' ? 'annual' : 'monthly'} {PLANS[selected].name} plan. Cancel any
+            time before {chargeHint} in Plan &amp; billing — it takes one click. We’ll email you a reminder
+            before you’re charged.
+          </p>
+          <p className="mt-2 text-subtle">There is no email cancellation route.</p>
+        </div>
+      )}
 
-      <ul className="mb-4 space-y-1.5 text-sm text-ink">
-        {[
-          `${PLANS[entitlement].name} features and order limit for ${TRIAL_DAYS} days`,
-          'True profit, Health Score, six leaks with £ impact',
-          'TikTok Shop UK (Beta): Excel import coming soon',
-        ].map((p) => (
-          <li key={p} className="flex items-start gap-2">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-            {p}
-          </li>
-        ))}
-      </ul>
-
-      <label className="mb-3 block text-sm">
-        <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-subtle">
-          Billing country
-        </span>
-        <select
-          className="min-h-11 w-full rounded-[10px] border border-border bg-elevated px-3 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-[var(--ring)]"
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-        >
-          {BUYER_COUNTRY_OPTIONS.map((code) => (
-            <option key={code} value={code}>
-              {BUYER_COUNTRY_LABELS[code] ?? code}
-            </option>
+      {!changing ? (
+        <ul className="mb-4 space-y-1.5 text-sm text-ink">
+          {[
+            `${PLANS[entitlement].name} features and order limit for ${TRIAL_DAYS} days`,
+            'True profit, Health Score, six leaks with £ impact',
+            'TikTok Shop UK (Beta): Excel import coming soon',
+          ].map((p) => (
+            <li key={p} className="flex items-start gap-2">
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+              {p}
+            </li>
           ))}
-        </select>
-        {!ALLOWED_BUYER_COUNTRIES.has(country.toUpperCase()) ? (
-          <span className="mt-1 block text-xs text-danger">{en.countryBlocked}</span>
-        ) : null}
-      </label>
+        </ul>
+      ) : null}
+
+      {!changing ? (
+        <label className="mb-3 block text-sm">
+          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-subtle">
+            Billing country
+          </span>
+          <select
+            className="min-h-11 w-full rounded-[10px] border border-border bg-elevated px-3 text-sm text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-[var(--ring)]"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+          >
+            {BUYER_COUNTRY_OPTIONS.map((code) => (
+              <option key={code} value={code}>
+                {BUYER_COUNTRY_LABELS[code] ?? code}
+              </option>
+            ))}
+          </select>
+          {!ALLOWED_BUYER_COUNTRIES.has(country.toUpperCase()) ? (
+            <span className="mt-1 block text-xs text-danger">{en.countryBlocked}</span>
+          ) : null}
+        </label>
+      ) : null}
 
       {message ? <p className="mb-3 text-sm text-subtle">{message}</p> : null}
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button
           className="flex-1"
+          disabled={busy}
           onClick={() => {
             if (!user) {
               setMessage('Sign in with a verified email first.')
               return
             }
-            if (hasPaidAccess(access)) {
-              setMessage(en.alreadySubscribed)
+            if (changing) {
+              void changePlan()
               return
             }
             void unlockProDemo(country, selected, interval).then((res) => setMessage(res.message))
           }}
         >
-          {PRIMARY_TRIAL_CTA}
+          {changing ? (busy ? 'Updating…' : `Change to ${PLANS[selected].name}`) : PRIMARY_TRIAL_CTA}
         </Button>
         <Button variant="secondary" className="flex-1" onClick={() => setUpgradeOpen(false)}>
           Not now

@@ -1,27 +1,46 @@
-# v20.1 — K88 / K89 / K90 implementation
+# v20.1 — K88 / K89 / K90 / K92 / K93
 
-**Pack:** Changes/Spec/SEO v20.1 (11 Nov 2026, 20:55 Europe/London).  
-**K91–K94:** proposed only — **not implemented** (await Akthar).
+**Pack:** Changes/Spec/SEO/Dev Answers v20.1 (11 Nov 2026).  
+**K91–K94:** decided — see `DECISIONS-K91-K94.md`.
 
-## Shipped
+## Decisions (Akthar)
+
+| ID | Decision |
+| --- | --- |
+| K91 | **No pause** on live trials. Prioritise GA-01 cancel → Stripe. |
+| K92 | **Yes** — Stripe customer emails stop-gap (ops). See `K92-STRIPE-CUSTOMER-EMAILS.md`. |
+| K93 | **Yes** — SES plan-change confirmation. See `K93-PLAN-CHANGE.md`. |
+| K94 | **Not at launch** — early delete via privacy + admin. |
+
+## Shipped (label: Built, awaiting QA until evidence)
 
 ### K88 — Contact reply wording
 - Help form intro, success line, pop-up body, and visitor SES confirmation use:  
   “Thank you for contacting us, we aim to respond within 24 hours.”
-- Removed “can’t / don’t promise a reply time” from the contact flow (Suggest a feature keeps its own line).
+- Visitor confirmation does **not** include their message text.
 
 ### K89 — Real Stripe cancel
-- `POST /api/billing/cancel` — owner session → Stripe `cancel_at_period_end: true` + idempotency key → re-read subscription → upcoming-invoice check (trials) → store `canceled_access` + reference → SES email → confirmation pop-up.
-- Failure never flips local cancel state; shows Try again pop-up.
-- `POST /api/billing/resubscribe` — clears `cancel_at_period_end` before access ends.
-- Plan & billing shows Cancelled status + Keep my plan.
-- Webhook sync maps `cancel_at_period_end` → `licence_state = canceled_access`.
+- `POST /api/billing/cancel` — Stripe `cancel_at_period_end` + SES + confirmation pop-up.
+- `POST /api/billing/resubscribe` — clears scheduled cancel before access ends.
 
 ### K90 — Trial-start email + pop-up
-- SES trial-start email once per subscription after Stripe shows `trialing` (Checkout completed / subscription created|updated).
-- Checkout `?checkout=success` polls `GET /api/billing/trial-status` up to 30s; pop-up only after server confirm (or “still confirming” waiting copy).
+- SES once per subscription after Stripe `trialing`; Checkout polls `GET /api/billing/trial-status`.
+
+### K92 — Stripe customer emails (ops only)
+- **Live enabled** (11 Nov 2026): receipts, unpaid-invoice reminders, 7-day trial-ending, renewals, card-fail emails. See `K92-STRIPE-CUSTOMER-EMAILS.md`.
+- **Test mode not mirrored** — QA: do not expect Stripe customer emails in Test for K92.
+- Does **not** replace GA-18 (our 3-day reminder).
+
+### K93 / GA-08 — Change plan
+- `POST /api/billing/change-plan` + UpgradeModal “Change plan” path.
+- Upgrade / trial: immediate. Paid downgrade & interval: subscription schedule at renewal.
+- SES includes old/new plan, effective date, price in pence, proration, order limit.
+
+### GA-55 — Trial cancel wording
+- Replaced “Cancel before day 14 and pay nothing” with  
+  “Cancel before your trial ends (date shown at Checkout and in Plan & billing)”.
 
 ## Ops still needed
-- Stripe Dashboard: ensure webhooks include `customer.subscription.created` / `updated` / `deleted` and `checkout.session.completed`.
-- Decide **K91–K94** (pause live trials, Stripe customer emails stop-gap, plan-change email, early delete).
-- Remaining gap-audit P0s beyond K88–K90 (shops data SoT, upload limits, etc.).
+- Stripe Dashboard: webhooks + **K92** customer emails.
+- QA evidence for GA-01/02/17/21/28/29/32 (and K93) before marking **Fixed**.
+- Remaining P0/P1 gap-audit items.

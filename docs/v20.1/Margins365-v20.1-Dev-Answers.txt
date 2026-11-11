@@ -1,0 +1,62 @@
+Margins365 v20.1: Answers to Developer Questions
+11 November 2026
+Purpose
+Answers to the open questions on the v20.1 P0/P1 gap list. Source of truth: Margins365-v20.1-
+Changes and Spec v20.1.
+Decisions (approved by Akthar, 11 Nov 2026)
+Item Question Decision Status
+K91
+Pause live sign-ups and 
+real trials until all P0 
+gaps are fixed?
+No pause. Live trials stay open. Because cancel does not 
+reach Stripe yet, GA-01 (cancel through Stripe) is the first 
+P0 to ship. Until it does, check any cancellation request by 
+hand in the Stripe Dashboard.
+Decided
+K92
+Turn on Stripe's own 
+customer emails as a 
+stop-gap?
+Yes. Turn on receipts, failed-payment and trial-ending 
+emails until our SES emails are built. Note that Stripe's trial-
+ending email goes 7 days before the end, not 3. Our own 3-
+day reminder (GA-18) is still required.
+Approved
+K93
+Send a confirmation 
+email when someone 
+changes plan?
+Yes. Send it via SES after Stripe confirms the change. 
+Include the old plan, the new plan, the effective date, the 
+new price in pence including VAT, the proration and the 
+new order limit.
+Approved
+K94
+Add a self-serve "Delete 
+my account now" 
+button at launch?
+Not at launch. Cancelling already wipes data at the end of 
+access. Handle early deletion requests through the privacy 
+contact with an admin tool, within the GDPR one-month 
+deadline.
+Approved
+Answers from existing policy (no decision needed)
+• Status labels: GA-01, GA-02, GA-17, GA-21, GA-28, GA-29 and GA-32 are only "Fixed" once 
+QA has passed them with evidence. That means Stripe test-mode dashboard checks, a 
+received email and a second-device check. Until then, mark them "Built, awaiting QA". 
+• GA-32 SES production proven: this needs screenshots of production access, a verified 
+identity, DKIM and MAIL FROM, plus a test email received at a non-team address. 
+• GA-55: every "Cancel before day 14 and pay nothing" wording must go. Replace it with 
+"Cancel before your trial ends (date shown at Checkout and in Plan & billing)". 
+• GA-28: the contact pop-up, the line under the button and the visitor confirmation email must 
+read exactly "Thank you for contacting us, we aim to respond within 24 hours." The visitor's 
+confirmation must not include their message text. 
+• GA-40 to GA-44: product data must be stored on the server for each shop; the browser may 
+only cache it. Order limits are enforced on the server. Data is wiped at the end of access, with 
+backups cleared within 7 days, and the account then closes. The Privacy Policy wording only 
+becomes true once this is built. 
+• Release rule: no screen or email may show success unless the server, and Stripe where 
+money is involved, confirms it. 
+• Fix order: all P0s first, then the P1s, then a mobile re-test (GA-64). Release only when no P0 
+or P1 is open. 

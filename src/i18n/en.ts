@@ -6,7 +6,7 @@ export const en = {
   brand: PRODUCT_NAME,
   tagline: 'Find where your margin leaks and what each leak costs you.',
   positioning: `Plans from ${formatGbp(PLANS.starter.monthlyGbp)} a month, including VAT. Cancel any time.`,
-  trialLine: `Try any plan free for ${TRIAL_DAYS} days. Cancel before day ${TRIAL_DAYS} and pay nothing. Cancel in Plan & billing — one click.`,
+  trialLine: `Try any plan free for ${TRIAL_DAYS} days. Cancel before your trial ends (date shown at Checkout and in Plan & billing) and pay nothing. Cancel in Plan & billing — one click.`,
   proDataBenefit: 'Keep your data, saved datasets and history while subscribed',
   showTheMaths: 'Show the maths',
   hideTheMaths: 'Hide the maths',

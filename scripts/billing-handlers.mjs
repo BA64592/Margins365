@@ -1,12 +1,25 @@
 /**
- * K89 / K90 — server-backed cancel + trial-start email (Stripe + SES).
+ * K89 / K90 / K93 — cancel, trial-start email, plan-change (Stripe + SES).
  */
 import { randomBytes } from 'node:crypto'
 import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2'
 import Stripe from 'stripe'
 import { userFromRequest } from './auth-handlers.mjs'
 import { dbConfigured, query } from './db.mjs'
-import { normalizeInterval, normalizePlanId } from './stripe-price-map.mjs'
+import {
+  normalizeInterval,
+  normalizePlanId,
+  PLAN_RANK,
+  planFromPriceId,
+  priceIdForPlan,
+} from './stripe-price-map.mjs'
+
+const ORDER_LIMITS = { starter: 500, growth: 2000, pro: 5000, scale: 15000 }
+
+function planNameOf(planId) {
+  const id = normalizePlanId(planId) || 'pro'
+  return id.charAt(0).toUpperCase() + id.slice(1)
+}
 
 const APP_ORIGIN = (
   process.env.APP_ORIGIN ||
@@ -548,6 +561,321 @@ export async function maybeSendTrialStartEmail({ userId, email, subscription }) 
     reference,
     email,
     limit,
+  }
+}
+
+/**
+ * K93 / GA-08 — POST /api/billing/change-plan
+ * Body: { planId, interval }
+ * Trial / paid upgrade (same interval): immediate.
+ * Paid downgrade or interval change: at renewal via subscription schedule.
+ */
+export async function handleBillingChangePlan(req, body) {
+  if (!dbConfigured()) {
+    return { status: 503, body: { ok: false, message: 'Database is not configured.' } }
+  }
+  const user = await userFromRequest(req)
+  if (!user) return { status: 401, body: { ok: false, message: 'Sign in first.' } }
+  const client = stripe()
+  if (!client) return { status: 503, body: { ok: false, message: 'Stripe is not configured.' } }
+
+  const newPlanId = normalizePlanId(body?.planId)
+  const newInterval = normalizeInterval(body?.interval)
+  if (!newPlanId) {
+    return { status: 400, body: { ok: false, message: 'Choose a valid plan.' } }
+  }
+  const newPriceId = priceIdForPlan(newPlanId, newInterval)
+  if (!newPriceId) {
+    return {
+      status: 503,
+      body: {
+        ok: false,
+        message: `Stripe price not configured for ${newPlanId}/${newInterval}.`,
+      },
+    }
+  }
+
+  const ip = req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() || 'local'
+  const reference = `CHG-${randomBytes(4).toString('hex').toUpperCase()}`
+
+  let sub
+  try {
+    sub = await findSubscriptionForUser(client, user)
+  } catch (err) {
+    await audit(user.id, 'plan_change_failed', { detail: String(err), ip, reference })
+    return {
+      status: 502,
+      body: { ok: false, message: 'We couldn’t change your plan. Nothing has changed. Please try again.' },
+    }
+  }
+
+  if (!sub || !['trialing', 'active', 'past_due'].includes(sub.status)) {
+    return {
+      status: 409,
+      body: { ok: false, message: 'No active trial or subscription to change.', code: 'none' },
+    }
+  }
+  if (sub.cancel_at_period_end) {
+    return {
+      status: 409,
+      body: {
+        ok: false,
+        message: 'Keep your plan first (Resubscribe), then change plan.',
+        code: 'cancel_pending',
+      },
+    }
+  }
+
+  const item = sub.items?.data?.[0]
+  if (!item?.id || !item.price?.id) {
+    return { status: 502, body: { ok: false, message: 'Subscription item missing in Stripe.' } }
+  }
+
+  const oldFromPrice = planFromPriceId(item.price.id)
+  const oldPlanId =
+    normalizePlanId(sub.metadata?.margins365_plan || sub.metadata?.marginos_plan || user.plan) ||
+    oldFromPrice?.planId ||
+    'pro'
+  const oldInterval =
+    normalizeInterval(item.price?.recurring?.interval || user.billing_interval) ||
+    oldFromPrice?.interval ||
+    'month'
+
+  if (oldPlanId === newPlanId && oldInterval === newInterval) {
+    return {
+      status: 409,
+      body: { ok: false, message: 'You are already on that plan and billing interval.' },
+    }
+  }
+
+  const isTrial = sub.status === 'trialing'
+  const rankUp =
+    oldInterval === newInterval && (PLAN_RANK[newPlanId] || 0) > (PLAN_RANK[oldPlanId] || 0)
+  const immediate = isTrial || rankUp
+  const effectiveAt = immediate
+    ? new Date()
+    : sub.current_period_end
+      ? new Date(sub.current_period_end * 1000)
+      : new Date()
+
+  const metaBase = {
+    ...(sub.metadata || {}),
+    margins365_account_id: sub.metadata?.margins365_account_id || user.id,
+    margins365_plan: immediate ? newPlanId : oldPlanId,
+    margins365_interval: immediate ? newInterval : oldInterval,
+  }
+
+  let updated = sub
+  let prorationPence = 0
+  let prorationLabel = 'None'
+
+  try {
+    if (immediate) {
+      updated = await client.subscriptions.update(
+        sub.id,
+        {
+          items: [{ id: item.id, price: newPriceId }],
+          proration_behavior: isTrial ? 'none' : 'create_prorations',
+          metadata: {
+            ...metaBase,
+            margins365_plan: newPlanId,
+            margins365_interval: newInterval,
+            margins365_pending_plan: '',
+            margins365_pending_interval: '',
+          },
+          ...(isTrial && sub.trial_end ? { trial_end: sub.trial_end } : {}),
+        },
+        { idempotencyKey: `chg:${user.id}:${sub.id}:${newPlanId}:${newInterval}:${immediate}` },
+      )
+      if (!isTrial) {
+        try {
+          const upcoming = await client.invoices.retrieveUpcoming({
+            customer: String(updated.customer),
+            subscription: updated.id,
+          })
+          const lines = (upcoming.lines?.data || []).filter((l) => l.proration)
+          prorationPence = lines.reduce((sum, l) => sum + Number(l.amount || 0), 0)
+          if (prorationPence !== 0) {
+            prorationLabel = `${moneyFromStripe(prorationPence, upcoming.currency)} (prorated adjustment)`
+          }
+        } catch {
+          /* optional */
+        }
+      }
+    } else {
+      // Paid downgrade or interval change — apply at renewal via schedule
+      let scheduleId =
+        typeof sub.schedule === 'string' ? sub.schedule : sub.schedule?.id || null
+      if (!scheduleId) {
+        const created = await client.subscriptionSchedules.create({
+          from_subscription: sub.id,
+        })
+        scheduleId = created.id
+      }
+      const schedule = await client.subscriptionSchedules.retrieve(scheduleId)
+      const phase0 = schedule.phases[0]
+      const endDate = phase0.end_date || sub.current_period_end
+      const currentItems = (phase0.items || []).map((phItem) => ({
+        price: typeof phItem.price === 'string' ? phItem.price : phItem.price.id,
+        quantity: phItem.quantity || 1,
+      }))
+      await client.subscriptionSchedules.update(scheduleId, {
+        end_behavior: 'release',
+        phases: [
+          {
+            start_date: phase0.start_date,
+            end_date: endDate,
+            items: currentItems,
+            proration_behavior: 'none',
+          },
+          {
+            start_date: endDate,
+            items: [{ price: newPriceId, quantity: 1 }],
+            proration_behavior: 'none',
+            metadata: {
+              margins365_account_id: user.id,
+              margins365_plan: newPlanId,
+              margins365_interval: newInterval,
+              margins365_pending_plan: '',
+              margins365_pending_interval: '',
+            },
+          },
+        ],
+      })
+      updated = await client.subscriptions.update(sub.id, {
+        metadata: {
+          ...metaBase,
+          margins365_pending_plan: newPlanId,
+          margins365_pending_interval: newInterval,
+        },
+      })
+      prorationLabel = 'None — change takes effect at renewal (no charge today)'
+    }
+  } catch (err) {
+    await audit(user.id, 'plan_change_failed', {
+      planId: newPlanId,
+      subscriptionId: sub.id,
+      detail: String(err),
+      ip,
+      reference,
+    })
+    return {
+      status: 502,
+      body: {
+        ok: false,
+        message: 'We couldn’t change your plan. Nothing has changed. Please try again.',
+        code: 'stripe_update_failed',
+      },
+    }
+  }
+
+  const newPrice = await client.prices.retrieve(newPriceId)
+  const newPricePence = Number(newPrice.unit_amount || 0)
+  const newPriceLabel = moneyFromStripe(newPricePence, newPrice.currency)
+  const orderLimit = ORDER_LIMITS[newPlanId] || 500
+  const effectiveLabel = londonStamp(effectiveAt)
+  const oldName = planNameOf(oldPlanId)
+  const newName = planNameOf(newPlanId)
+
+  if (immediate) {
+    const licenceState = updated.status === 'trialing' ? 'trialing' : 'active'
+    await query(
+      `UPDATE users SET
+         plan = $2,
+         licence_state = $3,
+         billing_interval = $4,
+         stripe_subscription_id = $5,
+         updated_at = NOW()
+       WHERE id = $1`,
+      [user.id, newPlanId, licenceState, newInterval, updated.id],
+    )
+  }
+
+  await audit(user.id, immediate ? 'plan_changed' : 'plan_change_scheduled', {
+    planId: newPlanId,
+    subscriptionId: updated.id,
+    ip,
+    reference,
+    detail: JSON.stringify({
+      oldPlanId,
+      oldInterval,
+      newPlanId,
+      newInterval,
+      immediate,
+      effectiveAt: effectiveAt.toISOString(),
+      newPricePence,
+      prorationPence,
+      orderLimit,
+    }),
+  })
+
+  const timingLine = immediate
+    ? isTrial
+      ? 'Effective immediately. Your trial end date is unchanged — no charge today.'
+      : 'Effective immediately. Any prorated difference is shown below.'
+    : `Scheduled for ${effectiveLabel}. You keep ${oldName} until then.`
+
+  const subject = immediate
+    ? `Your Margins365 plan is now ${newName}`
+    : `Your Margins365 plan change is scheduled`
+  const text = [
+    `Plan change confirmation`,
+    ``,
+    `From: ${oldName} (${oldInterval === 'year' ? 'annual' : 'monthly'})`,
+    `To: ${newName} (${newInterval === 'year' ? 'annual' : 'monthly'})`,
+    `Effective: ${effectiveLabel}`,
+    `New price: ${newPricePence} pence including VAT (${newPriceLabel} / ${newInterval === 'year' ? 'year' : 'month'})`,
+    `Proration: ${prorationLabel}${prorationPence ? ` (${prorationPence} pence)` : ''}`,
+    `New order limit: ${orderLimit.toLocaleString('en-GB')} unique orders / month`,
+    timingLine,
+    `Reference: ${reference}`,
+    `Manage billing: ${ORIGIN_URL}/account/billing`,
+    ``,
+    '— Margins365',
+  ].join('\n')
+  const html = `<p><strong>Plan change confirmation</strong></p><ul><li>From: ${oldName} (${oldInterval === 'year' ? 'annual' : 'monthly'})</li><li>To: ${newName} (${newInterval === 'year' ? 'annual' : 'monthly'})</li><li>Effective: ${effectiveLabel}</li><li>New price: <strong>${newPricePence} pence</strong> including VAT (${newPriceLabel} / ${newInterval === 'year' ? 'year' : 'month'})</li><li>Proration: ${prorationLabel}${prorationPence ? ` (${prorationPence} pence)` : ''}</li><li>New order limit: ${orderLimit.toLocaleString('en-GB')} / month</li></ul><p>${timingLine}</p><p>Reference: <strong>${reference}</strong></p><p><a href="${ORIGIN_URL}/account/billing">Plan &amp; billing</a></p><p>— Margins365</p>`
+
+  const mail = await sendMail(user.email, subject, text, html, CONTACT_INBOX)
+  if (!mail.ok) {
+    await audit(user.id, 'plan_change_email_failed', {
+      planId: newPlanId,
+      subscriptionId: updated.id,
+      detail: mail.message,
+      reference,
+      ip,
+    })
+  } else {
+    await audit(user.id, 'plan_change_email_sent', {
+      planId: newPlanId,
+      subscriptionId: updated.id,
+      reference,
+      ip,
+    })
+  }
+
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      immediate,
+      oldPlanId,
+      newPlanId,
+      oldInterval,
+      newInterval,
+      effectiveAt: effectiveAt.toISOString(),
+      effectiveLabel,
+      newPricePence,
+      newPriceLabel,
+      prorationPence,
+      prorationLabel,
+      orderLimit,
+      reference,
+      emailSent: Boolean(mail.ok),
+      title: subject,
+      message: immediate
+        ? `You’re now on ${newName}. ${timingLine}${mail.ok ? ` We’ve emailed ${user.email}.` : ''}`
+        : `Your change to ${newName} is scheduled for ${effectiveLabel}. ${mail.ok ? `We’ve emailed ${user.email}.` : ''}`,
+    },
   }
 }
 

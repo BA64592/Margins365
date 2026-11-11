@@ -14,6 +14,7 @@ import {
 import {
   normalizeInterval,
   normalizePlanId,
+  planFromPriceId,
   priceIdForPlan,
   stripeTierConfigured,
 } from './stripe-price-map.mjs'
@@ -362,8 +363,13 @@ export async function handleStripeWebhook(rawBody, signature) {
       const sub = event.data.object
       const accountId =
         sub.metadata?.margins365_account_id || sub.metadata?.marginos_account_id || ''
+      const priceId = sub.items?.data?.[0]?.price?.id
+      const fromPrice = planFromPriceId(typeof priceId === 'string' ? priceId : priceId?.id)
+      // Prefer live Stripe price (K93 scheduled changes) over stale metadata
       const planId =
-        normalizePlanId(sub.metadata?.margins365_plan || sub.metadata?.marginos_plan) || 'pro'
+        fromPrice?.planId ||
+        normalizePlanId(sub.metadata?.margins365_plan || sub.metadata?.marginos_plan) ||
+        'pro'
       const status = sub.status
       let licenceState =
         status === 'trialing'
@@ -377,7 +383,9 @@ export async function handleStripeWebhook(rawBody, signature) {
       if (sub.cancel_at_period_end && (status === 'trialing' || status === 'active')) {
         licenceState = 'canceled_access'
       }
-      const billingInterval = normalizeInterval(sub.items?.data?.[0]?.price?.recurring?.interval)
+      const billingInterval =
+        fromPrice?.interval ||
+        normalizeInterval(sub.items?.data?.[0]?.price?.recurring?.interval)
       if (accountId) {
         await setUserPlan(accountId, planId, licenceState, billingInterval)
         if (dbConfigured()) {
