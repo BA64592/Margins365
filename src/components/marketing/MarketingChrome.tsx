@@ -7,7 +7,6 @@ import type { AppRoute } from '../../lib/routes'
 import { AccountMenu } from '../AccountMenu'
 import { BrandLockup } from '../BrandMark'
 import { Button } from '../ui'
-import { StickyOfferBanner } from './StickyOfferBanner'
 
 const NAV: { id: AppRoute; label: string }[] = [
   { id: 'home', label: 'Home' },
@@ -54,7 +53,6 @@ export function MarketingChrome({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-bg text-ink">
       <div className="sticky top-0 z-50">
-        <StickyOfferBanner showCta={false} />
         <header className="border-b border-border/70 bg-bg/85 backdrop-blur-xl">
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
             <a href="/" onClick={(e) => { e.preventDefault(); setRoute('home') }} aria-label={PRODUCT_NAME}>

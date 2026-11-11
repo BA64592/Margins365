@@ -178,9 +178,10 @@ async function mintVerification(userId, origin) {
     `INSERT INTO verification_tokens (token, user_id, expires_at) VALUES ($1, $2, $3)`,
     [token, userId, expires.toISOString()],
   )
-  const base = origin || process.env.APP_ORIGIN || 'https://margins365.com'
+  // Prefer fixed APP_ORIGIN (K85 / K73) — never trust a browser-supplied host for email links
+  const base = process.env.APP_ORIGIN || origin || 'https://margins365.com'
   // Hit the API so verify works without SPA JS; cookie is set then redirect to app.
-  const verifyUrl = `${base.replace(/\/$/, '')}/api/auth/verify?token=${encodeURIComponent(token)}`
+  const verifyUrl = `${String(base).replace(/\/$/, '')}/api/auth/verify?token=${encodeURIComponent(token)}`
   return { token, verifyUrl }
 }
 
@@ -505,8 +506,16 @@ export async function handleAuthLogoutAll(req) {
   }
 }
 
-/** K65 — public Help centre Contact us form → info.marginos@gmail.com + visitor copy. */
+/** K65 / K84 — Help centre Contact us → CONTACT_INBOX + visitor confirmation (no message text). */
 export async function handleContactForm(req, body) {
+  // Honeypot — bots fill this; humans leave it empty
+  if (String(body?.companyWebsite || body?.website || '').trim()) {
+    return { status: 200, body: { ok: true, message: 'Thanks — we have your message.' } }
+  }
+  const filledAt = Number(body?.filledAt || 0)
+  if (filledAt && Date.now() - filledAt < 2500) {
+    return { status: 429, body: { ok: false, message: 'Please wait a moment and try again.' } }
+  }
   const name = String(body?.name || '').trim()
   const phone = String(body?.phone || '').trim()
   const businessName = String(body?.businessName || '').trim()
@@ -519,36 +528,52 @@ export async function handleContactForm(req, body) {
   if (!rateLimit(`contact:${ip}`, 5, 60 * 60 * 1000)) {
     return { status: 429, body: { ok: false, message: 'Please wait before sending another message.' } }
   }
-  if (!name || !email.includes('@') || !message) {
-    return { status: 400, body: { ok: false, message: 'Name, email and message are required.' } }
+  if (!rateLimit(`contact-email:${email || ip}`, 3, 60 * 60 * 1000)) {
+    return { status: 429, body: { ok: false, message: 'Please wait before sending another message.' } }
   }
-  if (message.length > 4000) {
-    return { status: 400, body: { ok: false, message: 'Keep your message under 4,000 characters.' } }
+  if (!name || !email.includes('@') || !country || !message) {
+    return {
+      status: 400,
+      body: { ok: false, message: 'Name, email, country and message are required.' },
+    }
   }
+  if (message.length < 10 || message.length > 5000) {
+    return { status: 400, body: { ok: false, message: 'Message must be 10–5,000 characters.' } }
+  }
+  const sessionUser = dbConfigured() ? await userFromRequest(req) : null
   const inbox = process.env.CONTACT_INBOX || 'info.marginos@gmail.com'
-  const subject = `Margins365 contact — ${name}`
-  const text = `Name: ${name}\nPhone: ${phone || '—'}\nBusiness: ${businessName || '—'}\nEmail: ${email}\nCountry: ${country || '—'}\n\n${message}\n`
-  const html = `<p><strong>Name:</strong> ${name}</p><p><strong>Phone:</strong> ${phone || '—'}</p><p><strong>Business:</strong> ${businessName || '—'}</p><p><strong>Email:</strong> ${email}</p><p><strong>Country:</strong> ${country || '—'}</p><p>${message.replace(/\n/g, '<br/>')}</p>`
-  const toInbox = await sendSesSimple(inbox, subject, text, html)
+  const subject = `Margins365 contact: ${name} — ${businessName || '—'}`
+  const when = new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })
+  const sessionBits = sessionUser
+    ? `\nSigned-in account: ${sessionUser.email}\nAccount business: ${sessionUser.business_name || '—'}\nPlan: ${sessionUser.plan || '—'} (${sessionUser.licence_state || '—'})\nAccount ID: ${sessionUser.id}\nForm email differs from account: ${email !== String(sessionUser.email || '').toLowerCase() ? 'yes' : 'no'}\n`
+    : '\nSigned-out visitor\n'
+  const text = `Name: ${name}\nPhone: ${phone || '—'}\nBusiness: ${businessName || '—'}\nEmail: ${email}\nCountry: ${country}\nWhen (Europe/London): ${when}${sessionBits}\n${message}\n`
+  const html = `<p><strong>Name:</strong> ${name}</p><p><strong>Phone:</strong> ${phone || '—'}</p><p><strong>Business:</strong> ${businessName || '—'}</p><p><strong>Email:</strong> ${email}</p><p><strong>Country:</strong> ${country}</p><p><strong>When:</strong> ${when}</p><pre style="white-space:pre-wrap;font-family:inherit">${sessionBits.trim()}</pre><p>${message.replace(/\n/g, '<br/>')}</p>`
+  const toInbox = await sendSesSimple(inbox, subject, text, html, email)
   if (!toInbox.ok) {
     return {
       status: 502,
       body: { ok: false, message: 'Could not send your message. Try again shortly.' },
     }
   }
+  const mentionsCancel = /cancel/i.test(message)
+  const confirmExtra = mentionsCancel
+    ? '\n\nTo cancel, the account owner uses Plan & billing.'
+    : ''
+  // K84 — visitor confirmation WITHOUT their message text
   await sendSesSimple(
     email,
-    'We received your Margins365 message',
-    `Thanks ${name}. We have your message to Margins365.\n\nWe read every message but do not promise a reply time. This is not a cancellation route — cancel only in Plan & billing.\n\n— Margins365\n`,
-    `<p>Thanks ${name}. We have your message to <strong>Margins365</strong>.</p><p>We read every message but do not promise a reply time. This is not a cancellation route — cancel only in Plan &amp; billing.</p><p>— Margins365</p>`,
+    "We've received your message — Margins365",
+    `Thanks, ${name}. We received your message from the Margins365 Help centre on ${when}. We read every message, but we can't promise a reply time.${confirmExtra}\n\n— Margins365\n`,
+    `<p>Thanks, ${name}. We received your message from the Margins365 Help centre on ${when}.</p><p>We read every message, but we can't promise a reply time.</p>${mentionsCancel ? '<p>To cancel, the account owner uses Plan &amp; billing.</p>' : ''}<p>— Margins365</p>`,
   )
   return {
     status: 200,
-    body: { ok: true, message: 'Thanks — we have your message. A copy is on its way to your inbox.' },
+    body: { ok: true, message: 'Thanks — we have your message.' },
   }
 }
 
-/** Authenticated feature suggestion (max 1000 chars). */
+/** K83 — authenticated feature suggestion: store + email CONTACT_INBOX. */
 export async function handleFeatureSuggestion(req, body) {
   if (!dbConfigured()) {
     return { status: 503, body: { ok: false, message: 'Auth database is not configured.' } }
@@ -559,6 +584,12 @@ export async function handleFeatureSuggestion(req, body) {
   if (!text) return { status: 400, body: { ok: false, message: 'Write a short note.' } }
   if (text.length > 1000) {
     return { status: 400, body: { ok: false, message: 'Keep suggestions to 1,000 characters.' } }
+  }
+  if (!rateLimit(`suggest:${user.id}`, 5, 60 * 60 * 1000)) {
+    return { status: 429, body: { ok: false, message: 'Please wait before sending another suggestion.' } }
+  }
+  if (!rateLimit(`suggest-day:${user.id}`, 20, 24 * 60 * 60 * 1000)) {
+    return { status: 429, body: { ok: false, message: 'Daily suggestion limit reached.' } }
   }
   await query(
     `INSERT INTO feature_suggestions (id, user_id, plan_id, email, request_text)
@@ -571,7 +602,24 @@ export async function handleFeatureSuggestion(req, body) {
       text.slice(0, 1000),
     ],
   )
-  return { status: 200, body: { ok: true, message: 'Thanks — we saved your suggestion for review.' } }
+  const inbox = process.env.CONTACT_INBOX || 'info.marginos@gmail.com'
+  const biz = user.business_name || '—'
+  const plan = user.plan || '—'
+  const when = new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })
+  const subject = `Margins365 feature suggestion: ${biz} (${plan})`
+  const notifyText = `Suggestion:\n${text}\n\nName: ${user.full_name || '—'}\nEmail: ${user.email}\nBusiness: ${biz}\nPlan: ${plan} (${user.licence_state || '—'})\nRole: owner\nAccount ID: ${user.id}\nWhen (Europe/London): ${when}\nScreen: ${String(body?.screen || 'Plan & billing')}\n`
+  const notifyHtml = `<p><strong>Suggestion</strong></p><p>${text.replace(/\n/g, '<br/>')}</p><p>Name: ${user.full_name || '—'}<br/>Email: ${user.email}<br/>Business: ${biz}<br/>Plan: ${plan} (${user.licence_state || '—'})<br/>Account ID: ${user.id}<br/>When: ${when}</p>`
+  const sent = await sendSesSimple(inbox, subject, notifyText, notifyHtml, user.email)
+  if (!sent.ok) {
+    console.error('[feature-suggestion] SES failed after store', sent.message)
+  }
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      message: 'Thanks, your suggestion has been sent to the Margins365 team.',
+    },
+  }
 }
 
 export async function handleSendVerification(req, body) {
@@ -623,28 +671,29 @@ export async function handleVerifyToken(token) {
   }
 }
 
-async function sendSesSimple(to, subject, text, html) {
+async function sendSesSimple(to, subject, text, html, replyTo) {
   const cfg = sesMailer()
   if (cfg.error) return { ok: false, message: cfg.error }
   const client = new SESv2Client({
     region: cfg.region,
     credentials: { accessKeyId: cfg.accessKeyId, secretAccessKey: cfg.secretAccessKey },
   })
-  await client.send(
-    new SendEmailCommand({
-      FromEmailAddress: cfg.from,
-      Destination: { ToAddresses: [to] },
-      Content: {
-        Simple: {
-          Subject: { Data: subject, Charset: 'UTF-8' },
-          Body: {
-            Text: { Data: text, Charset: 'UTF-8' },
-            Html: { Data: html, Charset: 'UTF-8' },
-          },
+  /** @type {Record<string, unknown>} */
+  const input = {
+    FromEmailAddress: cfg.from,
+    Destination: { ToAddresses: [to] },
+    Content: {
+      Simple: {
+        Subject: { Data: subject, Charset: 'UTF-8' },
+        Body: {
+          Text: { Data: text, Charset: 'UTF-8' },
+          Html: { Data: html, Charset: 'UTF-8' },
         },
       },
-    }),
-  )
+    },
+  }
+  if (replyTo) input.ReplyToAddresses = [String(replyTo)]
+  await client.send(new SendEmailCommand(input))
   return { ok: true }
 }
 
@@ -714,11 +763,13 @@ export async function handleRequestPasswordReset(body, req) {
     `INSERT INTO password_reset_tokens (token, user_id, expires_at) VALUES ($1, $2, $3)`,
     [token, user.id, expires.toISOString()],
   )
-  const origin = body.origin || req.headers.origin || process.env.APP_ORIGIN || 'https://margins365.com'
-  const resetUrl = `${String(origin).replace(/\/$/, '')}/?reset=${encodeURIComponent(token)}`
+  // K85 — reset link built only from fixed APP_ORIGIN, never from browser-supplied origin
+  const base = String(process.env.APP_ORIGIN || 'https://margins365.com').replace(/\/$/, '')
+  const resetUrl = `${base}/?reset=${encodeURIComponent(token)}`
   const sent = await sendPasswordResetEmail(user.email, resetUrl)
   if (!sent.ok) {
-    return { status: 502, body: { ok: false, message: sent.message || 'Could not send reset email.' } }
+    console.error('[password-reset] SES failed; token kept for retry', sent.message, user.id)
+    // Still neutral — do not reveal SES failure or account existence
   }
   return { status: 200, body: { ok: true, message: GENERIC_RESET_MSG } }
 }

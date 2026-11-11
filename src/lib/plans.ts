@@ -288,8 +288,10 @@ export function scenarioSaveLimit(plan: PlanId | 'none' | 'legacy' | null | unde
   return null // unlimited
 }
 
+/** D-1 / K72 — show pence when the amount is not a whole pound (never round £19.50 → £20). */
 export function formatGbp(amount: number) {
-  return formatMoney(amount, 'GBP', true)
+  const whole = Math.abs(amount - Math.round(amount)) < 1e-9
+  return formatMoney(amount, 'GBP', whole)
 }
 
 export function foundingAnnualGbp(plan: PlanId): number {

@@ -1,4 +1,4 @@
-Margins365 spec v20 — Developer change pack (K59–K74)
+Margins365 spec v20 — Developer change pack (K59–K86)
 Status: APPROVED — Akthar Uddin, 11 November 2026, 13:36 Europe/London, with his 
 follow-up decisions the same afternoon (founding offer 6 months; Sample shop buttons 
 and full product architecture delegated to the Business & Product Agent). For: Design & 
@@ -15,12 +15,12 @@ Decision summary
 ID Decision Replaces
 K59 Brand is Margins365, one word, everywhere K58 spelling
 K60
-Header: Home / Sample shop / Pricing. “Sample report” is 
-renamed “Sample shop” everywhere
+Header: Home / Sample shop / Pricing. “Sample report” is renamed 
+“Sample shop” everywhere
 —
 K61
-Home “Start here” green area keeps three buttons; Compare 
-plans and Sample shop swap places
+Home “Start here” green area keeps three buttons; Compare plans 
+and Sample shop swap places
 —
 K62 Every navigation opens at the top of the page —
 K63
@@ -36,46 +36,78 @@ New Help centre page with the Hard limits & billing FAQ and a
 Contact us form
 7 Nov form rules
 K66
-Sample shop page buttons: new text; second button becomes a 
-shop icon
+Sample shop page buttons: new text; second button becomes a shop 
+icon
 K55 button text
 ID Decision Replaces
 K67
-Signed-in header: no trial CTA, business-name account button 
-and menu, Info and Control room
+Signed-in header: no trial CTA, business-name account button and 
+menu, Info and Control room
 15.4 signed-in rules
 K68 Shops/multi-shop and seats/multi-seat fully built OD5, Q22, Q23 defaults
 K69 The trial gives the tier the customer chose K52 reverse trial
 K70 Professional account profile (Info) 5 “Profile & sign-in”
 K71 Optional cancellation reason in the cancel flow —
-K72
-Founding offer: 50% off for 6 months for the first 100 paying 
-users
-K42 (in part)
+K72 Founding offer: 50% off for 6 months for the first 100 paying users K42 (in part)
 K73
 Move fully to margins365.com; remove every marginos.online 
 reference
 K58 cutover wording
-K74 Legal documents published on the site (approved v20 texts) 7 Nov “sign in to view” idea
+K74 Legal documents published on the site (approved v20 texts)
+7 Nov “sign in to view” 
+idea
 K75 SEO and discoverability for the public site (Margins365-SEO-v20)
-Single-shell HTML, one title for 
-every page
+Single-shell HTML, one 
+title for every page
 K76
-Free public calculators (Etsy UK, Amazon UK, Shopify UK, 
-ecommerce margin), sharing the product's calculation module
+Free public calculators (Etsy UK, Amazon UK, Shopify UK, ecommerce 
+margin), sharing the product's calculation module
 —
 K77
-Keyword landing pages and help articles (no competitor 
-comparison page)
+Keyword landing pages and help articles (no competitor comparison 
+page)
 —
 K78 Home H1 “Know your true profit and where it leaks”
 “Stop guessing your e-
-commerce unit economics.”
+commerce unit 
+economics.”
 K79
-Consent-gated Plausible analytics; consent banner; Cookie 
-notice, Privacy Policy and DPA page v20.1
+Consent-gated Plausible analytics; consent banner; Cookie notice, 
+Privacy Policy and DPA page v20.1
 K74 “essential only, no 
 banner”
+K80
+Every pop-up works on a phone (fits the visible screen, scrolls inside, 
+buttons always reachable, page behind locked); site-wide mobile 
+check
+—
+K81
+Remove the "14 days free. Cancel before day 14 and pay nothing. 
+From £39/mo" banner everywhere
+K43 banner
+K82
+Every page opens at the top instantly, with no animated scroll (fixes 
+K62 on iPhone)
+—
+K83
+Suggest a feature is emailed to info.marginos@gmail.com (and 
+stored)
+Q33 store-only default 
+(S58)
+K84
+Contact us reaches info.marginos@gmail.com signed in and out; 
+visitor gets a confirmation without the message text (needs Akthar's 
+OK); in-page pop-up; spam limits
+23.11 "copy of what they 
+wrote"
+K85
+Forgot password works end to end; no browser-only fallbacks; reset 
+link built on the server
+—
+K86
+SES email set up and proven before release (verified domain, DKIM, 
+MAIL FROM, production access, SPF, DMARC)
+—
 What the live site does today (checked 11 November 2026, live bundle)
 • Brand shows “Margins 365” (with a space). No “Margins365” string. 
 • No page routing: refresh always returns to Home; pages don't scroll to the top on change. 
@@ -320,6 +352,290 @@ changes, Cookie settings in the footer Legal column to change it. No analytics i
 sign-in/reset pages or emails; events carry no personal data and no entered values. Publish the v20.1 
 Cookie notice, Privacy Policy and DPA & subprocessors page in the same release. Spec 23.18. 
 Acceptance. AN-1 to AN-6; QA suites CONS and ANL.
+Part A (continued) — Decisions K80–K86: Akthar's iPhone test, 
+11 November 2026
+Status. K80, K81, K82, K83 and K85 are fixes Akthar asked for on 11 November 2026 after 
+testing the live site on his iPhone. K84 and K86 are what it takes for his contact-form and email 
+requests to work. One item needs Akthar's OK before it's built: within K84, the visitor gets a 
+confirmation without their message text. That's a Business & Product security recommendation. 
+Two small legal-wording follow-ups (K83, K84) also need his approval before the next legal version. 
+Full requirements and acceptance criteria are in spec 23.19 (reproduced as B.19 below).
+Live findings behind K80–K86 (checked 11 November 2026, 17:30 Europe/London)
+Checked on the live site (bundle index-DrtqBa1f.js), with safe API probes (no real messages sent, no 
+accounts created), DNS lookups, a phone-sized browser test (390 × 664) and the server code 
+snapshot from 11 November 13:38.
+# Issue What happens now (evidence) Root cause Broken live?
+1
+Free-trial 
+pop-up 
+can't 
+scroll
+At 390 × 664 the plans pop-up is 1,541 px 
+tall. Its top (Close button and the Starter to 
+Pro tiles) sits 893 px above the screen. 
+Swiping scrolls the page behind it, not the 
+pop-up. On iPhone Safari the bottom, with 
+the Start 14-day free trial button, falls 
+behind the browser toolbar, as in Akthar's 
+screenshot.
+Every pop-up uses 
+one of two shared 
+containers. Both are 
+pinned to the full 
+screen with no 
+maximum height 
+and no scrolling 
+inside. The page 
+behind isn't locked. 
+The cookie banner 
+sits on a higher 
+layer than pop-ups, 
+so on a first visit it 
+can cover a pop-up's 
+buttons.
+Yes. Same fault in 
+sign-in / sign-up / 
+profile / reset, plans 
+& trial, Clear sample 
+data, Delete my 
+shop data, and 
+Cancel trial / 
+subscription (which 
+also holds the 
+reason list)
+2 Banner Exact text: "14 days free. Cancel before The K43 banner is still Present on every 
+# Issue What happens now (evidence) Root cause Broken live?
+day 14 and pay nothing. From 
+£39/mo". It's one component at the top of 
+the public site frame, sticky with the 
+header, so it shows on every public page 
+(Home, Sample shop, Pricing, Help centre, 
+legal pages), signed in or out. Dismissing it 
+lasts only for that browser session. Header 
+and banner together take 199 px of a 664 
+px phone screen.
+built in. public page
+3
+Pages 
+open at 
+the 
+bottom
+A page change now updates the address 
+and asks the browser to go to the top. But 
+the stylesheet turns on smooth scrolling 
+for the whole page, so the jump becomes 
+an animation of about 1 second that starts 
+from the old position. Trace from the 
+bottom of Home: the new page starts at y 
+≈ 1,900–6,000 and animates upwards. 
+iPhone Safari stops that animation when 
+the new page changes height or when the 
+user touches the screen, which leaves 
+them at or near the bottom. With smooth 
+scrolling switched off, the same clicks land 
+at the top instantly.
+Smooth scrolling 
+applied to page 
+changes, and the 
+scroll fires before the 
+new page has 
+rendered.
+Yes on iPhone 
+(Akthar saw it; the 
+animation was 
+reproduced in a 
+phone emulator)
+4
+Suggest a 
+feature
+Signed in only. The text goes to the server 
+(/api/feature-suggestions), which saves it in 
+the database and replies "saved for 
+review". No email is sent (server code). 
+Signed out, the server replies 401 "Sign in 
+first".
+Built to the old Q33 
+default (store only).
+Not sent to 
+info.marginos@gm
+ail.com
+5
+Contact 
+us
+The same Help centre form is used signed 
+in and signed out (signed in, the fields are 
+pre-filled). It posts name, phone, business 
+name, email, country and message to 
+/api/contact. The page doesn't send the 
+recipient, which is right, but it doesn't 
+include the account details either. There's 
+no honeypot and no minimum fill time. 
+Success shows the browser's own alert 
+box. The limit is 4,000 characters against 
+Delivery depends on 
+the SES setup (row 7).
+Delivery unproven
+# Issue What happens now (evidence) Root cause Broken live?
+the spec's 5,000. Validation works (empty 
+fields and an over-long message are 
+refused with 400). Who the server sends to 
+couldn't be confirmed without sending 
+a real message, so that wasn't done.
+6
+Forgot 
+password
+The request works: a made-up 
+@example.com address gets the neutral 
+200 response, a bad address gets 400, and 
+a bad reset token gets 400 "invalid or 
+expired". But: (a) if the server fails, for 
+example because SES refuses the email 
+(HTTP 502), the page quietly switches to 
+a built-in demo routine that keeps a fake 
+token in the browser and still says "If an 
+account exists, we've sent a reset link." 
+The user is told it worked when no email 
+went out. (b) The server builds the reset 
+link from an "origin" value the browser 
+sends (server code). Anyone could ask for 
+a reset for someone else's email with their 
+own website as the origin, so the real reset 
+email would carry a link to their site 
+(password-reset link poisoning, P0 
+security; Development to confirm against 
+current code). (c) /reset-password returns 
+404; the link uses /?reset=. (d) Email sign-in 
+and Google sign-in also fall back to a 
+browser-only "signed in" state on 
+network errors. (e) Server email text still 
+says “Margins 365” and invites replies to 
+an address that has no inbox.
+Demo fallbacks left in 
+the production build; 
+the server trusts a 
+browser-supplied 
+origin; SES status 
+unknown.
+Partly working, 
+not proven end to 
+end
+7
+Email 
+(SES) 
+setup
+DNS (17:30): mail.margins365.com has MX 
+feedback-smtp.eu-north-1.amazonses.com and 
+SPF include:amazonses.com. That means a 
+custom MAIL FROM is configured, so a 
+margins365.com identity exists in SES eu-
+north-1. _dmarc is v=DMARC1; p=none; with no 
+reporting address. The apex has no SPF 
+and no MX. _amazonses TXT is absent. 
+/api/health reports sesConfigured: true, 
+Can't be confirmed 
+from outside.
+Unknown. 
+Development 
+must check the 
+SES console (K86)
+# Issue What happens now (evidence) Root cause Broken live?
+region eu-north-1. Correction to the 
+earlier note: _amazonses is the old 
+verification method. SES now verifies a 
+domain with 3 DKIM CNAME records whose 
+names are random and can't be listed from 
+outside, so their absence doesn't prove 
+the domain is unverified. Sandbox status 
+can't be seen from outside either. If 
+SES is still in the sandbox, it only delivers 
+to verified addresses: the notification to 
+info.marginos@gmail.com could arrive 
+while every reset email, verification email 
+and visitor confirmation to a real customer 
+fails.
+Also found (existing rules; no new decision needed):
+• D-1 (P0) Founding prices are rounded to whole pounds in the plans pop-up: £19.50 
+shows as £20, £39.50 as £40, £64.50 as £65 and £99.50 as £100. The annual founding prices 
+are rounded the same way. Akthar's screenshot shows "£100/month" and "we will 
+automatically charge £40". The trial disclosure therefore states a charge of £40 when the 
+real charge is £39.50. This breaks K72 / 12.5C and the pre-contract disclosure (12.5A). Show 
+pence wherever a price isn't a whole pound. 
+• D-2 The cookie banner sits above pop-ups and has no bottom safe-area padding (K80 fixes it). 
+• D-3 The viewport tag has no viewport-fit=cover, so the site's safe-area padding does nothing 
+today. That's harmless now, but it matters once anything is pinned to the bottom (K80). 
+K80 — Every pop-up works on a phone, plus a site-wide mobile check
+Requirement. Every pop-up, sheet, drawer and confirmation (sign-in and reset, plans and trial, Clear 
+sample data, Delete my shop data, Cancel with reason, contact success, account menu, shop 
+switcher, team, phone menu, cookie banner) must:
+• fit the visible screen, on iPhone Safari with the address bar shown or hidden and with the 
+keyboard open; 
+• scroll inside, with the title and Close always visible; 
+• keep its buttons reachable (never behind the browser toolbar, home indicator or cookie 
+banner), with safe-area spacing at the bottom; 
+• lock the page behind it and restore the position on close; 
+• sit above every other layer; 
+• trap focus and return it on close. 
+A site-wide mobile check runs on every page and screen at 320–430 px, on iPad, iPhone Safari, 
+Android Chrome and Samsung Internet. Spec 23.19.1. Acceptance. MOB-1 to MOB-6; QA suite MOB.
+K81 — Remove the "14 days free" banner
+Requirement. Remove the sticky banner "14 days free. Cancel before day 14 and pay nothing. 
+From £39/mo" from every page and device, signed in and out, together with its dismiss button and 
+saved setting. There's no replacement. This supersedes the K43 banner. The trial terms on Pricing, in 
+the plans pop-up, at Checkout and in Plan & billing stay. Spec 23.19.2. Acceptance. BN-1 to BN-3; QA 
+MOB-12, PUB-15 (rewritten).
+K82 — Every page opens at the top, instantly
+Requirement. Every change of page lands at the very top with no animated scroll, from any entry 
+point, on every device. The cause on the live site is smooth scrolling applied to the whole page. 
+Smooth scrolling is allowed only for in-page jumps. Late-loading content must not push the page 
+down. Back and forward may restore the earlier position. This fixes K62 on iPhone. Spec 23.19.3. 
+Acceptance. NV-1 to NV-4; QA NAV-33 to NAV-36.
+K83 — Suggest a feature is emailed to info.marginos@gmail.com
+Requirement. Suggest a feature stays signed in only. The server stores each suggestion, then 
+emails it through SES to info.marginos@gmail.com. The email has the account email, business 
+name, plan and status, role, number of shops and the time, with Reply-To set to the submitter. The 
+success message is shown in the page. If sending fails, the server alerts and retries. Limits: 5 per hour 
+and 20 per day per account. The FAQ wording is updated. This replaces the Q33 store-only default 
+(S58). Spec 23.19.4. Acceptance. FS-1 to FS-5; QA HELP-17 to HELP-19.
+K84 — Contact us reaches info.marginos@gmail.com, signed in and signed out
+Requirement.
+• One form and one server route. The server always sends to info.marginos@gmail.com; the 
+page never chooses the recipient. Reply-To is the visitor. 
+• Signed-in sends add the account context from the session. 
+• The visitor gets a confirmation without their message text. (Needs Akthar's OK.) 
+• The success pop-up is shown in the page, not the browser alert box, and only after the 
+message is stored. 
+• Failures: alert and retry. 
+• Spam protection: a honeypot, a 3-second minimum fill time, 5 per IP and 3 per email per hour 
+in shared storage, the real client IP, and header-injection checks. 
+• Message length 10–5,000 characters. 
+Spec 23.19.5 (adds to 23.11). Acceptance. HC-7 to HC-12; QA HELP-20 to HELP-24 (HELP-06 and 
+HELP-08 updated).
+K85 — Forgot password works end to end
+Requirement.
+• No browser-only fallback for any account action. Server errors show a clear "couldn't reach 
+Margins365" message. 
+• The reset link is built on the server from https://margins365.com only, never from a browser-
+supplied origin. This closes a reset-link poisoning risk. 
+• The link opens a real /reset-password page, which is 404 today. 
+• SES failures alert and retry while the user still sees the neutral message. 
+• The K57 / Q34 limits and expiry are unchanged. 
+• Emails use "Margins365" and don't invite replies. 
+Spec 23.19.6. Acceptance. PR-1 to PR-6; QA AUTH-21 to AUTH-25.
+K86 — Email sending set up and proven before release
+Requirement.
+• The SES eu-north-1 margins365.com identity is Verified, with Easy DKIM and MAIL FROM 
+Successful. 
+• Production access (out of the sandbox). 
+• Bounce and complaint handling. 
+• An apex SPF record, and DMARC reporting moving later to quarantine. 
+• From is on margins365.com, with Reply-To set on every email (the domain has no inbox). 
+• Before QA, each email is proven to pass SPF, DKIM and DMARC at Gmail, Outlook and iCloud, 
+and to reach an unverified external address. 
+This blocks release of K83–K85 and every email. Spec 23.19.7. Acceptance. ES-1 to ES-5; QA EML-22 
+to EML-25.
+D-1 (defect against K72, P0). Founding prices must show pence: £19.50, £39.50, £64.50, £99.50, 
+£292.50, £592.50, £967.50, £1,492.50, in the plans pop-up, on cards, at Checkout, in Plan & billing 
+and in emails. The trial disclosure must state the exact amount that will be charged. QA OFF-17.
 Build order
 1. K73 domain and K59 brand (configuration; unblocks emails and sign-in). 
 2. K63 routes and K62 scroll (every other change depends on addresses). 
@@ -335,6 +651,10 @@ sitemap, redirects, OG image, icons and JSON-LD; then speed and caching; Search 
 Bing last, on production. 
 11.K79 consent banner first, then Plausible analytics behind it, with the v20.1 Cookie notice, 
 Privacy Policy and DPA page published in the same release. 
+K80–K86 (Akthar's iPhone test), slotted into the order above: K86 SES setup and production 
+access go with step 1 (every email depends on it). K82 scroll fix goes with step 2. K80 pop-ups, site-
+wide mobile check and K81 banner removal go with step 7. K85 forgot password goes with step 4. K83 
+and K84 go with step 8. Fix D-1 (pence in founding prices) goes with step 5.
 Phase 2 (after the core v20 QA pass):
 12.K76 calculators on the shared calculation module; QA suite PCALC before they go live. 
 13.K77 landing pages, then help articles at about 2 a month; SEO checks per page. 
@@ -346,6 +666,9 @@ subdomain of it).
 12.12 tables. 
 • Stripe test mode has all prices, trials and both founding coupons; SES sends from 
 margins365.com and passes SPF/DKIM/DMARC. 
+• K80–K86 and fix D-1 are built. The K86 proof is attached: SES console screenshots (identity 
+Verified, DKIM and MAIL FROM Successful, production access) and passing headers for each 
+email at Gmail, Outlook and iCloud. 
 • Registered address, company number and ICO number to be added before launch if required 
 (UK Companies Act trading disclosures). 
 K76 and K77 (Phase 2) get their own QA pass (suites PCALC and SEO-34 to SEO-36) before they go 
@@ -403,9 +726,9 @@ example “Growth · Trial ends 25 Nov”)
 Everyone —
 Shop switcher (list of shops, current one ticked, 
 Add shop if allowed)
-Scale (trial or paid) Switches the current 
+Scale (trial or paid)
+Switches the current 
 shop; Add shop goes to 
-Item Who sees it Goes to
 /app/shops/new
 Info Everyone /account/info
 Control room Everyone /app for the current shop
@@ -498,6 +821,7 @@ Invite, revoke invites, remove members Yes No
 Edit business Info (business name, country, VAT number, address) Yes View only
 Edit own name, phone, password, Google link Yes
 Yes (own 
+Action Owner Member
 only)
 Plan & billing: change plan, payment method, invoices Yes No
 Cancel trial or subscription Yes No (K50)
@@ -545,7 +869,6 @@ team
 Business name Required
 Account identity, header button, invoices 
 context, invites
-Field Required? Why (UK GDPR data minimisation)
 Country (business location) Required
 Tax and VAT handling, home currency 
 default, legal terms that apply
@@ -709,6 +1032,7 @@ changed / Your sign-in (Google-only)
 Invitation Owner invites Invitee
 You no longer have access Owner removes member Member
 Trial started Checkout complete Owner
+Email Trigger To
 Trial reminder
 3 days before trial end 
 (default)
@@ -728,7 +1052,6 @@ cancel
 Owner; dated notice to 
 members
 Data deleted Wipe completed Owner's last email
-Email Trigger To
 Contact notification / contact copy Help centre form
 info.marginos@gmail.co
 m / visitor
@@ -748,11 +1071,11 @@ link for reporting
 Founding place record DigitalOcean London
 Account closure; a count without personal 
 data is kept to honour the 100 limit
-Contact messages
-DigitalOcean London and the 
+Contact messages DigitalOcean London and the 
 info.marginos@gmail.com 
-mailbox
 12 months after receipt
+Data Where Kept until
+mailbox
 Legal acceptance 
 (document, version, 
 time)
@@ -793,11 +1116,12 @@ $100 per order, converted) counted as ad spend
 Amazon UK fee 
 and profit 
 calculator (FBA 
-and FBM)
 /amazon-fee-calculator-uk
 Referral fee by category from the 16.2 Amazon 
 table, default "Everything else" 15%, minimum 
 £0.25 per item, on the total the buyer pays 
+Calculator Route Fee presets used (16.2, UK row)
+and FBM)
 (Development confirms the fee base on 
 sell.amazon.co.uk and records the source, as 16.2 
 requires); FBA fulfilment, storage and other 
@@ -898,6 +1222,7 @@ Revenue £44.99; fees £1.15; return cost £2.25;
 CM £24.39 (54.2%); true profit £16.39 (36.4%), 
 Healthy; break-even ROAS 1.84×; target price 
 £25.68; break-even price £22.38
+Example Inputs Expected results
 Margin 
 (generic)
 Prices include 20% VAT; price £18.00; 
@@ -985,6 +1310,249 @@ GPC, or on signed-in pages. AN-2 After Accept, page views and the listed events 
 with no personal data or entered values. AN-3 Withdrawal stops sending immediately. AN-4 Banner: 
 equal choices, no pre-ticks, close = reject, re-ask rules, accessible. AN-5 No cookies are set by 
 analytics. AN-6 v20.1 legal texts published with the release.
+B.19 Phones, pop-ups, page position, forms and email delivery (K80–K86)
+Source. Akthar's iPhone test of the live site on 11 November 2026. K80–K83 and K85 are fixes he 
+asked for. K84 and K86 make his contact and email requests work. Within K84, sending the visitor a 
+confirmation without their message text is a Business & Product security recommendation for 
+Akthar to confirm. Live findings are in the v20 change pack under "Live findings behind K80–K86".
+B.19.1 Every pop-up works on a phone (K80)
+Applies to every pop-up, sheet, drawer and confirmation, now and in future. That includes sign in, sign 
+up, verify, profile completion, forgot password and set new password; plans and free trial; Clear 
+sample data; Delete my shop data; Cancel trial / subscription with the optional reason; the Help 
+centre success pop-up; account menu; shop switcher; invite and remove member; the phone 
+navigation menu; the cookie banner and Cookie settings.
+• Fits the visible screen. A pop-up is never taller than the part of the screen the user can see. 
+It is sized to the visible viewport (not the full-height 100vh measure) with a small margin. This 
+holds on iPhone Safari with the address bar shown or hidden, in landscape, and while the on-
+screen keyboard is open. 
+• Scrolls inside. If the content is longer than the screen, it scrolls inside the pop-up. The title 
+and Close stay visible at the top. 
+• Buttons always reachable. The primary and secondary buttons (for example Start 14-day 
+free trial and Not now) can always be reached without zooming. They are never cut off, and 
+never behind the browser toolbar, the home indicator or the cookie banner. Bottom spacing 
+respects the device's safe area. 
+• Page behind stays still. While a pop-up is open the page behind doesn't scroll, including on 
+iOS, and swipes inside the pop-up don't pass through to the page. Closing it returns the page 
+to exactly where it was. 
+• On top of everything. Pop-ups sit above every other layer, including the sticky header and 
+the cookie banner. 
+• Plans pop-up. On a phone, the user can see which plan is selected next to the trial terms and 
+the button, without scrolling back up. The terms box always names the selected plan and its 
+exact price (D-1). 
+• Keyboard and screen reader. Focus moves into the pop-up and stays there. Escape and 
+Close both close it, and focus returns to the button that opened it. A focused form field is never 
+hidden by the phone keyboard. 
+• Resilient. Rotating the device, 200% text size and the largest iOS text size keep every control 
+reachable. 
+Site-wide mobile check (K80). Every public page and signed-in screen is checked at 320, 375, 390, 
+414 and 430 px wide, on iPad portrait and landscape, and on desktop. Browsers: iPhone Safari 
+(address bar shown and hidden), Android Chrome, Samsung Internet and iPad Safari. Pass means:
+• no sideways page scrolling; 
+• nothing hidden behind fixed bars; 
+• every button reachable and at least 44 × 44 px; 
+• forms usable with the keyboard open; 
+• no pinch-zoom needed for body text; 
+• in portrait, the sticky header takes no more than about a sixth of the phone screen's height. 
+Acceptance.
+• MOB-1: Each listed pop-up, on iPhone Safari (bar shown and hidden), Android Chrome and 
+iPad, can reach its last control. Close stays visible. 
+• MOB-2: The page behind doesn't move while the pop-up is open, and is in the same place after 
+closing. 
+• MOB-3: The cookie banner never covers a pop-up control. 
+• MOB-4: Keyboard open: the focused field and the submit button are reachable. 
+• MOB-5: Focus is trapped and returned, and Escape works. 
+• MOB-6: Site-wide mobile check passes on every page and screen. 
+B.19.2 The "14 days free" banner is removed (K81)
+Remove the sticky banner whose text is exactly "14 days free. Cancel before day 14 and pay 
+nothing. From £39/mo":
+• from every page, public and signed in, on every device; 
+• including its dismiss button and its saved "dismissed" setting. 
+There is no replacement banner. This supersedes the K43 banner (approved 6 November 2026, 00:34 
+Europe/Madrid) and the banner lines in 3, 12.5A, 15.3, 15.4, S23 and S46.
+What stays. The trial terms required before purchase stay where they are now: the Pricing cards, the 
+trial terms in the plans pop-up, Checkout (K43 Option 1 and the K69 disclosure) and Plan & billing. The 
+header keeps its single primary button (K46). Other live lines that contain "Cancel before day 14" are 
+not the banner, so they aren't removed under K81. The signed-in trial status line (12.5B, "You're on 
+your [Plan] free trial until [date]…") is also not this banner and stays.
+Acceptance.
+• BN-1: A text search of the built site and the prerendered HTML finds no "Cancel before day 14 
+and pay nothing. From £39/mo" and no "14 days free." banner. 
+• BN-2: The header is the top element on every page, with no empty strip. 
+• BN-3: The trial terms are still shown on Pricing, in the plans pop-up and at Checkout. 
+B.19.3 Every page opens at the top, instantly (K82, fixes K62)
+Any change of page shows the new page at the very top, instantly, with no animated scrolling, 
+on every device. "Any change of page" covers:
+• the header, footer, Start here and Sample shop buttons, and Pricing buttons; 
+• the account menu; 
+• links inside FAQs, Help articles and legal pages; 
+• email links landing on the site; 
+• the redirect after sign-in and Stripe returns. 
+Rules:
+• Smooth scrolling is allowed only for jumps within the same page (for example Compare plans 
+to the table on Pricing). It must never apply to a page change. 
+• The top position holds after the new page finishes loading. Late content (lazy sections, images, 
+fonts) must not push the user down. 
+• The new page's heading isn't hidden under the sticky header. 
+• For screen readers, focus moves to the new page's main heading. 
+• Back and forward may restore the previous position (normal browser behaviour). Refreshing a 
+page may keep the position on that page. 
+Acceptance.
+• NV-1: From the very bottom of Home on iPhone Safari, every page change lands at the top 
+with no visible scrolling animation. The position is still the top 2 seconds later. 
+• NV-2: The same from the bottom of every page, on Android Chrome, iPad and desktop. 
+• NV-3: In-page jumps still scroll to their target. 
+• NV-4: Back restores the earlier position. 
+B.19.4 Suggest a feature is emailed to info.marginos@gmail.com (K83)
+Replaces the Q33 store-only default (S58). Suggest a feature stays signed in only.
+On send:
+1. The server checks the text (1–1,000 characters). 
+2. It stores the suggestion, as today, for the admin list. 
+3. It sends a notification through SES from the margins365.com identity to 
+info.marginos@gmail.com. The recipient is a server setting and is never in the page code. 
+The notification:
+• Subject: "Margins365 feature suggestion: [Business name] ([Plan])". 
+• Body: the suggestion text; the submitter's name and account email (taken from the session); 
+business name; plan and status (trial or paid); role (owner or member); number of shops; 
+internal account ID; the date and time (Europe/London); and the screen it was sent from. 
+• Reply-To: the submitter's account email. 
+Behaviour:
+• Success is shown in the page: "Thanks, your suggestion has been sent to the Margins365 
+team." No promise of a reply, and no copy is sent to the user. 
+• Failures. If storing fails, show an error and keep the text. If storing works but sending fails, 
+show success (the suggestion is stored), raise an admin alert and retry automatically until it is 
+sent. 
+• Limits. 5 per account per hour and 20 per day, held in shared storage. A double tap sends 
+once. HTML is shown as text everywhere. 
+• FAQ wording (3.2 and the Help centre): "Signed in, open Suggest a feature, write a short note 
+and send it. It goes straight to the Margins365 team. We can't promise a reply." 
+Legal follow-up (needs Akthar's approval): the Privacy Policy and DPA list the Gmail mailbox for 
+contact messages only. In the next legal version, add "and feature suggestions" to the Google (Gmail) 
+recipient line, and add a "Feature suggestions" row: account name, email, business name, plan and 
+text; purpose "improve the product"; basis "legitimate interests"; kept 24 months.
+Acceptance.
+• FS-1: A suggestion arrives at info.marginos@gmail.com with every listed field. Reply-To is the 
+submitter. 
+• FS-2: It is stored and visible in the admin list. 
+• FS-3: Signed out, the form isn't offered and the server refuses the request. 
+• FS-4: The limits hold and a double tap sends once. 
+• FS-5: The SES-failure path shows success, raises an alert and is delivered after the retry. 
+B.19.5 Contact us delivers to info.marginos@gmail.com, signed in and signed out (K84; adds to 
+23.11)
+Where this differs from 23.11, this applies.
+Sending:
+• One form and one server route for both states. The server always sends to 
+info.marginos@gmail.com (a server setting); the page never chooses the recipient. 
+• Sent server-side through SES from the margins365.com identity, From name Margins365. 
+• Notification subject: "Margins365 contact: [Name] — [Business name]". It contains every 
+field, and Reply-To is the visitor's email, so Akthar can reply straight from Gmail. 
+• Signed in, the notification also shows, taken from the session rather than the form: the 
+account email, the business name on the account, plan and status, role, internal account ID, 
+and a flag when the form email differs from the account email. Signed out, it is marked 
+"Signed-out visitor". 
+Visitor confirmation (security):
+• It is a confirmation without their message text. Subject: "We've received your message — 
+Margins365". Body: "Thanks, [Name]. We received your message from the Margins365 Help 
+centre on [date, time]. We read every message, but we can't promise a reply time." 
+• Add "To cancel, the account owner uses Plan & billing." when the message mentions 
+cancelling. 
+• Reply-To is info.marginos@gmail.com. 
+• It contains no message text, phone number or other fields, so the form can't be used to send 
+someone else spam content. 
+• This replaces "a copy of what they wrote" in 23.11 and HC-4. 
+On screen:
+• Success pop-up. It is shown in the page, not in the browser's alert box, and only after the 
+message is stored: "Thanks, [Name]. Your message has been sent. We've emailed a 
+confirmation to [email]." It has a Close button and follows K80. The form is then cleared. 
+• Failures. If storing fails, show an error and keep everything typed. If storing works but the 
+notification fails, show success, raise an admin alert and retry until it is sent; both emails must 
+eventually arrive. A failed visitor confirmation never blocks success. 
+Spam and abuse:
+• A hidden honeypot field and a minimum fill time of 3 seconds. Bot submissions are refused 
+silently. 
+• Server limits: 5 per IP per hour and 3 per email address per hour, held in shared storage so 
+they survive restarts and work across servers. 
+• The visitor's IP is taken from Cloudflare's connecting-IP header, never from a value the visitor 
+can set. 
+• A neutral "please wait" message when a limit is hit. 
+• Line breaks are removed from name and email (no header injection). 
+• No third-party captcha. 
+Message length: 10–5,000 characters, enforced in the page and on the server (live is 4,000).
+Legal follow-up (needs Akthar's approval): in the Privacy Policy, change "Answer your message 
+and send you a copy" to "Answer your message and send you a confirmation".
+Acceptance.
+• HC-7: Signed out and signed in, each send produces exactly one notification at 
+info.marginos@gmail.com, with Reply-To set to the visitor. 
+• HC-8: Signed-in notifications carry the account context from the session. 
+• HC-9: The visitor confirmation has no message text. 
+• HC-10: The in-page pop-up appears only after storage succeeds. 
+• HC-11: The honeypot, fill time, limits and injection checks hold. 
+• HC-12: The failure paths behave as above. 
+B.19.6 Forgot password works end to end (K85; adds to 5.1, 16.5 and K57)
+The journey: Sign in → Forgot password? → enter email → neutral message → email → link → set a 
+new password → signed in, with other sessions signed out → "Your password was changed" email. It 
+must work on iPhone Safari, Android Chrome and desktop, including when the link is opened on a 
+different device.
+Requirements:
+• No browser-only fallbacks for any account action: sign in, Google sign-in, verification, reset 
+request, set new password or profile save. If the server can't be reached or returns an error, 
+show "We couldn't reach Margins365. Check your connection and try again." and change 
+nothing. Remove the demo routines from the production build. 
+• Reset request. The server always returns the neutral message "If an account exists, we've 
+sent a reset link." for any well-formed email, with similar timing. If SES fails, the server keeps 
+the request, retries, raises an alert and logs it for Development; the user still sees the neutral 
+message, so nothing reveals whether an account exists. 
+• Reset link. The server builds it only from a fixed setting (https://margins365.com), never from 
+a value the browser sends. It points to a real /reset-password page (today that address is 
+404). The token is removed from the address bar once the page loads, never sent to analytics 
+and never leaked in the referrer. 
+• K57 / Q34 rules unchanged: 
+• the link lasts 60 minutes and works once; 
+• older links stop working; 
+• 3 requests per email and 10 per IP per hour, held in shared storage; 
+• Google-only accounts get "Your Margins365 sign-in"; 
+• a successful reset signs out every other session and sends "Your password was changed". 
+• Email copy: the brand is one word (the server text still says “Margins 365”). No email asks 
+the reader to "reply to this email", because margins365.com has no inbox. Point to the Help 
+centre instead. 
+Acceptance.
+• PR-1: The full journey works for a real test account on the three platforms. 
+• PR-2: With the server blocked, every account action shows the error and creates no local 
+session or token. 
+• PR-3: A reset requested with a forged origin still produces a margins365.com link. 
+• PR-4: /reset-password loads and refreshes. The token is gone from the address bar. 
+• PR-5: An SES failure still shows the neutral message, raises an alert, and the email arrives after 
+the retry. 
+• PR-6: The K57 limits, expiry, single use and the Google-only email all behave as specified. 
+B.19.7 Email sending is set up and proven before release (K86; adds to 20.5.4 and 23.12)
+Development does this with Akthar. It blocks release of K83–K85 and every email in 23.12.
+1. SES eu-north-1: the margins365.com domain identity shows Verified. Easy DKIM (3 CNAME 
+records added at the domain's DNS host, GoDaddy) shows Successful. The custom MAIL 
+FROM mail.margins365.com shows Successful (its MX and SPF are already published). 
+2. Production access is granted (out of the sandbox), with a daily quota and sending rate that 
+cover peak use. If the account is still in the sandbox, request production access; AWS asks for 
+the use case, how bounces and complaints are handled and how recipients opted in. 
+3. Bounces and complaints go to a notification destination. Bounced and complained 
+addresses are flagged and not mailed again, and the rates stay below AWS's review levels 
+(bounces 5%, complaints 0.1%). 
+4. DNS: - publish an apex SPF record (v=spf1 include:amazonses.com ~all); - keep DMARC at p=none 
+but add a reporting address Akthar reads (rua=), then move to p=quarantine after 2–4 weeks of 
+clean reports. 
+5. From and Reply-To: - From is on margins365.com (for example no-reply@margins365.com), 
+with the name "Margins365". - margins365.com has no inbox (no MX), so Reply-To is set on 
+every email: notifications to Akthar → the sender; everything sent to customers → 
+info.marginos@gmail.com. - No marginos.online identity is used for sending. 
+6. Proof before QA. Send one of each email (verify, reset, Google-only sign-in, password 
+changed, contact notification and confirmation, suggestion notification, invite) to Gmail, 
+Outlook and iCloud. Each must show SPF pass, DKIM pass with d=margins365.com, DMARC pass 
+and aligned, and land in the inbox rather than spam. Send one more to an unverified 
+external address to prove production access. Attach the SES console screenshots (identity, 
+DKIM, MAIL FROM, account dashboard) to the QA handover. 
+Acceptance.
+• ES-1: The identity, DKIM and MAIL FROM all show verified or successful. 
+• ES-2: Production access is shown on the account dashboard. 
+• ES-3: Every listed email passes SPF, DKIM and DMARC at three providers. 
+• ES-4: Bounce and complaint handling has been tested with the SES mailbox simulator. 
+• ES-5: The apex SPF and DMARC reporting records are published. 
 Files
 • /workspace/v20/Margins365-v20-Changes.md and .pdf (this pack) 
 • /workspace/v20/Margins365-Spec-v20.md and .pdf 

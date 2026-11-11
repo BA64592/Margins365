@@ -380,8 +380,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (current !== path) {
       window.history.pushState({ route: next }, '', path)
     }
-    // K62 — open every new page at the top
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    // K82 — open every new page at the top instantly (no smooth scroll); hold after paint
+    const jumpTop = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      document.documentElement.scrollTop = 0
+      document.body.scrollTop = 0
+    }
+    jumpTop()
+    requestAnimationFrame(() => {
+      jumpTop()
+      const h1 = document.querySelector('main h1, h1')
+      if (h1 instanceof HTMLElement) {
+        try {
+          h1.setAttribute('tabindex', '-1')
+          h1.focus({ preventScroll: true })
+        } catch {
+          /* ignore */
+        }
+      }
+    })
     document.title = pageTitle(next)
     const meta = document.querySelector('meta[name="description"]')
     if (meta) meta.setAttribute('content', pageDescription(next))
