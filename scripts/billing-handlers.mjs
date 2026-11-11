@@ -336,6 +336,19 @@ export async function handleBillingCancel(req, body) {
       ],
     )
 
+    // GA-42 — schedule wipe at access end (no free plan)
+    if (accessUntil) {
+      const { scheduleAccountDeletion } = await import('./deletion-handlers.mjs')
+      await scheduleAccountDeletion({
+        userId: user.id,
+        licenceState: 'canceled_access',
+        accessEndsAt: accessUntil,
+        reason: wasTrial ? 'cancel_trial' : 'cancel_subscription',
+        immediate: false,
+        email: user.email,
+      })
+    }
+
     await audit(user.id, 'cancel_confirmed', {
       planId,
       subscriptionId: checked.id,

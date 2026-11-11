@@ -3,6 +3,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -33,6 +34,7 @@ import {
 } from '../lib/retention'
 import { buildDemoStore, type DemoStoreId } from '../lib/demo/stores'
 import { clearAllState, loadState, saveState } from '../lib/storage'
+import { fetchWorkspace, listShopIds, pushWorkspace } from '../lib/serverWorkspace'
 import { evaluateOrderImport, uniqueOrderIds } from '../lib/orders/uniqueOrders'
 import {
   normalizePathname,
@@ -604,6 +606,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const serverShopIdRef = useRef<string | null>(null)
+  const serverHydratedRef = useRef(false)
+
   // Restore server session (verified email + licence) across devices / sign-ins
   useEffect(() => {
     void marginosAuthProvider.fetchSession().then(async (session) => {
@@ -614,6 +619,41 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (sync.ok && sync.session) current = sync.session
       setUser((prev) => authUserFromSession(current, prev))
       applyServerLicence(current)
+      // GA-44 — closed / ended accounts: wipe local cache
+      if (
+        current.licenceState === 'ended' ||
+        current.licenceState === 'removed_full_refund' ||
+        current.licenceState === 'removed_lost_dispute'
+      ) {
+        clearAllState(current.accountId)
+        setLines([])
+        setCosts([])
+        setAds([])
+        setScenarios([])
+        setSavedDatasets([])
+        setUsageUniqueOrderIds([])
+      }
+      // GA-40 — hydrate product data from server (browser is cache)
+      try {
+        const shopIds = await listShopIds()
+        if (shopIds[0]) {
+          serverShopIdRef.current = shopIds[0]
+          const ws = await fetchWorkspace(shopIds[0])
+          if (ws?.ok && !ws.empty) {
+            if (Array.isArray(ws.lines)) setLines(ws.lines as typeof lines)
+            if (Array.isArray(ws.costs)) setCosts(ws.costs as typeof costs)
+            if (Array.isArray(ws.ads)) setAds(ws.ads as typeof ads)
+            if (Array.isArray(ws.scenarios)) setScenarios(ws.scenarios as typeof scenarios)
+            if (Array.isArray(ws.savedDatasets))
+              setSavedDatasets(ws.savedDatasets as typeof savedDatasets)
+            if (Array.isArray(ws.usageUniqueOrderIds))
+              setUsageUniqueOrderIds(ws.usageUniqueOrderIds.map(String))
+          }
+          serverHydratedRef.current = true
+        }
+      } catch {
+        /* offline — keep local cache */
+      }
       // Keep account dialog open until email verified + profile complete
       if (!current.emailVerified || !isProfileComplete(authUserFromSession(current))) {
         setAuthOpen(true)
@@ -763,6 +803,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       trialUsed,
     }
     saveState(state)
+    // GA-40 / GA-41 — push product rows to server SoT (after hydrate, when signed in)
+    if (user?.id && serverShopIdRef.current && serverHydratedRef.current) {
+      void pushWorkspace(serverShopIdRef.current, {
+        lines,
+        costs,
+        ads,
+        scenarios,
+        savedDatasets,
+        usageUniqueOrderIds,
+        periodKey: usageMonthKey || undefined,
+      }).then((res) => {
+        if (!res.ok || !Array.isArray(res.usageUniqueOrderIds)) return
+        const next = res.usageUniqueOrderIds.map(String)
+        if (
+          next.length !== usageUniqueOrderIds.length ||
+          next.some((id, i) => id !== usageUniqueOrderIds[i])
+        ) {
+          setUsageUniqueOrderIds(next)
+        }
+      })
+    }
   }, [
     plan,
     access,

@@ -420,12 +420,67 @@ async function applyCheckoutCompleted(session) {
   }
 }
 
-async function applyRefundOrDispute(object) {
-  const email = object.billing_details?.email || object.receipt_email || ''
+async function resolveUserIdFromStripeObject(object) {
   const metaAccount =
-    object.metadata?.margins365_account_id || object.metadata?.marginos_account_id
-  if (metaAccount) await setUserPlan(metaAccount, 'free', 'removed_full_refund')
-  else if (email) await setUserPlanByEmail(email, 'free', 'removed_full_refund')
+    object.metadata?.margins365_account_id || object.metadata?.marginos_account_id || ''
+  if (metaAccount) return metaAccount
+  if (!dbConfigured()) return null
+  const customerId =
+    typeof object.customer === 'string'
+      ? object.customer
+      : object.customer?.id || object.customer || null
+  if (customerId) {
+    const { rows } = await query(
+      `SELECT id FROM users WHERE stripe_customer_id = $1 LIMIT 1`,
+      [String(customerId)],
+    )
+    if (rows[0]?.id) return rows[0].id
+  }
+  const email = (
+    object.billing_details?.email ||
+    object.receipt_email ||
+    object.customer_email ||
+    ''
+  )
+    .toLowerCase()
+    .trim()
+  if (email) {
+    const { rows } = await query(`SELECT id FROM users WHERE email = $1 LIMIT 1`, [email])
+    if (rows[0]?.id) return rows[0].id
+  }
+  return null
+}
+
+/** GA-14 — refund / lost dispute ends access and schedules wipe (never plan=free). */
+async function applyRefundOrDispute(object, kind = 'refund') {
+  const { scheduleAccountDeletion, sendAccessEndedNotice } = await import('./deletion-handlers.mjs')
+  const accountId = await resolveUserIdFromStripeObject(object)
+  if (!accountId || !dbConfigured()) return
+  const { rows } = await query(`SELECT id, email, plan, licence_state FROM users WHERE id = $1`, [
+    accountId,
+  ])
+  const user = rows[0]
+  if (!user) return
+  const licenceState = kind === 'dispute' ? 'removed_lost_dispute' : 'removed_full_refund'
+  // Keep tier plan for audit — never set plan to free (G9)
+  await setUserPlan(accountId, normalizePlanId(user.plan) || user.plan || 'pro', licenceState)
+  const now = new Date()
+  await scheduleAccountDeletion({
+    userId: accountId,
+    licenceState,
+    accessEndsAt: now,
+    reason: kind === 'dispute' ? 'lost_dispute' : 'full_refund',
+    immediate: true,
+    email: user.email,
+  })
+  if (user.email) {
+    await sendAccessEndedNotice(
+      user.email,
+      now,
+      kind === 'dispute' ? 'lost payment dispute' : 'full refund',
+    )
+  }
+  await releaseFoundingPlace(accountId)
 }
 
 export async function handleStripeWebhook(rawBody, signature) {
@@ -556,8 +611,23 @@ export async function handleStripeWebhook(rawBody, signature) {
       const accountId =
         sub.metadata?.margins365_account_id || sub.metadata?.marginos_account_id || ''
       if (accountId) {
-        await setUserPlan(accountId, 'free', 'canceled')
-        // K72 — release founding place if still reserved/confirmed on cancel before first pay settles as used
+        // GA-14 / GA-43 — never plan=free; schedule wipe at period end (or now)
+        const { scheduleAccountDeletion } = await import('./deletion-handlers.mjs')
+        const ends = sub.ended_at
+          ? new Date(sub.ended_at * 1000)
+          : sub.cancel_at
+            ? new Date(sub.cancel_at * 1000)
+            : new Date()
+        const planId =
+          normalizePlanId(sub.metadata?.margins365_plan || sub.metadata?.marginos_plan) || 'pro'
+        await setUserPlan(accountId, planId, 'canceled_access')
+        await scheduleAccountDeletion({
+          userId: accountId,
+          licenceState: 'canceled_access',
+          accessEndsAt: ends,
+          reason: 'subscription_deleted',
+          immediate: ends.getTime() <= Date.now(),
+        })
         if (sub.status === 'trialing' || sub.metadata?.margins365_founding === '1') {
           await releaseFoundingPlace(accountId)
         }
@@ -607,14 +677,10 @@ export async function handleStripeWebhook(rawBody, signature) {
         await setUserPlan(accountId, failPlan, finalFailure ? 'canceled_access' : 'past_due')
       }
     } else if (event.type === 'charge.refunded') {
-      await applyRefundOrDispute(event.data.object)
-      const metaAccount =
-        event.data.object.metadata?.margins365_account_id ||
-        event.data.object.metadata?.marginos_account_id
-      if (metaAccount) await releaseFoundingPlace(metaAccount)
+      await applyRefundOrDispute(event.data.object, 'refund')
     } else if (event.type === 'charge.dispute.closed') {
       const d = event.data.object
-      if (d.status === 'lost') await applyRefundOrDispute(d)
+      if (d.status === 'lost') await applyRefundOrDispute(d, 'dispute')
     }
   } catch (err) {
     console.error('[stripe-webhook] handler error', err)

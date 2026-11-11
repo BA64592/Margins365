@@ -36,21 +36,27 @@
 | GAP-06 | P0 | **Built, awaiting QA** | Atomic founding reserve under cap |
 | GAP-07 | P0 | Partial | More webhook events; add `trial_will_end` + `invoice.payment_failed` in Dashboard |
 | GAP-11 | P0 | **Built, awaiting QA** | `cancelAt` from Stripe → client `accessEndsAt` |
-| GAP-14 | P0 | Open | Refund → access end + deletion schedule |
+| GAP-14 | P0 | **Built, awaiting QA** | Refund/dispute → access end + wipe schedule (never `plan=free`) |
 | GAP-16 | P0 | **Built, awaiting QA** | Terms+Refunds acceptance at signup & Checkout |
 | GAP-17 | P0 | **Built, awaiting QA (K90)** | Trial-start email |
 | GAP-18 | P0 | **Built, awaiting QA** | `trial_will_end` → SES 3-day reminder |
 | GAP-20 | P0 | **Built, awaiting QA** | `invoice.payment_failed` → SES (+ final failure) |
 | GAP-21 | P0 | **Built, awaiting QA (K89)** | Cancel email |
-| GAP-22 | P0 | Open | Founding price-ends-soon email / job |
+| GAP-22 | P0 | **Built, awaiting QA** | Founding ends-soon SES via cron |
 | GAP-32 | P0 | **Ops proven (K86)** | SES production + DNS |
 | GAP-33 | P0 | **Built, awaiting QA** | All auth email links from `APP_ORIGIN` only |
 | GAP-34 | P0 | **Built, awaiting QA** | No demo auth fallback on server failure |
-| GAP-40–44 | P0 | Open | Server product data, limits, wipe, closure, privacy match |
+| GAP-40 | P0 | **Built, awaiting QA** | `shop_workspaces` + GET/PUT `/api/shops/:id/workspace` |
+| GAP-41 | P0 | **Built, awaiting QA** | Server unique-order limit on workspace PUT |
+| GAP-42 | P0 | **Built, awaiting QA** | `runDueDeletions` wipe + tombstone + data-deleted email |
+| GAP-43 | P0 | **Built, awaiting QA** | Account closure at wipe (`account_closed_at`, sessions killed) |
+| GAP-44 | P0 | **Built, awaiting QA** | Privacy claims match once GA-40/42 live; closed sign-in blocked |
 
-## Ops for Akthar (webhooks)
+## Ops for Akthar
 
-Add to Stripe webhook endpoint if missing: `customer.subscription.trial_will_end`, `invoice.payment_failed` (see `docs/STRIPE-SETUP.md`).
+1. Stripe webhooks: `customer.subscription.trial_will_end`, `invoice.payment_failed` (done live).
+2. Set **`CRON_SECRET`** on DO and schedule daily `POST /api/internal/cron` — see `docs/v20.1/CRON-OPS.md`.
+3. Confirm DO Postgres backups retention ≤ 7 days (GA-42 backups).
 
 ## Exit criteria that still block release (high level)
 

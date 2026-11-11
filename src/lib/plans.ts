@@ -247,7 +247,17 @@ export function localStateFromLicence(input: {
     return { plan: chosen, access: 'canceled_access', trialEntitlement: null, billingInterval }
   }
 
-  // canceled / removed_* / none / unknown with a plan still in DB but no paid access
+  // GA-14 / GA-44 — refund, dispute, ended: no access; keep never inventing a free plan
+  if (
+    licence === 'removed_full_refund' ||
+    licence === 'removed_lost_dispute' ||
+    licence === 'ended' ||
+    licence === 'canceled'
+  ) {
+    return { plan: 'none', access: 'none', trialEntitlement: null, billingInterval }
+  }
+
+  // none / unknown with a plan still in DB but no paid access
   return { plan: 'none', access: 'none', trialEntitlement: null, billingInterval }
 }
 

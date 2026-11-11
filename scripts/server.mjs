@@ -47,6 +47,14 @@ import {
   handleStripeWebhook,
   stripeConfigured,
 } from './stripe-handlers.mjs'
+import {
+  ensureProductDataSchema,
+  handleGetOrderUsage,
+  handleGetWorkspace,
+  handlePutWorkspace,
+} from './product-data-handlers.mjs'
+import { ensureDeletionSchema } from './deletion-handlers.mjs'
+import { runScheduledJobs } from './scheduler.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(__dirname, '..')
@@ -527,6 +535,44 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    // GA-40 / GA-41 — product workspace + order usage (server SoT)
+    const workspaceMatch = url.match(/^\/api\/shops\/([^/]+)\/workspace$/)
+    if (workspaceMatch && req.method === 'GET') {
+      const result = await handleGetWorkspace(req, decodeURIComponent(workspaceMatch[1]))
+      json(res, result.status, result.body)
+      return
+    }
+    if (workspaceMatch && req.method === 'PUT') {
+      let body = {}
+      try {
+        body = await parseJson(req)
+      } catch {
+        json(res, 400, { ok: false, message: 'Invalid JSON' })
+        return
+      }
+      const result = await handlePutWorkspace(req, decodeURIComponent(workspaceMatch[1]), body)
+      json(res, result.status, result.body)
+      return
+    }
+    if (req.method === 'GET' && url === '/api/account/usage') {
+      const result = await handleGetOrderUsage(req)
+      json(res, result.status, result.body)
+      return
+    }
+
+    // GA-22 / GA-42 — cron (DigitalOcean job or external). Header X-Cron-Secret.
+    if (req.method === 'POST' && url === '/api/internal/cron') {
+      const expected = process.env.CRON_SECRET || ''
+      const got = req.headers['x-cron-secret']
+      if (!expected || got !== expected) {
+        json(res, 401, { ok: false, message: 'Unauthorized' })
+        return
+      }
+      const result = await runScheduledJobs()
+      json(res, 200, result)
+      return
+    }
+
     // Legacy sample-report → sample-shop (K60 / K75)
     if (
       (req.method === 'GET' || req.method === 'HEAD') &&
@@ -573,6 +619,16 @@ migrate()
         await ensureBillingSchema()
       } catch (e) {
         console.warn('[margins365] billing schema', e)
+      }
+      try {
+        await ensureProductDataSchema()
+      } catch (e) {
+        console.warn('[margins365] product data schema', e)
+      }
+      try {
+        await ensureDeletionSchema()
+      } catch (e) {
+        console.warn('[margins365] deletion schema', e)
       }
     } else console.warn('[margins365] DATABASE_URL missing — auth API disabled')
     server.listen(port, '0.0.0.0', () => {

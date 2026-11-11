@@ -114,6 +114,18 @@ export async function migrate() {
     );
     CREATE INDEX IF NOT EXISTS legal_acceptances_user_id_idx ON legal_acceptances(user_id);
   `)
+  // GA-14 / GA-42 / GA-44 — deletion schedule + closure
+  await p.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS deletion_due_at TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS deletion_reason TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS account_closed_at TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS deletion_tombstone_id TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS data_deleted_email_sent_at TIMESTAMPTZ;
+  `)
+  // GA-22
+  await p.query(`
+    ALTER TABLE founding_places ADD COLUMN IF NOT EXISTS founding_ends_soon_sent_at TIMESTAMPTZ;
+  `)
   await p.query(`
     CREATE TABLE IF NOT EXISTS feature_suggestions (
       id TEXT PRIMARY KEY,

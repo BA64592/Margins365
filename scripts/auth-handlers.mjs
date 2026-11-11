@@ -97,6 +97,8 @@ export function publicUser(row) {
     cancelAt: row.cancel_at?.toISOString?.() || row.cancel_at || null,
     cancelReference: row.cancel_reference || null,
     cancelAtPeriodEnd: Boolean(row.cancel_at_period_end),
+    accountClosedAt: row.account_closed_at?.toISOString?.() || row.account_closed_at || null,
+    deletionDueAt: row.deletion_due_at?.toISOString?.() || row.deletion_due_at || null,
     stripeCustomerId: row.stripe_customer_id || null,
     stripeSubscriptionId: row.stripe_subscription_id || null,
     timeZone: row.time_zone || 'Europe/London',
@@ -132,7 +134,13 @@ export async function userFromRequest(req) {
      WHERE s.id = $1 AND s.expires_at > NOW()`,
     [sid],
   )
-  return rows[0] || null
+  const user = rows[0] || null
+  // GA-44 — closed accounts cannot use the API; kill leftover sessions
+  if (user?.account_closed_at || String(user?.licence_state || '') === 'ended') {
+    await query(`DELETE FROM sessions WHERE id = $1`, [sid])
+    return null
+  }
+  return user
 }
 
 function sesMailer() {
@@ -387,6 +395,17 @@ export async function handleAuthContinue(body, req) {
     user = inserted.rows[0]
     await recordLegalAcceptance(user.id, 'signup', ip)
   } else {
+    if (user.account_closed_at || String(user.licence_state || '') === 'ended') {
+      return {
+        status: 403,
+        body: {
+          ok: false,
+          code: 'account_closed',
+          message:
+            'This account is closed. Create a new empty account with the same email is not possible — use a new email, or contact support from Help.',
+        },
+      }
+    }
     if (String(user.auth_provider || 'email') === 'google') {
       return {
         status: 400,
