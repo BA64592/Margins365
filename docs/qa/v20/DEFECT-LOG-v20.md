@@ -91,3 +91,33 @@ See `DESIGN-DEV-RESPONSE-v20.md`.
 - Home H1 exact string (browser).  
 - `marginos.online` → `https://margins365.com/…` 301.  
 - `/sample-report` → `/sample-shop` 301.  
+
+---
+
+## Retest pass — K80–K86 prompt (11 Nov 2026 evening Europe/London)
+
+| ID | Status |
+|----|--------|
+| DEF-MOB-001 | **Fixed** — body/`html` scroll lock + iOS `position:fixed` pin while Modal/ConfirmDialog open |
+| DEF-BN-001 | **Fixed** — removed unused `TRIAL_BANNER_LINE` from client bundle |
+| DEF-EML-K86 | **Open / ops** — apex SPF empty; DMARC `p=none`; SES production access proof not attached |
+
+### DEF-MOB-001
+**Title:** Plans modal does not lock background scroll at ~390px  
+**Priority:** P0  
+**Test case:** MOB-01 / MOB-07  
+**Actual:** Wheel/touch scrolled the page behind the open UpgradeModal.  
+**Fix:** `useBodyScrollLock` in `src/components/ui.tsx`.
+
+### DEF-BN-001
+**Title:** Exact sticky banner copy still in JS via unused constant  
+**Priority:** P1  
+**Test case:** MOB-12 / BN-1  
+**Actual:** `TRIAL_BANNER_LINE` remained in `plans.ts` and the production bundle.  
+**Fix:** Removed; `TRIAL_BANNER_REMOVED` marker only. Allowed non-banner "Cancel before day 14" trial lines remain (spec B.19.2).
+
+### DEF-EML-K86
+**Title:** K86 SES / DNS proof incomplete on apex  
+**Priority:** P1 (ops)  
+**Test case:** EML-22–25 / exit criterion 8 & 16  
+**Actual:** No SPF TXT on `margins365.com`; DMARC is `p=none` only; MAIL FROM subdomain present.  

@@ -60,7 +60,8 @@ export const FOUNDING_MONTHLY_ONLY = false
 export const TRIAL_REMINDER_DAYS = 3
 
 /** K43 — exact sticky banner string (approved word-for-word). */
-export const TRIAL_BANNER_LINE = '14 days free. Cancel before day 14 and pay nothing. From £39/mo'
+/** Removed by K81 — do not reintroduce a sticky trial banner string. */
+export const TRIAL_BANNER_REMOVED = true as const
 
 /** K46 — single primary CTA label everywhere. */
 export const PRIMARY_TRIAL_CTA = 'Start 14-day free trial'

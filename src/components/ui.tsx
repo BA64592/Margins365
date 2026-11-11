@@ -1,5 +1,38 @@
-import type { ButtonHTMLAttributes, HTMLAttributes, InputHTMLAttributes, ReactNode } from 'react'
+import { useEffect, type ButtonHTMLAttributes, type HTMLAttributes, type InputHTMLAttributes, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
+
+/** K80 — lock document scroll while a dialog is open (phone + desktop). */
+function useBodyScrollLock(locked: boolean) {
+  useEffect(() => {
+    if (!locked) return
+    const html = document.documentElement
+    const body = document.body
+    const prevHtmlOverflow = html.style.overflow
+    const prevBodyOverflow = body.style.overflow
+    const prevBodyTouchAction = body.style.touchAction
+    const scrollY = window.scrollY
+    html.style.overflow = 'hidden'
+    body.style.overflow = 'hidden'
+    body.style.touchAction = 'none'
+    // iOS Safari: pin position so background can't rubber-band
+    body.style.position = 'fixed'
+    body.style.top = `-${scrollY}px`
+    body.style.left = '0'
+    body.style.right = '0'
+    body.style.width = '100%'
+    return () => {
+      html.style.overflow = prevHtmlOverflow
+      body.style.overflow = prevBodyOverflow
+      body.style.touchAction = prevBodyTouchAction
+      body.style.position = ''
+      body.style.top = ''
+      body.style.left = ''
+      body.style.right = ''
+      body.style.width = ''
+      window.scrollTo(0, scrollY)
+    }
+  }, [locked])
+}
 
 export function Button({
   className,
@@ -130,6 +163,7 @@ export function Modal({
   title: string
   children: ReactNode
 }) {
+  useBodyScrollLock(open)
   if (!open) return null
   // K80 — fit visible viewport (dvh), scroll inside, sticky title/Close, safe-area bottom
   return (
@@ -142,12 +176,17 @@ export function Modal({
           onClose()
         }
       }}
+      onWheel={(e) => {
+        // Wheel on the dimmed backdrop must not scroll the page behind
+        if (e.target === e.currentTarget) e.preventDefault()
+      }}
     >
       <button
         type="button"
         aria-label="Close dialog"
         className="absolute inset-0 bg-slate-950/50 backdrop-blur-[2px]"
         onClick={onClose}
+        onWheel={(e) => e.preventDefault()}
       />
       <div
         role="dialog"
@@ -165,7 +204,10 @@ export function Modal({
             Close
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 pt-3">
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 pt-3"
+          style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+        >
           {children}
         </div>
       </div>
@@ -194,6 +236,7 @@ export function ConfirmDialog({
   onConfirm: () => void
   danger?: boolean
 }) {
+  useBodyScrollLock(open)
   if (!open) return null
   return (
     <div
@@ -211,6 +254,7 @@ export function ConfirmDialog({
         aria-label={cancelLabel}
         className="absolute inset-0 bg-slate-950/50 backdrop-blur-[2px]"
         onClick={onCancel}
+        onWheel={(e) => e.preventDefault()}
       />
       <div
         role="alertdialog"
@@ -225,7 +269,10 @@ export function ConfirmDialog({
         >
           {title}
         </h3>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-3 text-sm text-subtle">
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-3 text-sm text-subtle"
+          style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+        >
           {children}
         </div>
         <div className="mt-3 flex shrink-0 flex-wrap justify-end gap-2 px-5 pb-5">
