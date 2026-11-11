@@ -3,7 +3,12 @@
  * v19 subscriptions: Starter / Growth / Pro / Scale × monthly / annual + 14-day trial.
  */
 import Stripe from 'stripe'
-import { setUserPlan, setUserPlanByEmail, userFromRequest } from './auth-handlers.mjs'
+import {
+  recordLegalAcceptance,
+  setUserPlan,
+  setUserPlanByEmail,
+  userFromRequest,
+} from './auth-handlers.mjs'
 import { dbConfigured, query } from './db.mjs'
 import {
   confirmFoundingPlace,
@@ -18,7 +23,12 @@ import {
   priceIdForPlan,
   stripeTierConfigured,
 } from './stripe-price-map.mjs'
-import { maybeSendTrialStartEmail } from './billing-handlers.mjs'
+import {
+  ensureBillingSchema,
+  maybeSendPaymentFailedEmail,
+  maybeSendTrialReminderEmail,
+  maybeSendTrialStartEmail,
+} from './billing-handlers.mjs'
 
 const ALLOWED = new Set([
   'GB',
@@ -86,13 +96,18 @@ export async function createCheckoutSession(body, req) {
     }
   }
 
+  if (dbConfigured()) await ensureBillingSchema()
+
   let accountId = ''
   let email = ''
+  /** @type {Record<string, unknown> | null} */
+  let userRow = null
   if (req && dbConfigured()) {
     const user = await userFromRequest(req)
     if (!user) {
       return { status: 401, body: { ok: false, message: 'Sign in to start checkout.' } }
     }
+    userRow = user
     accountId = String(user.id)
     email = String(user.email || '')
   } else if (process.env.NODE_ENV === 'production' || dbConfigured()) {
@@ -126,6 +141,82 @@ export async function createCheckoutSession(body, req) {
     }
   }
 
+  // GA-04 — refuse Checkout when account already has a live subscription
+  const liveStates = new Set(['trialing', 'active', 'past_due', 'canceled_access'])
+  const licenceState = String(userRow?.licence_state || '').toLowerCase()
+  if (userRow && liveStates.has(licenceState)) {
+    return {
+      status: 409,
+      body: {
+        ok: false,
+        code: 'already_subscribed',
+        message:
+          licenceState === 'canceled_access'
+            ? 'You already have a plan ending soon. Use Keep my plan in Plan & billing, or wait until access ends.'
+            : 'You already have an active plan. Change plan in Plan & billing instead of starting Checkout again.',
+      },
+    }
+  }
+  if (userRow && dbConfigured()) {
+    try {
+      const listOpts = userRow.stripe_customer_id
+        ? { customer: String(userRow.stripe_customer_id), status: 'all', limit: 10 }
+        : null
+      if (listOpts) {
+        const list = await stripe.subscriptions.list(listOpts)
+        const live = list.data.find((s) =>
+          ['trialing', 'active', 'past_due'].includes(s.status),
+        )
+        if (live) {
+          return {
+            status: 409,
+            body: {
+              ok: false,
+              code: 'already_subscribed',
+              message:
+                'You already have an active plan. Change plan in Plan & billing instead of starting Checkout again.',
+            },
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[checkout] subscription lookup', err)
+    }
+  }
+
+  // GA-03 — one trial per account (server). Card fingerprint remains Stripe Dashboard default.
+  const trialConsumed = Boolean(
+    userRow?.trial_consumed ||
+      userRow?.trial_start_email_sent_at ||
+      (userRow?.trial_ends_at && String(userRow.licence_state || '') !== 'none'),
+  )
+  if (trialConsumed) {
+    return {
+      status: 409,
+      body: {
+        ok: false,
+        code: 'trial_used',
+        message:
+          'This account has already used its free trial. Contact support from Help if you need a paid plan without a second trial.',
+      },
+    }
+  }
+
+  // GA-16 — Checkout requires Terms + Refunds acceptance on this session
+  if (userRow && body.acceptLegal) {
+    const ip = req?.headers?.['x-forwarded-for']?.toString().split(',')[0]?.trim() || 'local'
+    await recordLegalAcceptance(accountId, 'checkout', ip)
+  } else if (userRow) {
+    return {
+      status: 400,
+      body: {
+        ok: false,
+        code: 'legal_required',
+        message: 'Accept the Terms and Refunds policy before Checkout.',
+      },
+    }
+  }
+
   // K72 — reserve founding place server-side; apply coupon only when reserved
   const wantFounding = body.founding !== false
   let foundingReserved = false
@@ -153,12 +244,13 @@ export async function createCheckoutSession(body, req) {
     ? [{ coupon: foundingCouponId(interval) }]
     : undefined
 
+  // GA-15 — return URLs fixed by server (ignore browser-supplied hosts)
   const base = {
     mode: 'subscription',
     client_reference_id: accountId,
     customer_email: email || undefined,
-    success_url: String(body.successUrl || `${origin}/?checkout=success`),
-    cancel_url: String(body.cancelUrl || `${origin}/?checkout=cancel`),
+    success_url: `${origin}/?checkout=success`,
+    cancel_url: `${origin}/?checkout=cancel`,
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: {
       trial_period_days: trialDays > 0 ? trialDays : undefined,
@@ -287,6 +379,13 @@ async function applyCheckoutCompleted(session) {
   )
   if (accountId) await setUserPlan(accountId, planId, licenceState, billingInterval)
   else if (email) await setUserPlanByEmail(email, planId, licenceState, billingInterval)
+  // GA-03 — mark trial consumed as soon as Checkout creates a trial
+  if (accountId && licenceState === 'trialing' && dbConfigured()) {
+    await query(
+      `UPDATE users SET trial_consumed = TRUE, updated_at = NOW() WHERE id = $1`,
+      [accountId],
+    )
+  }
   // K72 — confirm founding reservation once Checkout completes (trial or paid)
   if (accountId && session.metadata?.margins365_founding === '1') {
     if (licenceState === 'active' || licenceState === 'trialing') {
@@ -463,15 +562,49 @@ export async function handleStripeWebhook(rawBody, signature) {
           await releaseFoundingPlace(accountId)
         }
       }
+    } else if (event.type === 'customer.subscription.trial_will_end') {
+      // GA-18 — Stripe fires ~3 days before trial end
+      const sub = event.data.object
+      const accountId =
+        sub.metadata?.margins365_account_id || sub.metadata?.marginos_account_id || ''
+      if (accountId && dbConfigured() && !sub.cancel_at_period_end) {
+        const { rows } = await query(`SELECT email FROM users WHERE id = $1`, [accountId])
+        const email = rows[0]?.email || ''
+        if (email) {
+          await maybeSendTrialReminderEmail({ userId: accountId, email, subscription: sub })
+        }
+      }
     } else if (event.type === 'invoice.payment_failed') {
       const inv = event.data.object
+      const accountId =
+        inv.subscription_details?.metadata?.margins365_account_id ||
+        inv.metadata?.margins365_account_id ||
+        inv.metadata?.marginos_account_id ||
+        ''
+      const finalFailure =
+        inv.billing_reason === 'subscription_cycle' && Number(inv.attempt_count || 0) >= 3
       // Release reservation when the first post-trial invoice finally fails
-      if (inv.billing_reason === 'subscription_cycle' && inv.attempt_count >= 3) {
-        const accountId =
-          inv.subscription_details?.metadata?.margins365_account_id ||
-          inv.metadata?.margins365_account_id ||
-          ''
-        if (accountId) await releaseFoundingPlace(accountId)
+      if (finalFailure && accountId) await releaseFoundingPlace(accountId)
+      // GA-20 — SES on each failed charge; final failure ends access messaging
+      if (accountId && dbConfigured()) {
+        let email = inv.customer_email || ''
+        if (!email) {
+          const { rows } = await query(`SELECT email FROM users WHERE id = $1`, [accountId])
+          email = rows[0]?.email || ''
+        }
+        if (email) {
+          await maybeSendPaymentFailedEmail({
+            userId: accountId,
+            email,
+            invoice: inv,
+            finalFailure,
+          })
+        }
+        const failPlan =
+          normalizePlanId(inv.subscription_details?.metadata?.margins365_plan) ||
+          normalizePlanId(inv.metadata?.margins365_plan) ||
+          'pro'
+        await setUserPlan(accountId, failPlan, finalFailure ? 'canceled_access' : 'past_due')
       }
     } else if (event.type === 'charge.refunded') {
       await applyRefundOrDispute(event.data.object)

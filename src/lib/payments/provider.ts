@@ -151,6 +151,7 @@ export async function stripeStartCheckout(args: CheckoutArgs): Promise<CheckoutR
         interval: args.interval,
         founding: foundingPlacesLeft(args.foundingSold) > 0,
         trialDays: TRIAL_DAYS,
+        acceptLegal: true,
         successUrl: `${window.location.origin}/?checkout=success`,
         cancelUrl: `${window.location.origin}/?checkout=cancel`,
       }),

@@ -104,6 +104,9 @@ export async function ensureBillingSchema() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS cancel_at_period_end BOOLEAN NOT NULL DEFAULT FALSE;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_start_email_sent_at TIMESTAMPTZ;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_consumed BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_reminder_email_sent_at TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_failed_email_sent_at TIMESTAMPTZ;
   `)
   await query(`
     CREATE TABLE IF NOT EXISTS billing_audit (
@@ -540,6 +543,7 @@ export async function maybeSendTrialStartEmail({ userId, email, subscription }) 
   }
   await query(
     `UPDATE users SET trial_start_email_sent_at = NOW(),
+       trial_consumed = TRUE,
        stripe_subscription_id = COALESCE(stripe_subscription_id, $2),
        trial_ends_at = COALESCE($3::timestamptz, trial_ends_at),
        updated_at = NOW()
@@ -562,6 +566,132 @@ export async function maybeSendTrialStartEmail({ userId, email, subscription }) 
     email,
     limit,
   }
+}
+
+/** GA-18 — one reminder ~3 days before trial end (Stripe trial_will_end). */
+export async function maybeSendTrialReminderEmail({ userId, email, subscription }) {
+  if (!dbConfigured() || !userId || !email || !subscription) return { sent: false }
+  await ensureBillingSchema()
+  if (subscription.cancel_at_period_end || subscription.status !== 'trialing') {
+    return { sent: false, reason: 'not_trialing_or_cancelled' }
+  }
+  const { rows } = await query(
+    `SELECT trial_reminder_email_sent_at, plan, cancel_at_period_end FROM users WHERE id = $1`,
+    [userId],
+  )
+  if (!rows[0] || rows[0].trial_reminder_email_sent_at) return { sent: false, reason: 'already' }
+  if (rows[0].cancel_at_period_end) return { sent: false, reason: 'cancelled' }
+
+  const planId =
+    normalizePlanId(subscription.metadata?.margins365_plan || subscription.metadata?.marginos_plan) ||
+    normalizePlanId(rows[0].plan) ||
+    'pro'
+  const planName = planNameOf(planId)
+  const price = subscription.items?.data?.[0]?.price
+  const amountLabel = moneyFromStripe(price?.unit_amount, price?.currency)
+  const trialEnd = subscription.trial_end ? new Date(subscription.trial_end * 1000) : null
+  const reference = `REM-${subscription.id.slice(-8).toUpperCase()}`
+
+  const subject = `Your Margins365 ${planName} trial ends soon`
+  const text = [
+    `Your free trial of ${planName} ends on ${trialEnd ? londonStamp(trialEnd) : 'the trial end date'}.`,
+    `Unless you cancel in Plan & billing, we’ll charge ${amountLabel} including VAT then.`,
+    `Cancel any time before then — one click. Replying to this email does not cancel.`,
+    `Plan & billing: ${ORIGIN_URL}/account/billing`,
+    `Reference: ${reference}`,
+    '',
+    '— Margins365',
+  ].join('\n')
+  const html = `<p>Your free trial of <strong>${planName}</strong> ends on <strong>${trialEnd ? londonStamp(trialEnd) : 'the trial end date'}</strong>.</p><p>Unless you cancel in Plan &amp; billing, we’ll charge <strong>${amountLabel}</strong> including VAT then.</p><p><a href="${ORIGIN_URL}/account/billing">Cancel in Plan &amp; billing</a> — one click. Replying does not cancel.</p><p>Reference: ${reference}</p><p>— Margins365</p>`
+
+  const mail = await sendMail(email, subject, text, html, CONTACT_INBOX)
+  if (!mail.ok) {
+    await audit(userId, 'trial_reminder_email_failed', {
+      planId,
+      subscriptionId: subscription.id,
+      detail: mail.message,
+      reference,
+    })
+    return { sent: false, reason: 'ses_failed' }
+  }
+  await query(
+    `UPDATE users SET trial_reminder_email_sent_at = NOW(), updated_at = NOW()
+     WHERE id = $1 AND trial_reminder_email_sent_at IS NULL`,
+    [userId],
+  )
+  await audit(userId, 'trial_reminder_email_sent', {
+    planId,
+    subscriptionId: subscription.id,
+    reference,
+  })
+  return { sent: true, reference }
+}
+
+/** GA-20 — payment failed / final failure email. */
+export async function maybeSendPaymentFailedEmail({
+  userId,
+  email,
+  invoice,
+  finalFailure = false,
+}) {
+  if (!dbConfigured() || !userId || !email || !invoice) return { sent: false }
+  await ensureBillingSchema()
+  const attempt = Number(invoice.attempt_count || 1)
+  const amountLabel = moneyFromStripe(invoice.amount_due, invoice.currency)
+  const reference = `PAYFAIL-${String(invoice.id || '').slice(-8).toUpperCase() || randomBytes(4).toString('hex').toUpperCase()}`
+  const subject = finalFailure
+    ? 'Margins365 payment failed — access ending'
+    : 'Margins365 payment failed — update your card'
+  const text = finalFailure
+    ? [
+        `We couldn’t take your Margins365 payment of ${amountLabel} including VAT after several attempts.`,
+        `Access will end and your data will be scheduled for deletion. Download anything you need from Plan & billing.`,
+        `Update card / billing: ${ORIGIN_URL}/account/billing`,
+        `Reference: ${reference}`,
+        '',
+        '— Margins365',
+      ].join('\n')
+    : [
+        `We couldn’t take your Margins365 payment of ${amountLabel} including VAT (attempt ${attempt}).`,
+        `Please update your card in Plan & billing so your plan continues.`,
+        `Update card: ${ORIGIN_URL}/account/billing`,
+        `Reference: ${reference}`,
+        '',
+        '— Margins365',
+      ].join('\n')
+  const html = finalFailure
+    ? `<p>We couldn’t take your Margins365 payment of <strong>${amountLabel}</strong> including VAT after several attempts.</p><p>Access will end and your data will be scheduled for deletion. Download anything you need from <a href="${ORIGIN_URL}/account/billing">Plan &amp; billing</a>.</p><p>Reference: ${reference}</p><p>— Margins365</p>`
+    : `<p>We couldn’t take your Margins365 payment of <strong>${amountLabel}</strong> including VAT (attempt ${attempt}).</p><p><a href="${ORIGIN_URL}/account/billing">Update your card in Plan &amp; billing</a> so your plan continues.</p><p>Reference: ${reference}</p><p>— Margins365</p>`
+
+  const mail = await sendMail(email, subject, text, html, CONTACT_INBOX)
+  if (!mail.ok) {
+    await audit(userId, 'payment_failed_email_failed', {
+      detail: mail.message,
+      reference,
+      subscriptionId: typeof invoice.subscription === 'string' ? invoice.subscription : null,
+    })
+    return { sent: false, reason: 'ses_failed' }
+  }
+  await query(
+    `UPDATE users SET
+       payment_failed_email_sent_at = NOW(),
+       licence_state = CASE WHEN $2 THEN 'past_due' ELSE licence_state END,
+       updated_at = NOW()
+     WHERE id = $1`,
+    [userId, !finalFailure],
+  )
+  if (finalFailure) {
+    await query(
+      `UPDATE users SET licence_state = 'canceled_access', updated_at = NOW() WHERE id = $1`,
+      [userId],
+    )
+  }
+  await audit(userId, finalFailure ? 'payment_final_failure_email_sent' : 'payment_failed_email_sent', {
+    reference,
+    detail: JSON.stringify({ attempt, amount: invoice.amount_due, finalFailure }),
+    subscriptionId: typeof invoice.subscription === 'string' ? invoice.subscription : null,
+  })
+  return { sent: true, reference, finalFailure }
 }
 
 /**

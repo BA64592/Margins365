@@ -182,8 +182,9 @@ async function mintVerification(userId, origin) {
     `INSERT INTO verification_tokens (token, user_id, expires_at) VALUES ($1, $2, $3)`,
     [token, userId, expires.toISOString()],
   )
-  // Prefer fixed APP_ORIGIN (K85 / K73) — never trust a browser-supplied host for email links
-  const base = process.env.APP_ORIGIN || origin || 'https://margins365.com'
+  // GA-33 / K85 — every email link from fixed APP_ORIGIN only (ignore browser origin)
+  void origin
+  const base = process.env.APP_ORIGIN || 'https://margins365.com'
   // Hit the API so verify works without SPA JS; cookie is set then redirect to app.
   const verifyUrl = `${String(base).replace(/\/$/, '')}/api/auth/verify?token=${encodeURIComponent(token)}`
   return { token, verifyUrl }
@@ -313,6 +314,31 @@ export async function handleGoogleContinue(body, req) {
   }
 }
 
+const LEGAL_TERMS_VERSION = process.env.LEGAL_TERMS_VERSION || 'v20'
+const LEGAL_REFUNDS_VERSION = process.env.LEGAL_REFUNDS_VERSION || 'v20'
+
+export async function recordLegalAcceptance(userId, source, ip) {
+  if (!dbConfigured() || !userId) return
+  const docs = [
+    ['terms', LEGAL_TERMS_VERSION],
+    ['refunds', LEGAL_REFUNDS_VERSION],
+  ]
+  for (const [document, version] of docs) {
+    await query(
+      `INSERT INTO legal_acceptances (id, user_id, document, version, ip, source)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [
+        `leg_${crypto.randomBytes(8).toString('hex')}`,
+        userId,
+        document,
+        version,
+        ip || null,
+        source || 'signup',
+      ],
+    )
+  }
+}
+
 export async function handleAuthContinue(body, req) {
   if (!dbConfigured()) {
     return { status: 503, body: { ok: false, message: 'Auth database is not configured.' } }
@@ -339,6 +365,17 @@ export async function handleAuthContinue(body, req) {
   const existing = await query(`SELECT * FROM users WHERE email = $1`, [email])
   let user = existing.rows[0]
   if (!user) {
+    // GA-16 — record Terms + Refunds acceptance at account create
+    if (!body.acceptLegal) {
+      return {
+        status: 400,
+        body: {
+          ok: false,
+          code: 'legal_required',
+          message: 'Accept the Terms and Refunds policy to create an account.',
+        },
+      }
+    }
     const id = `acct_${crypto.randomBytes(10).toString('hex')}`
     const hash = await bcrypt.hash(password, 12)
     const inserted = await query(
@@ -348,6 +385,7 @@ export async function handleAuthContinue(body, req) {
       [id, email, hash, timeZone],
     )
     user = inserted.rows[0]
+    await recordLegalAcceptance(user.id, 'signup', ip)
   } else {
     if (String(user.auth_provider || 'email') === 'google') {
       return {

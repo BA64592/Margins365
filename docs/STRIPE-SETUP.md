@@ -70,8 +70,11 @@ Endpoint (live host): `https://<your-domain>/api/webhooks/stripe`
 Minimum events:
 
 - `checkout.session.completed`
+- `customer.subscription.created`
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
+- `customer.subscription.trial_will_end` (GA-18 — ~3 days before trial end)
+- `invoice.payment_failed` (GA-20)
 - `charge.refunded`
 - `charge.dispute.created`
 - `charge.dispute.closed`

@@ -88,20 +88,27 @@ export async function reserveFoundingPlace(userId, planId, interval) {
     }
   }
 
-  // Atomic-ish: check count then insert; unique user_id prevents double
-  const used = await foundingUsedCount()
-  if (used >= FOUNDING_CAP) {
-    return { ok: true, reserved: false, placesLeft: 0, reason: 'sold_out' }
-  }
-
+  // GA-06 — single-statement reserve under cap (avoids parallel 101st)
   try {
-    await query(
+    const { rows } = await query(
       `INSERT INTO founding_places (user_id, status, plan_id, interval)
-       VALUES ($1, 'reserved', $2, $3)`,
-      [userId, planId || null, interval || null],
+       SELECT $1, 'reserved', $2, $3
+       WHERE (
+         SELECT COUNT(*)::int FROM founding_places WHERE status IN ('reserved', 'confirmed')
+       ) < $4
+       AND NOT EXISTS (SELECT 1 FROM founding_places WHERE user_id = $1)
+       RETURNING user_id`,
+      [userId, planId || null, interval || null, FOUNDING_CAP],
     )
+    if (rows[0]) {
+      return { ok: true, reserved: true, placesLeft: await foundingPlacesLeft() }
+    }
+    const again = await query(`SELECT status FROM founding_places WHERE user_id = $1`, [userId])
+    if (again.rows[0] && (again.rows[0].status === 'reserved' || again.rows[0].status === 'confirmed')) {
+      return { ok: true, reserved: true, placesLeft: await foundingPlacesLeft(), already: true }
+    }
+    return { ok: true, reserved: false, placesLeft: await foundingPlacesLeft(), reason: 'sold_out' }
   } catch (err) {
-    // race: unique violation or over-cap — re-check
     const again = await query(`SELECT status FROM founding_places WHERE user_id = $1`, [userId])
     if (again.rows[0] && (again.rows[0].status === 'reserved' || again.rows[0].status === 'confirmed')) {
       return { ok: true, reserved: true, placesLeft: await foundingPlacesLeft(), already: true }
@@ -113,18 +120,6 @@ export async function reserveFoundingPlace(userId, planId, interval) {
       reason: err instanceof Error ? err.message : 'reserve_failed',
     }
   }
-
-  // Soft check after insert — if somehow over cap, release this one
-  const after = await foundingUsedCount()
-  if (after > FOUNDING_CAP) {
-    await query(
-      `UPDATE founding_places SET status = 'released', released_at = NOW() WHERE user_id = $1 AND status = 'reserved'`,
-      [userId],
-    )
-    return { ok: true, reserved: false, placesLeft: 0, reason: 'sold_out_race' }
-  }
-
-  return { ok: true, reserved: true, placesLeft: Math.max(0, FOUNDING_CAP - after) }
 }
 
 export async function confirmFoundingPlace(userId) {

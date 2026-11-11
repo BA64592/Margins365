@@ -15,6 +15,9 @@ export interface AuthSession {
   licenceState?: string | null
   billingInterval?: 'month' | 'year' | null
   trialEndsAt?: string | null
+  /** GA-11 — Stripe cancel_at / access end when cancelled */
+  cancelAt?: string | null
+  cancelAtPeriodEnd?: boolean
   stripeCustomerId?: string | null
   googleSub?: string
   pendingVerifyToken?: string
@@ -24,9 +27,15 @@ export interface AuthSession {
   enabledPlatforms?: string[] | null
 }
 
+export type SignInOptions = { acceptLegal?: boolean }
+
 export interface AuthProvider {
   signUpEmail(email: string, password: string): Promise<{ ok: boolean; message: string }>
-  signInEmail(email: string, password: string): Promise<{
+  signInEmail(
+    email: string,
+    password: string,
+    options?: SignInOptions,
+  ): Promise<{
     ok: boolean
     session?: AuthSession
     message: string
@@ -60,6 +69,8 @@ type ApiUser = {
   licenceState?: string | null
   billingInterval?: string | null
   trialEndsAt?: string | null
+  cancelAt?: string | null
+  cancelAtPeriodEnd?: boolean
   stripeCustomerId?: string | null
   timeZone?: string
   createdAt?: string
@@ -70,6 +81,9 @@ type ApiUser = {
   phone?: string | null
   enabledPlatforms?: string[] | null
 }
+
+const SERVER_UNREACHABLE =
+  'Could not reach the Margins365 server. Check your connection and try again. You stay signed out until the server confirms.'
 
 export type ProfilePatch = {
   fullName: string
@@ -97,6 +111,8 @@ function sessionFromApi(user: ApiUser): AuthSession {
     licenceState: user.licenceState ?? null,
     billingInterval: iv === 'year' || iv === 'month' ? iv : null,
     trialEndsAt: user.trialEndsAt ?? null,
+    cancelAt: user.cancelAt ?? null,
+    cancelAtPeriodEnd: Boolean(user.cancelAtPeriodEnd),
     stripeCustomerId: user.stripeCustomerId ?? null,
     fullName: user.fullName ?? null,
     businessName: user.businessName ?? null,
@@ -167,7 +183,7 @@ const localAuthProvider: AuthProvider = {
     }
     return { ok: true, message: `Verification email would be sent to ${email} (24h link).` }
   },
-  async signInEmail(email, password) {
+  async signInEmail(email, password, _options) {
     if (password.length < MIN_PASSWORD) {
       return { ok: false, message: `Password must be at least ${MIN_PASSWORD} characters.` }
     }
@@ -295,7 +311,7 @@ const serverAuthProvider: AuthProvider = {
   async signUpEmail(email, password) {
     return this.signInEmail(email, password).then((r) => ({ ok: r.ok, message: r.message }))
   },
-  async signInEmail(email, password) {
+  async signInEmail(email, password, options) {
     try {
       const { okHttp, data } = await apiJson<{
         ok?: boolean
@@ -309,6 +325,7 @@ const serverAuthProvider: AuthProvider = {
           password,
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/London',
           origin: window.location.origin,
+          acceptLegal: Boolean(options?.acceptLegal),
         }),
       })
       if (!okHttp || !data.ok || !data.user) {
@@ -317,7 +334,9 @@ const serverAuthProvider: AuthProvider = {
           message:
             data.code === 'google_only'
               ? 'This account uses Google Sign-In. Please use Continue with Google above.'
-              : data.message || 'Sign-in failed.',
+              : data.code === 'legal_required'
+                ? data.message || 'Accept the Terms and Refunds policy to create an account.'
+                : data.message || 'Sign-in failed.',
           code: data.code,
         }
       }
@@ -327,7 +346,8 @@ const serverAuthProvider: AuthProvider = {
         message: data.message || 'Signed in.',
       }
     } catch {
-      return localAuthProvider.signInEmail(email, password)
+      // GA-34 — never invent a local signed-in session when the server is unreachable
+      return { ok: false, message: SERVER_UNREACHABLE }
     }
   },
   async signInGoogle(claims) {
@@ -360,7 +380,7 @@ const serverAuthProvider: AuthProvider = {
         message: data.message || 'Signed in with Google.',
       }
     } catch {
-      return localAuthProvider.signInGoogle(claims)
+      return { ok: false, message: SERVER_UNREACHABLE }
     }
   },
   async requestEmailVerification() {
@@ -397,7 +417,7 @@ const serverAuthProvider: AuthProvider = {
         session: data.user ? sessionFromApi(data.user) : undefined,
       }
     } catch {
-      return localAuthProvider.verifyEmail(token)
+      return { ok: false, message: SERVER_UNREACHABLE }
     }
   },
   async requestPasswordReset(email) {
@@ -415,11 +435,10 @@ const serverAuthProvider: AuthProvider = {
       if (okHttp && data.ok) {
         return { ok: true, message: data.message || GENERIC_RESET_MSG }
       }
-      // Fall back to local demo path when API/DB unavailable
-      if (!okHttp) return localAuthProvider.requestPasswordReset(email)
-      return { ok: false, message: data.message || 'Could not send reset email.' }
+      // GA-34 — no local fake reset success when API/DB is down
+      return { ok: false, message: data.message || SERVER_UNREACHABLE }
     } catch {
-      return localAuthProvider.requestPasswordReset(email)
+      return { ok: false, message: SERVER_UNREACHABLE }
     }
   },
   async resetPassword(token, newPassword) {
@@ -434,16 +453,12 @@ const serverAuthProvider: AuthProvider = {
       if (okHttp && data.ok) {
         return { ok: true, message: data.message || 'Password updated.' }
       }
-      // Structured API failure (expired token, validation) — do not invent a local success
       if (status >= 400 && status < 500 && data.message) {
         return { ok: false, message: data.message }
       }
-      if (status >= 500 || status === 503) {
-        return localAuthProvider.resetPassword(token, newPassword)
-      }
-      return { ok: false, message: data.message || 'Could not reset password.' }
+      return { ok: false, message: data.message || SERVER_UNREACHABLE }
     } catch {
-      return localAuthProvider.resetPassword(token, newPassword)
+      return { ok: false, message: SERVER_UNREACHABLE }
     }
   },
   async updateProfile(patch) {
@@ -465,7 +480,7 @@ const serverAuthProvider: AuthProvider = {
       }
       return { ok: false, message: data.message || 'Could not save profile.' }
     } catch {
-      return localAuthProvider.updateProfile(patch)
+      return { ok: false, message: SERVER_UNREACHABLE }
     }
   },
   async fetchSession() {
@@ -505,8 +520,14 @@ const serverAuthProvider: AuthProvider = {
   },
 }
 
-/** Prefer server auth in the browser; falls back automatically if API is down. */
-export const marginosAuthProvider: AuthProvider = serverAuthProvider
+/**
+ * Prefer server auth. Local demo provider is only used when explicitly opted in
+ * via VITE_DEMO_HARNESS (never as a silent fallback — GA-34).
+ */
+export const marginosAuthProvider: AuthProvider =
+  !isStrictAuthEnabled() && import.meta.env.VITE_DEMO_HARNESS === 'true'
+    ? localAuthProvider
+    : serverAuthProvider
 
 /** @deprecated alias — prefer marginosAuthProvider */
 export const demoAuthProvider = marginosAuthProvider

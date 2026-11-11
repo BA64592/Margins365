@@ -26,27 +26,31 @@
 
 ## GAP P0 — engineering status (code vs live QA)
 
-| GAP | Sev | Code status (as of main) | Notes |
+| GAP | Sev | Code status | Notes |
 | --- | --- | --- | --- |
-| GAP-01 | P0 | **Code fixed (K89)** | Needs Stripe test-mode QA evidence |
-| GAP-02 | P0 | **Code fixed** | Server ignores client `trialDays` |
-| GAP-03 | P0 | Open | One trial per account/card |
-| GAP-04 | P0 | Open | Block duplicate Checkout |
+| GAP-01 | P0 | **Built, awaiting QA (K89)** | Stripe cancel + email |
+| GAP-02 | P0 | **Built, awaiting QA** | Server ignores client `trialDays` |
+| GAP-03 | P0 | **Built, awaiting QA** | Server refuses second trial (`trial_consumed`) |
+| GAP-04 | P0 | **Built, awaiting QA** | Server refuses Checkout if live sub |
 | GAP-05 | P0 | Partial / verify | Founding coupons at Checkout — confirm live Stripe |
-| GAP-06 | P0 | Partial / verify | Founding place atomicity under parallel Checkout |
-| GAP-07 | P0 | Partial | Webhooks improved for cancel_at_period_end; more events still needed |
-| GAP-11 | P0 | Open | Access end date from Stripe |
+| GAP-06 | P0 | **Built, awaiting QA** | Atomic founding reserve under cap |
+| GAP-07 | P0 | Partial | More webhook events; add `trial_will_end` + `invoice.payment_failed` in Dashboard |
+| GAP-11 | P0 | **Built, awaiting QA** | `cancelAt` from Stripe → client `accessEndsAt` |
 | GAP-14 | P0 | Open | Refund → access end + deletion schedule |
-| GAP-16 | P0 | Open | Legal acceptance records |
-| GAP-17 | P0 | **Code fixed (K90)** | Trial-start email — needs E2E proof |
-| GAP-18 | P0 | Open | 3-day trial reminder |
-| GAP-20 | P0 | Open | Payment-failed emails |
-| GAP-21 | P0 | **Code fixed (K89)** | Cancel email — needs E2E proof |
-| GAP-22 | P0 | Open | Data-deleted email / job |
+| GAP-16 | P0 | **Built, awaiting QA** | Terms+Refunds acceptance at signup & Checkout |
+| GAP-17 | P0 | **Built, awaiting QA (K90)** | Trial-start email |
+| GAP-18 | P0 | **Built, awaiting QA** | `trial_will_end` → SES 3-day reminder |
+| GAP-20 | P0 | **Built, awaiting QA** | `invoice.payment_failed` → SES (+ final failure) |
+| GAP-21 | P0 | **Built, awaiting QA (K89)** | Cancel email |
+| GAP-22 | P0 | Open | Founding price-ends-soon email / job |
 | GAP-32 | P0 | **Ops proven (K86)** | SES production + DNS |
-| GAP-33 | P0 | Open | Reset links always APP_ORIGIN (verify) |
-| GAP-34 | P0 | Open | Fake-success ban across auth |
+| GAP-33 | P0 | **Built, awaiting QA** | All auth email links from `APP_ORIGIN` only |
+| GAP-34 | P0 | **Built, awaiting QA** | No demo auth fallback on server failure |
 | GAP-40–44 | P0 | Open | Server product data, limits, wipe, closure, privacy match |
+
+## Ops for Akthar (webhooks)
+
+Add to Stripe webhook endpoint if missing: `customer.subscription.trial_will_end`, `invoice.payment_failed` (see `docs/STRIPE-SETUP.md`).
 
 ## Exit criteria that still block release (high level)
 

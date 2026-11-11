@@ -250,6 +250,7 @@ interface AppContextValue {
   signInEmail: (
     email: string,
     password: string,
+    options?: { acceptLegal?: boolean },
   ) => Promise<{ ok: boolean; message: string; code?: string }>
   signInGoogle: (claims: {
     sub: string
@@ -591,9 +592,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTrialEntitlement(next.trialEntitlement)
     if (next.billingInterval) setBillingInterval(next.billingInterval)
     if (session.trialEndsAt) setTrialEndsAt(session.trialEndsAt)
+    // GA-11 — access end comes from Stripe cancel_at, never a browser estimate
+    if (session.cancelAt) setAccessEndsAt(session.cancelAt)
+    else if (next.access !== 'canceled_access') setAccessEndsAt(null)
     if (next.access === 'trial' || next.access === 'active' || next.access === 'legacy') {
       setTrialUsed(true)
       setFreeClocks([])
+    }
+    if (next.access === 'canceled_access' || session.licenceState === 'trialing') {
+      setTrialUsed(true)
     }
   }
 
@@ -995,8 +1002,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTax: (patch) => setTaxState((t) => ({ ...t, ...patch })),
     setTargetMarginPct,
     setMonthlyOverheads,
-    signInEmail: async (email, password) => {
-      const res = await marginosAuthProvider.signInEmail(email, password)
+    signInEmail: async (email, password, options) => {
+      const res = await marginosAuthProvider.signInEmail(email, password, options)
       if (!res.ok || !res.session) {
         return {
           ok: false,

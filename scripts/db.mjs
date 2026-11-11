@@ -94,6 +94,25 @@ export async function migrate() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS enabled_platforms TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS billing_interval TEXT;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_consumed BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_reminder_email_sent_at TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_failed_email_sent_at TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS cancel_at TIMESTAMPTZ;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS cancel_reference TEXT;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS cancel_at_period_end BOOLEAN NOT NULL DEFAULT FALSE;
+  `)
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS legal_acceptances (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      document TEXT NOT NULL,
+      version TEXT NOT NULL,
+      accepted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      ip TEXT,
+      source TEXT
+    );
+    CREATE INDEX IF NOT EXISTS legal_acceptances_user_id_idx ON legal_acceptances(user_id);
   `)
   await p.query(`
     CREATE TABLE IF NOT EXISTS feature_suggestions (

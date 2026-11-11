@@ -73,11 +73,13 @@ export function UpgradeModal() {
   const [selected, setSelected] = useState<PlanId>('growth')
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [acceptLegal, setAcceptLegal] = useState(false)
 
   useEffect(() => {
     if (!upgradeOpen) return
     setMessage(null)
     setBusy(false)
+    setAcceptLegal(false)
     if (changing) {
       if (isPlanId(plan)) setSelected(plan)
       if (billingInterval === 'year' || billingInterval === 'month') setInterval(billingInterval)
@@ -277,6 +279,28 @@ export function UpgradeModal() {
         </label>
       ) : null}
 
+      {!changing ? (
+        <label className="mb-3 flex items-start gap-2 text-sm text-ink">
+          <input
+            type="checkbox"
+            className="mt-1 h-4 w-4 shrink-0"
+            checked={acceptLegal}
+            onChange={(e) => setAcceptLegal(e.target.checked)}
+          />
+          <span>
+            I agree to the{' '}
+            <a className="text-accent underline-offset-2 hover:underline" href="/legal/terms">
+              Terms
+            </a>{' '}
+            and{' '}
+            <a className="text-accent underline-offset-2 hover:underline" href="/legal/refunds">
+              Refunds policy
+            </a>{' '}
+            before starting Checkout.
+          </span>
+        </label>
+      ) : null}
+
       {message ? <p className="mb-3 text-sm text-subtle">{message}</p> : null}
 
       <div className="flex flex-col gap-2 sm:flex-row">
@@ -290,6 +314,10 @@ export function UpgradeModal() {
             }
             if (changing) {
               void changePlan()
+              return
+            }
+            if (!acceptLegal) {
+              setMessage('Accept the Terms and Refunds policy before Checkout.')
               return
             }
             void unlockProDemo(country, selected, interval).then((res) => setMessage(res.message))

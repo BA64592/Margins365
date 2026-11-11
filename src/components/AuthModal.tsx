@@ -43,6 +43,7 @@ export function AuthModal() {
   const [busy, setBusy] = useState(false)
   const [googleBusy, setGoogleBusy] = useState(false)
   const [canResendReset, setCanResendReset] = useState(false)
+  const [acceptLegal, setAcceptLegal] = useState(false)
   const [inApp] = useState(() =>
     typeof navigator !== 'undefined' ? isInAppBrowser() : false,
   )
@@ -193,9 +194,15 @@ export function AuthModal() {
       setError('Password must be at least 15 characters.')
       return
     }
+    if (mode === 'create' && !acceptLegal) {
+      setError('Accept the Terms and Refunds policy to create an account.')
+      return
+    }
     setBusy(true)
     try {
-      const res = await signInEmail(trimmed, password)
+      const res = await signInEmail(trimmed, password, {
+        acceptLegal: mode === 'create' ? acceptLegal : false,
+      })
       if (!res.ok) {
         if (res.code === 'google_only') {
           setError('This account uses Google Sign-In. Please use Continue with Google above.')
@@ -608,6 +615,30 @@ export function AuthModal() {
                 >
                   Forgot password?
                 </button>
+              ) : null}
+              {mode === 'create' ? (
+                <label className="flex items-start gap-2 text-sm text-ink">
+                  <input
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 shrink-0"
+                    checked={acceptLegal}
+                    onChange={(e) => {
+                      setAcceptLegal(e.target.checked)
+                      resetFeedback()
+                    }}
+                  />
+                  <span>
+                    I agree to the{' '}
+                    <a className="text-accent underline-offset-2 hover:underline" href="/legal/terms">
+                      Terms
+                    </a>{' '}
+                    and{' '}
+                    <a className="text-accent underline-offset-2 hover:underline" href="/legal/refunds">
+                      Refunds policy
+                    </a>
+                    .
+                  </span>
+                </label>
               ) : null}
               {error ? (
                 <p className="rounded-[10px] bg-danger-soft px-3 py-2 text-sm text-danger" role="alert">
