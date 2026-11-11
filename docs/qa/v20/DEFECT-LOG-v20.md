@@ -136,7 +136,7 @@ Akthar supplied AWS + GoDaddy screenshots (archived under `docs/qa/v20/evidence/
 | MAIL FROM `mail.margins365.com` Successful | Proven (live DNS matches) |
 | DMARC `p=none` | Present (monitoring only) |
 | Apex SPF on `margins365.com` | **Still open** — add TXT `@` `v=spf1 include:amazonses.com ~all` (or include existing senders) |
-| SES production access | **Still open** — console screenshot not in pack |
+| SES production access | **Proven** (eu-north-1 Production access granted, 11 Nov ~21:09) |
 | External header proofs | **Still open** |
 
 DEF-EML-K86 remains **partially open** until apex SPF + production access + header proofs.

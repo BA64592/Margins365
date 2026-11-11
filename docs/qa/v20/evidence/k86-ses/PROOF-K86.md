@@ -22,9 +22,19 @@ Files: this folder + `/opt/cursor/artifacts/k86-ses-proof/`.
 | TXT `mail.margins365.com` SPF `include:amazonses.com` | Pass |
 | TXT `_dmarc.margins365.com` | Pass (`p=none`) |
 | Apex TXT SPF on `margins365.com` | **Missing** |
-| SES production access (out of sandbox) | **Not shown** in these screenshots |
+| SES production access (out of sandbox) | **Proven** — “You are in Production” / Production access granted (eu-north-1; 50k/day, 14/s) |
 | Inbox header proofs (Gmail / Outlook / iCloud) | **Not attached** |
 
 ## Verdict
 
 Identity + DKIM + MAIL FROM are proven. ES / EML exit criteria still need: apex SPF on `@`, production-access screenshot, and at least one external delivery header pass per provider.
+
+
+## Production access (Akthar, 11 Nov 2026 ~21:09 Europe/London)
+
+Screenshots: `01a1cc74-6b4b-71db-9582-2470d3a7ee16.jpg`, `01a1cc74-6b69-7da1-a9c1-1395da2fb8ca.jpg`
+
+- Banner: **You are in Production — Europe (Stockholm)**
+- Status: **Production access granted**
+- Quota: 50,000 / 24h · 14/s
+- Completed tasks include: verify email (`info.marginos@gmail.com`), verify domain (`margins365.com`), VDM Enabled, request production access Enabled
