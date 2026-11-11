@@ -94,7 +94,11 @@ export function publicUser(row) {
     licenceState,
     billingInterval: interval === 'year' || interval === 'month' ? interval : null,
     trialEndsAt: row.trial_ends_at?.toISOString?.() || row.trial_ends_at || null,
+    cancelAt: row.cancel_at?.toISOString?.() || row.cancel_at || null,
+    cancelReference: row.cancel_reference || null,
+    cancelAtPeriodEnd: Boolean(row.cancel_at_period_end),
     stripeCustomerId: row.stripe_customer_id || null,
+    stripeSubscriptionId: row.stripe_subscription_id || null,
     timeZone: row.time_zone || 'Europe/London',
     createdAt: row.created_at?.toISOString?.() || row.created_at,
     lastSignInAt: row.last_sign_in_at?.toISOString?.() || row.last_sign_in_at,
@@ -510,7 +514,10 @@ export async function handleAuthLogoutAll(req) {
 export async function handleContactForm(req, body) {
   // Honeypot — bots fill this; humans leave it empty
   if (String(body?.companyWebsite || body?.website || '').trim()) {
-    return { status: 200, body: { ok: true, message: 'Thanks — we have your message.' } }
+    return {
+      status: 200,
+      body: { ok: true, message: 'Thank you for contacting us, we aim to respond within 24 hours.' },
+    }
   }
   const filledAt = Number(body?.filledAt || 0)
   if (filledAt && Date.now() - filledAt < 2500) {
@@ -560,16 +567,20 @@ export async function handleContactForm(req, body) {
   const confirmExtra = mentionsCancel
     ? '\n\nTo cancel, the account owner uses Plan & billing.'
     : ''
-  // K84 — visitor confirmation WITHOUT their message text
+  // K84 — visitor confirmation WITHOUT message text; K88 — 24-hour aim wording
+  const k88Line = `Hi ${name}, Thank you for contacting us, we aim to respond within 24 hours. You sent your message from the Margins365 Help centre on ${when}.`
   await sendSesSimple(
     email,
     "We've received your message — Margins365",
-    `Thanks, ${name}. We received your message from the Margins365 Help centre on ${when}. We read every message, but we can't promise a reply time.${confirmExtra}\n\n— Margins365\n`,
-    `<p>Thanks, ${name}. We received your message from the Margins365 Help centre on ${when}.</p><p>We read every message, but we can't promise a reply time.</p>${mentionsCancel ? '<p>To cancel, the account owner uses Plan &amp; billing.</p>' : ''}<p>— Margins365</p>`,
+    `${k88Line}${confirmExtra}\n\n— Margins365\n`,
+    `<p>Hi ${name}, Thank you for contacting us, we aim to respond within 24 hours. You sent your message from the Margins365 Help centre on ${when}.</p>${mentionsCancel ? '<p>To cancel, the account owner uses Plan &amp; billing.</p>' : ''}<p>— Margins365</p>`,
   )
   return {
     status: 200,
-    body: { ok: true, message: 'Thanks — we have your message.' },
+    body: {
+      ok: true,
+      message: 'Thank you for contacting us, we aim to respond within 24 hours.',
+    },
   }
 }
 
@@ -950,12 +961,28 @@ export async function handleSyncLicence(req) {
           planId
         const mapped = licenceStateFromSubscriptionStatus(sub.status)
         if (mapped) licenceState = mapped
+        // K89 — scheduled cancel still has access
+        if (sub.cancel_at_period_end && (sub.status === 'trialing' || sub.status === 'active')) {
+          licenceState = 'canceled_access'
+        }
         const iv = sub.items?.data?.[0]?.price?.recurring?.interval
         if (iv === 'year' || iv === 'month') billingInterval = iv
         if (sub.customer) {
           await query(
-            `UPDATE users SET stripe_customer_id = COALESCE(stripe_customer_id, $2), updated_at = NOW() WHERE id = $1`,
-            [user.id, String(sub.customer)],
+            `UPDATE users SET stripe_customer_id = COALESCE(stripe_customer_id, $2),
+               stripe_subscription_id = COALESCE(stripe_subscription_id, $3),
+               cancel_at_period_end = $4,
+               cancel_at = $5,
+               trial_ends_at = COALESCE($6::timestamptz, trial_ends_at),
+               updated_at = NOW() WHERE id = $1`,
+            [
+              user.id,
+              String(sub.customer),
+              sub.id,
+              Boolean(sub.cancel_at_period_end),
+              sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : null,
+              sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+            ],
           )
         }
       } catch {

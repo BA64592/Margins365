@@ -34,10 +34,24 @@ import { RecommendationsPanel } from './components/RecommendationsPanel'
 import { SavedDatasets } from './components/SavedDatasets'
 import { ScenarioCompare } from './components/ScenarioCompare'
 import { UpgradeModal } from './components/UpgradeModal'
-import { Button } from './components/ui'
+import { Button, Modal } from './components/ui'
 import { AppProvider, useApp } from './context/AppContext'
 import { en } from './i18n/en'
 import { PRODUCT_NAME } from './lib/brand'
+
+/** K90 — trial-start confirmation after Checkout return. */
+function TrialConfirmHost() {
+  const { trialConfirm, dismissTrialConfirm } = useApp()
+  if (!trialConfirm?.open) return null
+  return (
+    <Modal open onClose={dismissTrialConfirm} title={trialConfirm.title}>
+      <p className="text-sm text-ink">{trialConfirm.body}</p>
+      <Button className="mt-4" onClick={dismissTrialConfirm}>
+        Close
+      </Button>
+    </Modal>
+  )
+}
 
 /** K87 — after sign-in from Suggest a feature, open the form. */
 function AfterAuthRedirect() {
@@ -246,6 +260,7 @@ function AppShell() {
   return (
     <>
       <AfterAuthRedirect />
+      <TrialConfirmHost />
       <AppShellRoutes />
     </>
   )

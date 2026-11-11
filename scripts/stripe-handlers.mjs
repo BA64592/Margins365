@@ -17,6 +17,7 @@ import {
   priceIdForPlan,
   stripeTierConfigured,
 } from './stripe-price-map.mjs'
+import { maybeSendTrialStartEmail } from './billing-handlers.mjs'
 
 const ALLOWED = new Set([
   'GB',
@@ -135,7 +136,8 @@ export async function createCheckoutSession(body, req) {
   }
 
   const origin = defaultOriginUrl()
-  const trialDays = Number(body.trialDays || TRIAL_DAYS)
+  // GA-02 / K38 — server always owns trial length; ignore any client trialDays
+  const trialDays = TRIAL_DAYS
   const meta = {
     margins365_account_id: accountId,
     marginos_account_id: accountId,
@@ -290,6 +292,32 @@ async function applyCheckoutCompleted(session) {
       await confirmFoundingPlace(accountId)
     }
   }
+  // K90 — if Checkout created a subscription, send trial-start once confirmed
+  if (accountId && email && session.subscription && licenceState === 'trialing') {
+    try {
+      const client = stripeClient()
+      const subId =
+        typeof session.subscription === 'string' ? session.subscription : session.subscription.id
+      const sub = await client.subscriptions.retrieve(subId)
+      if (dbConfigured()) {
+        await query(
+          `UPDATE users SET stripe_subscription_id = COALESCE(stripe_subscription_id, $2),
+             stripe_customer_id = COALESCE(stripe_customer_id, $3),
+             trial_ends_at = COALESCE($4::timestamptz, trial_ends_at),
+             updated_at = NOW() WHERE id = $1`,
+          [
+            accountId,
+            sub.id,
+            sub.customer ? String(sub.customer) : null,
+            sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+          ],
+        )
+      }
+      await maybeSendTrialStartEmail({ userId: accountId, email, subscription: sub })
+    } catch (err) {
+      console.warn('[stripe] trial-start email after checkout', err)
+    }
+  }
 }
 
 async function applyRefundOrDispute(object) {
@@ -337,7 +365,7 @@ export async function handleStripeWebhook(rawBody, signature) {
       const planId =
         normalizePlanId(sub.metadata?.margins365_plan || sub.metadata?.marginos_plan) || 'pro'
       const status = sub.status
-      const licenceState =
+      let licenceState =
         status === 'trialing'
           ? 'trialing'
           : status === 'active'
@@ -345,8 +373,77 @@ export async function handleStripeWebhook(rawBody, signature) {
             : status === 'past_due'
               ? 'past_due'
               : 'canceled'
+      // K89 — cancel_at_period_end keeps access until period/trial end
+      if (sub.cancel_at_period_end && (status === 'trialing' || status === 'active')) {
+        licenceState = 'canceled_access'
+      }
       const billingInterval = normalizeInterval(sub.items?.data?.[0]?.price?.recurring?.interval)
-      if (accountId) await setUserPlan(accountId, planId, licenceState, billingInterval)
+      if (accountId) {
+        await setUserPlan(accountId, planId, licenceState, billingInterval)
+        if (dbConfigured()) {
+          await query(
+            `UPDATE users SET
+               stripe_subscription_id = $2,
+               cancel_at_period_end = $3,
+               cancel_at = $4,
+               trial_ends_at = COALESCE($5::timestamptz, trial_ends_at),
+               updated_at = NOW()
+             WHERE id = $1`,
+            [
+              accountId,
+              sub.id,
+              Boolean(sub.cancel_at_period_end),
+              sub.cancel_at ? new Date(sub.cancel_at * 1000).toISOString() : null,
+              sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+            ],
+          )
+        }
+        // K90 — trial-start email once Stripe confirms trialing
+        if (status === 'trialing' && !sub.cancel_at_period_end) {
+          let email = ''
+          if (dbConfigured()) {
+            const { rows } = await query(`SELECT email FROM users WHERE id = $1`, [accountId])
+            email = rows[0]?.email || ''
+          }
+          if (email) {
+            await maybeSendTrialStartEmail({ userId: accountId, email, subscription: sub })
+          }
+        }
+      }
+    } else if (event.type === 'customer.subscription.created') {
+      const sub = event.data.object
+      const accountId =
+        sub.metadata?.margins365_account_id || sub.metadata?.marginos_account_id || ''
+      const planId =
+        normalizePlanId(sub.metadata?.margins365_plan || sub.metadata?.marginos_plan) || 'pro'
+      const billingInterval = normalizeInterval(sub.items?.data?.[0]?.price?.recurring?.interval)
+      if (accountId) {
+        await setUserPlan(
+          accountId,
+          planId,
+          sub.status === 'trialing' ? 'trialing' : sub.status === 'active' ? 'active' : 'trialing',
+          billingInterval,
+        )
+        if (dbConfigured()) {
+          await query(
+            `UPDATE users SET stripe_subscription_id = $2,
+               stripe_customer_id = COALESCE(stripe_customer_id, $3),
+               trial_ends_at = COALESCE($4::timestamptz, trial_ends_at),
+               updated_at = NOW() WHERE id = $1`,
+            [
+              accountId,
+              sub.id,
+              sub.customer ? String(sub.customer) : null,
+              sub.trial_end ? new Date(sub.trial_end * 1000).toISOString() : null,
+            ],
+          )
+        }
+        if (sub.status === 'trialing' && dbConfigured()) {
+          const { rows } = await query(`SELECT email FROM users WHERE id = $1`, [accountId])
+          const email = rows[0]?.email || ''
+          if (email) await maybeSendTrialStartEmail({ userId: accountId, email, subscription: sub })
+        }
+      }
     } else if (event.type === 'customer.subscription.deleted') {
       const sub = event.data.object
       const accountId =

@@ -5,7 +5,7 @@ import { en } from '../i18n/en'
 import { hasPaidAccess } from '../lib/plans'
 import type { HomeCurrency } from '../lib/types'
 import { StartFreshButton } from './ConfirmActions'
-import { Button, Card, ConfirmDialog, Input, SectionHeading } from './ui'
+import { Button, Card, ConfirmDialog, Input, Modal, SectionHeading } from './ui'
 import { ProGate } from './ProGate'
 
 const CURRENCIES: HomeCurrency[] = ['GBP', 'EUR', 'USD', 'CAD', 'AUD']
@@ -32,7 +32,7 @@ export function SettingsBar() {
     setUpgradeOpen,
     setAuthOpen,
     signOut,
-    cancelAccess,
+    applyServerCancel,
   } = useApp()
   const [overheadsText, setOverheadsText] = useState(() =>
     monthlyOverheads === 0 ? '' : String(monthlyOverheads),
@@ -40,6 +40,14 @@ export function SettingsBar() {
   const [cancelOpen, setCancelOpen] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
   const [cancelNote, setCancelNote] = useState('')
+  const [cancelBusy, setCancelBusy] = useState(false)
+  const [resubBusy, setResubBusy] = useState(false)
+  const [resultOpen, setResultOpen] = useState(false)
+  const [resultTitle, setResultTitle] = useState('')
+  const [resultBody, setResultBody] = useState('')
+  const [resultFail, setResultFail] = useState(false)
+  const [cancelRef, setCancelRef] = useState<string | null>(null)
+  const [stripeLine, setStripeLine] = useState<string | null>(null)
   const [suggestText, setSuggestText] = useState('')
   const [suggestMsg, setSuggestMsg] = useState<string | null>(null)
   const [suggestBusy, setSuggestBusy] = useState(false)
@@ -137,6 +145,85 @@ export function SettingsBar() {
     setStatusMsg('Signed out of all devices.')
   }
 
+  const confirmServerCancel = async () => {
+    if (cancelBusy) return
+    setCancelBusy(true)
+    setCancelOpen(false)
+    try {
+      const res = await fetch('/api/billing/cancel', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reason: cancelReason || null,
+          note: cancelNote.trim().slice(0, 500) || null,
+        }),
+      })
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        message?: string
+        title?: string
+        body?: string
+        reference?: string
+        accessUntil?: string | null
+        stripeLine?: string
+      }
+      if (!res.ok || !data.ok) {
+        setResultFail(true)
+        setResultTitle('Cancellation failed')
+        setResultBody(
+          data.message ||
+            `We couldn’t cancel your ${access === 'trial' ? 'trial' : 'subscription'}. Nothing has changed. Please try again.`,
+        )
+        setResultOpen(true)
+        return
+      }
+      applyServerCancel({
+        accessEndsAt: data.accessUntil || null,
+        reference: data.reference || null,
+        stripeLine: data.stripeLine || null,
+      })
+      setCancelRef(data.reference || null)
+      setStripeLine(data.stripeLine || null)
+      setResultFail(false)
+      setResultTitle(data.title || 'Cancelled')
+      setResultBody(data.body || data.message || 'Cancellation confirmed.')
+      setResultOpen(true)
+      setCancelReason('')
+      setCancelNote('')
+    } catch {
+      setResultFail(true)
+      setResultTitle('Cancellation failed')
+      setResultBody(
+        `We couldn’t cancel your ${access === 'trial' ? 'trial' : 'subscription'}. Nothing has changed. Please try again.`,
+      )
+      setResultOpen(true)
+    } finally {
+      setCancelBusy(false)
+    }
+  }
+
+  const resubscribe = async () => {
+    if (resubBusy) return
+    setResubBusy(true)
+    try {
+      const res = await fetch('/api/billing/resubscribe', {
+        method: 'POST',
+        credentials: 'include',
+      })
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; message?: string }
+      if (!res.ok || !data.ok) {
+        setStatusMsg(data.message || 'Could not keep your plan. Try again.')
+        return
+      }
+      window.location.reload()
+    } catch {
+      setStatusMsg('Could not keep your plan. Try again.')
+    } finally {
+      setResubBusy(false)
+    }
+  }
+
   return (
     <section>
       <SectionHeading
@@ -205,16 +292,28 @@ export function SettingsBar() {
             </Button>
           ) : null}
           {access === 'canceled_access' ? (
-            <p className="text-xs font-medium text-warn">
-              Cancellation scheduled
-              {accessEndsAt
-                ? ` — access ends ${new Date(accessEndsAt).toLocaleString('en-GB', {
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                  })}`
-                : ''}
-              . Download your data before then.
-            </p>
+            <>
+              <p className="text-xs font-medium text-warn">
+                Cancelled — access until{' '}
+                {accessEndsAt
+                  ? new Date(accessEndsAt).toLocaleString('en-GB', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                      timeZone: 'Europe/London',
+                    }) + ' Europe/London'
+                  : 'the end of your period'}
+                {cancelRef ? ` · Reference ${cancelRef}` : ''}. You won’t be charged.
+              </p>
+              {stripeLine ? <p className="text-xs text-subtle">{stripeLine}</p> : null}
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={resubBusy}
+                onClick={() => void resubscribe()}
+              >
+                {resubBusy ? 'Working…' : 'Keep my plan'}
+              </Button>
+            </>
           ) : null}
         </div>
         <p className="text-xs text-subtle">
@@ -376,28 +475,11 @@ export function SettingsBar() {
         open={cancelOpen}
         title={access === 'trial' ? 'Cancel trial?' : 'Cancel subscription?'}
         cancelLabel="Go Back"
-        confirmLabel="Confirm Cancel"
+        confirmLabel={cancelBusy ? 'Cancelling…' : 'Confirm Cancel'}
         danger
-        onCancel={() => setCancelOpen(false)}
+        onCancel={() => !cancelBusy && setCancelOpen(false)}
         onConfirm={() => {
-          // K71 — optional reason; never required; never delays Confirm Cancel
-          try {
-            const payload = {
-              reason: cancelReason || null,
-              note: cancelNote.trim().slice(0, 500) || null,
-              at: new Date().toISOString(),
-              access,
-            }
-            const prev = JSON.parse(localStorage.getItem('m365_cancel_reasons') || '[]') as unknown[]
-            localStorage.setItem('m365_cancel_reasons', JSON.stringify([...prev, payload].slice(-50)))
-          } catch {
-            // ignore
-          }
-          const res = cancelAccess()
-          setStatusMsg(res.message)
-          setCancelOpen(false)
-          setCancelReason('')
-          setCancelNote('')
+          void confirmServerCancel()
         }}
       >
         <p className="text-sm text-ink">
@@ -433,6 +515,35 @@ export function SettingsBar() {
           />
         </label>
       </ConfirmDialog>
+
+      <Modal open={resultOpen} onClose={() => setResultOpen(false)} title={resultTitle}>
+        <p className="text-sm text-ink whitespace-pre-wrap">{resultBody}</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {!resultFail ? (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                exportDataCsv()
+                setResultOpen(false)
+              }}
+            >
+              Download my data
+            </Button>
+          ) : (
+            <Button
+              onClick={() => {
+                setResultOpen(false)
+                setCancelOpen(true)
+              }}
+            >
+              Try again
+            </Button>
+          )}
+          <Button variant={resultFail ? 'secondary' : 'primary'} onClick={() => setResultOpen(false)}>
+            Close
+          </Button>
+        </div>
+      </Modal>
     </section>
   )
 }

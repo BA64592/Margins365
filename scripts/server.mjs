@@ -36,6 +36,12 @@ import {
   handleRevokeInvite,
 } from './shops-handlers.mjs'
 import {
+  ensureBillingSchema,
+  handleBillingCancel,
+  handleBillingResubscribe,
+  handleTrialStatus,
+} from './billing-handlers.mjs'
+import {
   createCheckoutSession,
   handleStripeWebhook,
   stripeConfigured,
@@ -386,6 +392,31 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    // K89 — cancel / resubscribe (Stripe cancel_at_period_end + SES)
+    if (req.method === 'POST' && url === '/api/billing/cancel') {
+      let body = {}
+      try {
+        body = await parseJson(req)
+      } catch {
+        json(res, 400, { ok: false, message: 'Invalid JSON' })
+        return
+      }
+      const result = await handleBillingCancel(req, body)
+      json(res, result.status, result.body)
+      return
+    }
+    if (req.method === 'POST' && url === '/api/billing/resubscribe') {
+      const result = await handleBillingResubscribe(req)
+      json(res, result.status, result.body)
+      return
+    }
+    // K90 — poll trial confirmation after Checkout return
+    if (req.method === 'GET' && url === '/api/billing/trial-status') {
+      const result = await handleTrialStatus(req)
+      json(res, result.status, result.body)
+      return
+    }
+
     // Primary Stripe webhook + Part 5 alias (same handler; no Dashboard change required)
     if (
       req.method === 'POST' &&
@@ -523,6 +554,11 @@ migrate()
         await ensureShopsSchema()
       } catch (e) {
         console.warn('[margins365] shops schema', e)
+      }
+      try {
+        await ensureBillingSchema()
+      } catch (e) {
+        console.warn('[margins365] billing schema', e)
       }
     } else console.warn('[margins365] DATABASE_URL missing — auth API disabled')
     server.listen(port, '0.0.0.0', () => {

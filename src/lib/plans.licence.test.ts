@@ -41,6 +41,12 @@ function assert(cond: unknown, msg: string) {
 }
 
 {
+  const s = localStateFromLicence({ plan: 'pro', licenceState: 'canceled_access' })
+  assert(s.plan === 'pro', 'canceled_access keeps plan')
+  assert(s.access === 'canceled_access', 'canceled_access keeps access window')
+}
+
+{
   const s = localStateFromLicence({ plan: 'free', licenceState: 'none' })
   assert(s.plan === 'none' && s.access === 'none', 'free/none')
 }

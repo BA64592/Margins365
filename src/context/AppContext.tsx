@@ -180,6 +180,20 @@ interface AppContextValue {
   keepPro: () => { ok: boolean; message: string }
   /** Easy Cancel — schedule end-of-period account close + data wipe (no charge after cancel). */
   cancelAccess: () => { ok: boolean; message: string }
+  /** K89 — apply server-confirmed cancel (never invent cancel locally). */
+  applyServerCancel: (input: {
+    accessEndsAt: string | null
+    reference?: string | null
+    stripeLine?: string | null
+  }) => void
+  /** K90 — trial-start confirmation after Checkout. */
+  trialConfirm: {
+    open: boolean
+    title: string
+    body: string
+    waiting: boolean
+  } | null
+  dismissTrialConfirm: () => void
   theme: 'light'
   currency: HomeCurrency
   user: AuthUser | null
@@ -438,6 +452,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [nowTick, setNowTick] = useState(() => Date.now())
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [authOpen, setAuthOpen] = useState(false)
+  const [trialConfirm, setTrialConfirm] = useState<{
+    open: boolean
+    title: string
+    body: string
+    waiting: boolean
+  } | null>(null)
   const [passwordResetToken, setPasswordResetToken] = useState<string | null>(null)
   const [selectedSku, setSelectedSku] = useState<string | null>(
     (saved?.costs ?? sample.costs)[0]?.sku ?? null,
@@ -639,14 +659,58 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // Do not grant trial from the query string alone (BUG-023). Wait for session/licence sync.
       setPaymentPending(false)
       setFreeClocks([])
+      setTrialConfirm({
+        open: true,
+        waiting: true,
+        title: 'Confirming your trial',
+        body: "We're still confirming your trial with our payment provider. No charge has been taken. We'll email you as soon as it's confirmed.",
+      })
       void (async () => {
         let session = await marginosAuthProvider.fetchSession()
         const sync = await marginosAuthProvider.syncLicence()
         if (sync.ok && sync.session) session = sync.session
-        if (!session) return
-        setUser((prev) => authUserFromSession(session!, prev))
-        applyServerLicence(session)
-        setTrialUsed(true)
+        if (session) {
+          setUser((prev) => authUserFromSession(session!, prev))
+          applyServerLicence(session)
+          setTrialUsed(true)
+        }
+        // K90 — poll until server confirms trialing (webhook), max ~30s
+        const started = Date.now()
+        while (Date.now() - started < 30000) {
+          try {
+            const res = await fetch('/api/billing/trial-status', { credentials: 'include' })
+            const data = (await res.json().catch(() => ({}))) as {
+              ok?: boolean
+              confirmed?: boolean
+              waiting?: boolean
+              title?: string
+              body?: string
+            }
+            if (res.ok && data.confirmed) {
+              setTrialConfirm({
+                open: true,
+                waiting: false,
+                title: data.title || 'Your 14-day free trial has started',
+                body: data.body || 'Your trial is confirmed. We’ve emailed a confirmation.',
+              })
+              const again = await marginosAuthProvider.fetchSession()
+              if (again) {
+                setUser((prev) => authUserFromSession(again, prev))
+                applyServerLicence(again)
+              }
+              return
+            }
+          } catch {
+            /* retry */
+          }
+          await new Promise((r) => setTimeout(r, 2000))
+        }
+        setTrialConfirm({
+          open: true,
+          waiting: true,
+          title: 'Confirming your trial',
+          body: "We're still confirming your trial with our payment provider. No charge has been taken. We'll email you as soon as it's confirmed.",
+        })
       })()
       params.delete('checkout')
       const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`
@@ -887,33 +951,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     },
     cancelAccess: () => {
-      if (!hasPaidAccess(access)) {
-        return { ok: false, message: 'No active trial or subscription to cancel.' }
-      }
-      if (access === 'canceled_access') {
-        return { ok: false, message: 'Cancellation is already scheduled.' }
-      }
-      const endIso =
-        access === 'trial'
-          ? trialEndsAt
-          : accessEndsAt ||
-            trialEndsAt ||
-            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-      if (!endIso) {
-        return { ok: false, message: 'Could not determine when access ends.' }
-      }
-      setAccess('canceled_access')
-      setAccessEndsAt(endIso)
-      setTrialEntitlement(null)
-      const endLabel = new Date(endIso).toLocaleString('en-GB', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-      })
+      // K89 — browser must not invent cancel; use /api/billing/cancel via Plan & billing UI.
       return {
-        ok: true,
-        message: `Cancellation confirmed. You keep access until ${endLabel}. Your account will be closed and your data permanently deleted then. Download your data before then.`,
+        ok: false,
+        message: 'Cancel from Plan & billing so Stripe can confirm it.',
       }
     },
+    applyServerCancel: (input) => {
+      setAccess('canceled_access')
+      if (input.accessEndsAt) setAccessEndsAt(input.accessEndsAt)
+      setTrialEntitlement(null)
+    },
+    trialConfirm,
+    dismissTrialConfirm: () => setTrialConfirm(null),
     result,
     scenarioResults,
     upgradeOpen,

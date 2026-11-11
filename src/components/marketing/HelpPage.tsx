@@ -166,7 +166,7 @@ export function HelpPage() {
       <section id="contact" className="mt-12 scroll-mt-24">
         <h2 className="font-display text-xl font-semibold text-navy">Contact us</h2>
         <p className="mt-1 text-sm text-subtle">
-          We read every message. We don’t promise a reply time. Do not use this form to cancel.
+          We read every message and aim to respond within 24 hours. Do not use this form to cancel.
         </p>
         {!user ? (
           <p className="mt-3 text-sm text-subtle">
@@ -229,7 +229,7 @@ export function HelpPage() {
 
       <Modal open={popupOpen} onClose={() => setPopupOpen(false)} title="Message sent">
         <p className="text-sm text-ink">
-          Thanks — we have your message. We read every message, but we can’t promise a reply time.
+          Thank you for contacting us, we aim to respond within 24 hours.
         </p>
         <Button className="mt-4" onClick={() => setPopupOpen(false)}>
           Close

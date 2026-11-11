@@ -1,0 +1,1018 @@
+Margins365 — SEO & Discoverability Spec v20.1 (K75–K79)
+Version 20.1 — 11 November 2026, 20:55 Europe/London. Unchanged requirements. The gap 
+audit found these SEO items not yet built: Phase 2 pages live and in the sitemap before their release 
+gate (GA-60), no share image and no /favicon.ico (GA-61), legal and Sample shop pages prerendered 
+without their text (GA-62), sitemap content type, mixed-case URLs, canonical on 404 and HTML 404 
+for /api (GA-63). Tests: QA Prompt v20.1 GAP-60–GAP-63.
+For Design & Development (build), QA & Testing (suite SEO in the QA Prompt v20)
+From Business & Product, for Akthar Uddin
+Date 11 November 2026 (Europe/London)
+Status
+Approved by Akthar Uddin, 11 November 2026, 14:38 Europe/London. K75 
+(technical SEO and metadata, Parts A–C) is approved for the v20 build. Also approved: the 
+free calculator pages (K76), the keyword landing pages and help articles (K77), the 
+keyword-based Home H1 (K78) and privacy-friendly analytics behind a consent banner 
+(K79). Not approved: a competitor comparison page. It has been removed from 
+this document.
+Baseline Spec v20 (K59–K74), route map 23.1, Cookie notice v20, QA Prompt v20
+Requirements and acceptance criteria only: no code, no UI design. Nothing here changes prices, 
+limits, formulas or legal texts.
+Honest note. No one can guarantee a #1 ranking on Google or Bing. Rankings depend 
+on competitors, links, content quality and search-engine changes outside our control. 
+This spec makes Margins365 fully crawlable, correctly described and fast, which is 
+the part we control. Content and reputation (Part D and E) build rankings over months, 
+not weeks.
+1. Answer to Akthar's question
+Are we fully SEO-optimised today? No. The live site has a meta description and a page title, and 
+nothing else. Search engines see one blank page for every address. Section 2 lists what was 
+checked. The fixes are in sections 3–13 and are written so the developers can build them inside v20.
+2. Audit of the live site (11 November 2026, 14:24–14:30 Europe/London)
+Method: fetched index.html, robots.txt, sitemap.xml, the v20 routes and unknown paths with curl; 
+rendered Home, Pricing and Help in headless Chrome; ran Lighthouse 12 (mobile, simulated 
+throttling) locally on Home. The Google PageSpeed Insights API refused the request (daily quota 
+exceeded), so there is no Google field data (CrUX); the site probably has too little traffic for it 
+anyway. Read alongside the live bundle /workspace/app.js.
+2.1 Findings, most important first
+# Finding Evidence Effect
+Fixed 
+by
+A1
+The HTML has no content. Every 
+address returns the same 771-byte shell 
+(<div id="root"></div>); all text is drawn 
+by JavaScript.
+curl of /, /pricing, 
+/help, /legal/terms 
+returned identical 
+HTML (same 
+checksum).
+Google can render 
+JavaScript, but later and 
+less reliably; Bing, social 
+previews (LinkedIn, 
+WhatsApp, X, Facebook) 
+and many AI crawlers read 
+only the HTML and see 
+nothing.
+§3
+A2
+No real pages. /pricing, /sample-shop, 
+/help, /legal/terms all show Home after 
+rendering.
+Rendered DOM of 
+/pricing and /help 
+= Home (same 
+H1).
+Only one page can ever 
+rank.
+§4 
+(K63)
+A3
+No links a crawler can follow. The 
+rendered Home has 0 <a href> links and 
+28 buttons; navigation is button clicks.
+Rendered DOM.
+Crawlers cannot discover 
+any other page even after 
+routing is built.
+§11
+A4
+Soft 404s and fake files. Unknown 
+paths, /robots.txt, /sitemap.xml, 
+/favicon.ico and /site.webmanifest all 
+return 200 with the Home HTML.
+curl status codes.
+Lighthouse marks robots.txt 
+invalid; Search Console will 
+report soft 404s; there is no 
+sitemap.
+§6, §7, 
+§9
+A5
+Same title and description on every 
+address, and the brand is spelled with a 
+space: Margins 365 — margin leak 
+diagnosis.
+index.html.
+Breaks K59; no page-
+specific relevance; "margin 
+leak diagnosis" is not a 
+phrase sellers search for.
+§5
+A6
+No canonical, no Open Graph or 
+Twitter tags, no structured data, no 
+web manifest, no hreflang. lang="en" 
+rather than en-GB.
+index.html. Shared links show no image 
+or proper title; no 
+§5, §8, 
+§9, §10
+brand/knowledge signals.
+A7
+www and non-www both serve the 
+site (200), with no redirect. /pricing/ 
+also returns 200 alongside /pricing.
+curl. Duplicate URLs split signals. §7
+A8
+Speed is close to, but not at, the 
+target. Lighthouse mobile: Performance 
+89, LCP 2.9 s (target ≤ 2.5 s), FCP 2.5 
+s, TBT 130 ms, CLS 0.079, total 372 KiB, 
+unused JavaScript ≈ 164 KiB. JS 256 KB 
+compressed (871 KB raw), CSS 25 KB 
+compressed.
+Lighthouse JSON.
+LCP fails the "good" 
+threshold on mobile.
+§12
+A9
+Nothing is cached at the edge. HTML 
+and hashed assets are sent with cache-
+control: private and Cloudflare reports 
+BYPASS.
+Response 
+headers.
+Every visitor waits for the 
+origin; slower repeat visits.
+§12
+A10
+No security headers (HSTS, CSP, X-
+Content-Type-Options, Referrer-Policy, 
+frame protection). A 401 console error 
+appears on every signed-out page load 
+(the session check).
+Headers; 
+Lighthouse 
+"errors in 
+console".
+Lighthouse Best Practices 
+96; HSTS also matters for 
+the http→https rule. Already 
+QA gap G10.
+§7, §12
+A11
+Icons are incomplete. /favicon.png is 
+32×32 only; /favicon.ico is the Home 
+HTML; /brand/icon-512.png does not exist 
+(returns HTML); apple-touch-icon points 
+to a 192 px file.
+curl.
+Poor icons in Google results, 
+bookmarks and home 
+screens.
+§9
+A12
+marginos.online now 301-redirects 
+with the path and query kept 
+(/pricing → margins365.com/pricing), 
+cached for 24 h. www.marginos.online fails 
+the TLS handshake. When the domain is 
+cancelled (K73) the redirect stops.
+curl.
+Fine for now. Old links stop 
+working after cancellation.
+§7
+A13
+Good already: viewport tag, theme 
+colour, images have alt text, Lighthouse 
+accessibility 100, Brotli compression, 
+HTTP/2 and HTTP/3, origin response ≈ 
+120 ms.
+Lighthouse, 
+headers.
+Keep. —
+A14
+Not verified from our network: plain 
+http:// requests returned 500 from the 
+test network's proxy, so the http→https 
+redirect could not be confirmed.
+curl.
+QA checks from a normal 
+connection (SEO-12).
+§7
+Lighthouse's own SEO score is 92 because it only checks basics (title, description, status, robots.txt); 
+it does not see A1–A3, which matter most.
+3. Rendering: static HTML for public pages (fixes A1)
+Google's guidance is that server-side or static rendering is the reliable option, and that dynamic 
+rendering (serving bots a different version) is a workaround it no longer recommends (Google: 
+JavaScript SEO basics; Google: Dynamic rendering as a workaround).
+Requirements
+1. Prerender (static generation at build time) or server-render every public route: /, 
+/sample-shop, /pricing, /help, /legal/terms, /legal/privacy, /legal/refunds-and-cancellation, 
+/legal/dpa, /legal/cookies, the 404 page, and the K76 calculator and K77 landing and help pages 
+when they go live. Development chooses the method. 
+2. The HTML each route returns before JavaScript runs contains: the full visible text of the 
+page (H1, headings, body copy, plan prices, FAQ answers, legal text), the header and footer 
+navigation as real links, the page's own <title>, meta description, canonical, robots, Open 
+Graph/Twitter tags and JSON-LD (sections 5, 8). The app then hydrates the same markup. 
+3. Same content for people and bots. No user-agent switching (cloaking). The prerendered 
+page is the signed-out version; signed-in header changes (K67) happen after hydration, in 
+space reserved so nothing shifts (CLS, §12). 
+4. Live values. The founding "[n] places left" count (K72) is either rendered by the server at 
+request time or loaded after hydration in a reserved slot. Prices in the HTML are the standard 
+prices plus the founding line exactly as shown to signed-out visitors. 
+5. Signed-in app stays client-rendered and is never indexed: /app/*, /account/*, /welcome, 
+/invite/* (section 6). 
+6. Legal pages are HTML pages (K74). Their Download PDF files are not indexed separately (X-
+Robots-Tag: noindex on the PDF responses), so the HTML page is the one that ranks. 
+Acceptance: SEO-01, SEO-02, SEO-03.
+4. Clean URLs (matches the v20 route map, 23.1)
+• One address per page, lower case, hyphens, no trailing slash (except /), no # routing, no 
+tracking parameters in internal links. 
+• Public routes exactly as 23.1: /, /sample-shop, /pricing, /help, /sign-in, /reset-password, 
+/legal/terms, /legal/privacy, /legal/refunds-and-cancellation, /legal/dpa, /legal/cookies. 
+• /sample-report (old name) 301 → /sample-shop. 
+• Unknown paths return a real 404 status with the branded 404 page (A4), never Home with 
+200. 
+• Help topics, if they become separate pages later, live under /help/<topic>. 
+5. Per-page metadata (fixes A5)
+Rules for every public page
+• <title> ≤ 60 characters, unique, keyword first and Margins365 (one word) included. Google 
+truncates by pixel width, not a fixed count, so ≤ 60 is a safe target (Google: title links). 
+• Meta description ≤ 155 characters, unique, a true summary of the page (Google: meta 
+descriptions). Google may rewrite it; that is normal. 
+• Exactly one H1 per page, matching the page topic; H2/H3 in order without skipping levels. 
+• <link rel="canonical"> = the absolute https://margins365.com/... address of the page itself. 
+• <meta name="robots"> as in the table. The signed-in app also sends X-Robots-Tag: noindex. 
+• <html lang="en-GB">. 
+• Founding-offer wording is not put in titles or descriptions (it ends after 100 places and search 
+results would go stale). 
+5.1 Exact proposed titles, descriptions and H1s (existing v20 pages)
+Page <title> Chars Meta description Chars
+Home
+Margins365 | True Profit 
+& Margin Leaks for 
+Online Sellers
+58
+See your true profit across Shopify, 
+Amazon and Etsy, and the margin leaks 
+costing you most, in pounds. UK pricing 
+inc VAT. 14-day free trial.
+142
+Sample shop
+Sample Shop: A 
+Margins365 Profit 
+Diagnosis
+42
+Explore a sample shop's true profit, 
+Health Score and margin leaks ranked by 
+£ cost a month. Sample data, no sign-up 
+needed to look.
+132
+Pricing
+Margins365 Pricing: Plans 
+from £39 a Month inc 
+VAT
+50
+Starter £39, Growth £79, Pro £129, Scale 
+£199 a month including VAT. Every plan 
+starts with a 14-day free trial. Cancel in 
+Plan & billing.
+138
+Help centre Help Centre: Billing, 
+Limits & Contact | 
+51 Answers on order limits, billing, trials, 
+shops, seats, uploads and cancelling 
+129
+Page <title> Chars Meta description Chars
+Margins365
+Margins365, plus a contact form for 
+anything else.
+Terms
+Terms of Service | 
+Margins365
+29
+The terms for using Margins365: plans, 
+the 14-day trial, the founding offer, 
+billing, cancellation and your data. 
+Version 20.
+125
+Privacy Policy
+Privacy Policy | 
+Margins365
+27
+How Margins365 collects, uses, stores 
+and deletes personal data under UK and 
+EU GDPR, who processes it and how to 
+use your rights.
+130
+Refunds & 
+cancellation
+Refunds & Cancellation 
+Policy | Margins365
+42
+How to cancel a Margins365 trial or plan 
+in Plan & billing, when access ends, when 
+data is deleted and when refunds apply.
+122
+DPA & 
+subprocessors
+Data Processing 
+Agreement & 
+Subprocessors | 
+Margins365
+54
+The Margins365 data processing terms 
+and the current list of subprocessors, 
+what each one does and where data is 
+processed.
+123
+Cookie notice
+Cookie Notice | 
+Margins365
+26
+The essential cookies and browser 
+storage Margins365 uses, what each one 
+does and how long it lasts. No advertising 
+cookies.
+124
+Sign in Sign in | Margins365 20
+Sign in to Margins365 with your email 
+and password or with Google.
+66
+Reset password
+Reset your password | 
+Margins365
+32
+Reset the password for your Margins365 
+account.
+47
+404
+Page not found | 
+Margins365
+27
+This page doesn't exist. Go to the 
+Margins365 home page, pricing or help 
+centre.
+80
+Route, robots and H1
+Page Route Robots H1
+Home / index, Know your true profit and where it leaks 
+Page Route Robots H1
+follow (K78)
+Sample shop /sample-shop
+index, 
+follow
+What a Margins365 diagnosis looks like 
+(unchanged)
+Pricing /pricing
+index, 
+follow
+Margins365 plans — 14 days free on every 
+tier (unchanged apart from the brand 
+spelling)
+Help centre /help
+index, 
+follow
+Help centre
+Terms /legal/terms
+index, 
+follow
+Terms of Service
+Privacy Policy /legal/privacy
+index, 
+follow
+Privacy Policy
+Refunds & 
+cancellation
+/legal/refunds-and-
+cancellation
+index, 
+follow
+Refunds & cancellation
+DPA & 
+subprocessors
+/legal/dpa
+index, 
+follow
+DPA & subprocessors
+Cookie notice /legal/cookies
+index, 
+follow
+Cookie notice
+Sign in /sign-in
+noindex, 
+follow
+Sign in
+Reset password /reset-password
+noindex, 
+nofollow
+Reset your password
+404 (any unknown path) noindex We can't find that page
+H1s marked "unchanged" are the current headings. The Home H1 changes to "Know your true profit 
+and where it leaks" (K78, approved; spec 23.17).
+6. robots.txt and indexing (fixes A4)
+Serve /robots.txt as text/plain, status 200, with exactly:
+User-agent: *
+Allow: /
+Disallow: /app/
+Disallow: /account/
+Disallow: /invite/
+Disallow: /welcome
+Disallow: /api/
+Sitemap: https://margins365.com/sitemap.xml
+• /sign-in and /reset-password stay crawlable but carry noindex (so the noindex can be seen). 
+Reset-token URLs never appear in links or the sitemap. 
+• Staging sites send X-Robots-Tag: noindex, nofollow on every response and require a password, 
+so they never get indexed. Production must not inherit that header (SEO-07). 
+• AI crawlers: no blocking by default (being cited by AI answers helps discovery). Akthar can opt 
+out of AI training crawlers later without affecting Google Search. 
+7. Redirects and canonical host (fixes A7, A12, A14)
+From To Type
+http://margins365.com/*, 
+http://www.margins365.com/*
+https://margins365.com/* (same 
+path and query)
+301, in one hop
+https://www.margins365.com/* https://margins365.com/* 301
+Trailing slash, e.g. /pricing/ /pricing 301
+Upper case, e.g. /Pricing /pricing 301
+/sample-report /sample-shop 301
+https://marginos.online/*, 
+http://marginos.online/*, www.marginos.online/*
+https://margins365.com/* (same 
+path and query)
+301, until the domain is 
+cancelled (K73)
+• HSTS on margins365.com: max-age at least one year, includeSubDomains after checking every 
+subdomain works on HTTPS. Preload only with Akthar's agreement (hard to undo). 
+• www.marginos.online currently fails TLS: either add it to the certificate so the redirect works, or 
+accept that it will stop when the domain goes. 
+• After marginos.online is cancelled, nothing can redirect from it. Before cancelling, use Search 
+Console's Change of Address tool from the old property, if it was ever verified, so Google 
+moves signals to margins365.com. 
+8. Open Graph, Twitter cards and the OG image
+Tags on every public page: og:title (same as <title> without " | Margins365" where it would 
+repeat), og:description (= meta description), og:url (= canonical), og:type = website, og:site_name = 
+Margins365, og:locale = en_GB, og:image, og:image:width = 1200, og:image:height = 630, og:image:alt; 
+twitter:card = summary_large_image, twitter:title, twitter:description, twitter:image, twitter:image:alt. No 
+twitter:site until a real X account exists.
+OG image spec (Design produces):
+• 1200 × 630 px, PNG or JPG, under 300 KB, absolute HTTPS URL on margins365.com, served 
+with a long cache. 
+• Brand teal #34726B / navy #061F45, the Margins365 logo, one line of text: "True profit and margin 
+leaks for online sellers". Keep text inside the centre 1000 × 520 px (some apps crop). 
+• One default image for all pages; optional variants for Pricing ("Plans from £39 a month inc VAT. 
+14-day free trial") and Sample shop (a sample-data screenshot labelled "Sample data"). 
+• No founding-offer price in the image (it ends). 
+9. Favicons and web manifest (fixes A11)
+File Size Use
+/favicon.ico
+16, 32 and 48 px 
+in one file
+Old browsers, Google results
+/icon.svg vector Modern browsers (rel="icon" type="image/svg+xml")
+/apple-touch-icon.png
+180 × 180, no 
+transparency
+iPhone and iPad home screen
+/icon-192.png, 
+/icon-512.png
+192, 512 Manifest, Android
+/icon-maskable-512.png
+512, logo inside 
+the central 80%
+Android adaptive icons
+/site.webmanifest —
+name "Margins365", short_name "Margins365", start_url "/", 
+display "browser" (it is not an installable app), theme_color 
+#34726B, background_color #FFFFFF, the icons above
+Use the approved teal "M" set in /workspace/brand/ (icon-green-square-*, icon-180-ios.png). Each file 
+returns its real type with 200 (not the Home HTML). Google shows a site's favicon in results if it is at 
+least 48 × 48 and crawlable.
+10. Structured data (JSON-LD)
+Validate with Google's Rich Results Test and the Schema.org validator. Values must match what the 
+page shows.
+Type Page(s) Properties What it can earn
+Organization /
+name "Margins365", url, logo (512 
+px PNG), email (contact address, 
+once Akthar confirms which), 
+sameAs (only real social profiles). 
+No address or company number 
+until Akthar publishes them.
+Brand/logo understanding, 
+knowledge panel signals
+WebSite /
+name "Margins365", alternateName 
+"Margins 365" (helps people who 
+type it with a space), url. No 
+SearchAction (there is no site 
+search).
+Site name in results
+SoftwareApplication 
+(WebApplication)
+/, /pricing
+name, applicationCategory 
+BusinessApplication, 
+operatingSystem "Web browser", 
+url, description, offers: one Offer 
+per plan in GBP, price 39.00 / 
+79.00 / 129.00 / 199.00, 
+priceCurrency GBP, a 
+UnitPriceSpecification with 
+billingDuration P1M and 
+valueAddedTaxIncluded true, plus 
+annual 390 / 790 / 1290 / 1990 
+with P1Y.
+Understanding only, for now 
+(see note)
+FAQPage
+every page 
+that shows 
+an FAQ 
+(Help 
+centre's 
+Hard limits 
+& billing 
+FAQ; any 
+FAQ left on 
+Pricing)
+Each visible question and 
+answer, word for word
+No rich result: Google's 
+Search Central changelog says 
+the FAQ rich result "will no 
+longer appear in Google 
+Search starting May 7, 2026" 
+and its documentation has 
+been removed (Google Search 
+Central: latest updates, 8 May 
+and June 2026 entries, verified 
+11 November 2026; also 
+reported by Search Engine 
+Type Page(s) Properties What it can earn
+Journal). Still valid 
+Schema.org; may help other 
+engines and AI answers. Low 
+cost, so keep it.
+BreadcrumbList
+every page 
+except 
+Home
+Home › Page (and Home › Legal › 
+Terms etc.)
+Breadcrumb path in results
+Note on ratings. Google's software-app rich result requires a rating or review (Google: 
+SoftwareApplication). Margins365 has none yet, so it will not get star results. Never add made-up 
+ratings: it breaks Google's rules (manual action) and UK law on fake reviews. Add aggregateRating only 
+when genuine reviews are shown on the page.
+11. Links, headings, images and accessibility (fixes A3)
+• Every navigation item is a real link (<a href="/pricing">), including header, footer, "Start 
+here" buttons that go to pages, Sample shop and Help links. Buttons are only for actions 
+(submit, open a menu, toggle). Links can still route client-side without reloading. 
+• Descriptive link text ("See pricing", "Open the Help centre"), never "click here". 
+• Internal linking map: Home → Sample shop, Pricing, Help centre; Pricing → Help centre FAQ, 
+Terms, Refunds & cancellation; Sample shop → Pricing; Help centre → Pricing, every legal page; 
+every page → footer links (Help centre, Sign in, five legal pages). K76 and K77 pages link to 
+Pricing, Sample shop and each other, and Home links to each platform page. 
+• Headings: one H1, logical H2/H3 order (also WCAG 2.2 "Info and relationships"). 
+• Images: every content image has an alt describing it ("Sample shop Control room showing a 
+Health Score of …"); decorative images have empty alt. Charts have a text summary nearby. 
+Width and height set to prevent layout shift. 
+• Images in WebP or AVIF with a fallback, sized for the screen (srcset), lazy-loaded below the 
+fold, the hero/LCP image never lazy-loaded. 
+• These overlap with WCAG 2.2 AA (spec 15): lang attribute, link purpose, headings, alt text and 
+contrast. Lighthouse accessibility is 100 today; keep it there. 
+12. Speed: Core Web Vitals (fixes A8–A10)
+Targets (75th percentile, mobile): LCP < 2.5 s, INP < 200 ms, CLS < 0.1 — Google's "good" 
+thresholds (Google: Core Web Vitals). Today: LCP 2.9 s (fails), TBT 130 ms (INP can't be measured in a 
+lab; TBT is the proxy), CLS 0.079 (passes, small margin).
+Requirements
+1. Static HTML (§3) so text paints before JavaScript downloads. 
+2. Split the JavaScript: public pages must not download the signed-in app, charts or import code. 
+Target ≤ 150 KB compressed JS on public pages (today 256 KB, with about 164 KB unused). 
+3. Cache hashed files in /assets/ for one year (public, max-age=31536000, immutable) and let 
+Cloudflare cache them. Cache prerendered public HTML for a short time (for example 5 
+minutes) and purge on deploy. Signed-in and API responses stay private, no-store. 
+4. Preload the main font (or use a system font stack), font-display: swap; preconnect only to 
+origins actually used on the first view. 
+5. Reserve space for the signed-in header, founding counter and any banner (CLS). 
+6. Do not call the session check on public pages for signed-out visitors in a way that logs a 
+console error (A10); a quiet "not signed in" response is fine. 
+7. Security headers on every HTML response: HSTS, X-Content-Type-Options: nosniff, Referrer-
+Policy: strict-origin-when-cross-origin, frame protection (frame-ancestors 'none' in CSP or X-
+Frame-Options: DENY), and a Content Security Policy that allows Stripe and Google sign-in. 
+Already QA SEC-20–24. 
+8. Measure with Lighthouse on Home, Pricing, Sample shop and Help centre before each release; 
+after launch, watch the Search Console Core Web Vitals report (real users). 
+13. Search Console, Bing and analytics consent
+Google Search Console (Akthar's Google account owns it; developers get user access):
+1. Add a Domain property for margins365.com, verified with a DNS TXT record at the DNS provider 
+(Cloudflare). 
+2. Submit https://margins365.com/sitemap.xml. 
+3. URL-inspect and Request indexing for each public page after launch. 
+4. Watch: Page indexing (soft 404s, duplicates), Core Web Vitals, HTTPS, Enhancements 
+(Breadcrumbs), Manual actions. 
+Bing Webmaster Tools: import the site from Search Console (fastest) or verify with DNS; submit the 
+same sitemap. Bing's index also supplies results to Yahoo and several smaller search engines. 
+Optional: IndexNow to tell Bing about updates instantly.
+XML sitemap at /sitemap.xml (application/xml, 200): only the indexable public pages in §5.1 (/, /sample-
+shop, /pricing, /help, the five /legal/... pages, and Part D pages once live), absolute 
+https://margins365.com URLs, a real lastmod from the last content change. No priority or changefreq 
+(Google ignores them). Never signed-in, sign-in, reset or PDF URLs.
+hreflang: the site has one language. Add hreflang="en-GB" and hreflang="x-default", both pointing to 
+the page itself, on every public page and in no other form. Google says hreflang is only needed for 
+alternative language or region versions, so this is tidy rather than a ranking factor. Add other 
+languages only with separate translated pages later.
+Analytics and cookies (K79, approved). Search Console and Bing need no cookies and no code on 
+the page. Analytics uses Plausible Analytics (EU-hosted, no cookies, no stored IP addresses) and 
+loads only after the visitor clicks "Accept analytics" on a consent banner with equal Accept and 
+Reject buttons, for UK and EU visitors alike. No analytics in the signed-in app. The Cookie notice, 
+Privacy Policy and DPA page move to v20.1 in the same release. Full requirements: spec 23.18.
+• Background on the law: in the UK, since the Data (Use and Access) Act 2025, analytics used 
+only for aggregate statistics can run without prior consent if visitors are told and can opt out 
+(ICO: exceptions); EU ePrivacy rules are stricter. Gating on consent meets both. 
+14. Keyword research
+14.1 How this was done and its limits
+Web searches on 11 November 2026 for each candidate phrase, reading who ranks and what the 
+pages do (search intent). No source we can access publishes search volumes for these 
+phrases, so this document gives no volume numbers. To get them: Google Keyword Planner 
+(free with a Google Ads account), or a paid tool such as Ahrefs or Semrush; after launch, Search 
+Console shows the real searches that bring visitors. Rankings seen here also vary by location and 
+person.
+14.2 Keyword map
+Cluster
+Phrases 
+(primary first)
+Intent
+Who ranks now (from our 
+searches)
+Opportunity for a 
+new site, and 
+target page
+Brand
+margins365, 
+margins 365
+Navigational
+margins365.com already 
+appears for "margins365" in 
+a search index, with the old 
+"Margins 365" title
+Must win. 
+Achievable once §3–
+§10 are built. Page: /
+Profit leaks 
+(our 
+positioning)
+ecommerce 
+profit leak, 
+shopify profit 
+leak audit, 
+margin leakage 
+ecommerce, 
+where is my 
+profit going
+Informational, 
+problem-aware
+Ecommerce Fastlane, 
+Groundwork Metrics, Ad-Lab, 
+StoreBuilt (UK), MarginLab 
+(search)
+Best fit. Small sites 
+rank; matches the 
+"six margin leaks" 
+product exactly. 
+Page: / now; /profit-
+leak-checklist (Part D)
+Cluster
+Phrases 
+(primary first)
+Intent
+Who ranks now (from our 
+searches)
+Opportunity for a 
+new site, and 
+target page
+True profit
+true profit 
+calculator, true 
+profit 
+ecommerce, net 
+profit per order
+Tool / 
+informational
+Margeny's "true profit 
+calculator"; TrueProfit is a 
+competitor's brand name, 
+so "true profit" alone is 
+ambiguous
+Medium. Use "true 
+profit" in copy, but 
+don't build around 
+the bare brand term. 
+Page: /, Part D
+Shopify
+shopify profit 
+calculator (uk), 
+shopify profit 
+margin 
+calculator, 
+shopify fees 
+calculator uk
+Tool
+Shopify's own calculator 
+(shopify.com/tools/profit-
+margin-calculator), Calcrux, 
+MiniWebtool, Margeny, 
+Bundly (search)
+Hard for the head 
+term (Shopify's 
+authority). Realistic 
+for the UK + VAT 
+long tail if a free 
+calculator exists. 
+Page: /shopify-profit-
+calculator (Part D)
+Amazon UK
+amazon fee 
+calculator uk, 
+amazon fba 
+calculator uk, 
+amazon profit 
+calculator uk vat
+Tool
+Amazon's own Revenue 
+Calculator and 
+sell.amazon.co.uk/pricing, 
+plus Atlassa (UK/EU) 
+(Amazon UK pricing; Atlassa)
+Hard for the head 
+term. Possible for 
+"with VAT", "FBA fees 
+2026", the fuel 
+surcharge change 
+(1.5% → 2% from 2 
+Nov 2026). Page: 
+/amazon-fee-
+calculator-uk (Part D)
+Etsy UK
+etsy profit 
+calculator uk, 
+etsy fee 
+calculator uk, 
+etsy fees uk vat
+Tool
+Only small independent 
+sites: SellerFeesCalc, 
+CraftKept, 
+FreeEtsyCalculator, FeesLab 
+(SellerFeesCalc; CraftKept)
+Most realistic 
+platform win. No 
+big brand owns it; UK 
+detail (VAT on fees, 
+0.48% regulatory 
+operating fee) is 
+already in spec 16. 
+Page: /etsy-profit-
+calculator-uk (Part D)
+Margin 
+(generic)
+ecommerce 
+profit margin 
+calculator uk, 
+profit margin 
+calculator vat, 
+Tool / 
+informational
+Small UK tool sites (No-Cap 
+Tools, Scale Oxford, 
+PayoutMath)
+Good, if the page has 
+a working calculator. 
+Page: /ecommerce-
+profit-margin-
+Cluster
+Phrases 
+(primary first)
+Intent
+Who ranks now (from our 
+searches)
+Opportunity for a 
+new site, and 
+target page
+contribution 
+margin 
+ecommerce
+calculator (Part D)
+Multi-channel
+shopify amazon 
+etsy profit 
+dashboard, 
+multi-channel 
+profit tracking 
+uk
+Commercial
+BeProfit is the named multi-
+channel option in 
+comparison posts (Tera Ads 
+comparison)
+Good differentiator: 
+three platforms, £, 
+VAT, no store 
+connection. Page: 
+/multi-channel-profit 
+(Part D)
+14.3 Competitors (prices from their pages or recent reviews; USD unless stated)
+Competitor Focus Entry price Trial / free Source
+TrueProfit Shopify net profit
+$35/month (300 
+orders)
+14-day trial Tera Ads
+BeProfit
+Shopify + Amazon + 
+WooCommerce, multi-shop
+$49/month (450 
+orders)
+14-day trial Tera Ads
+Lifetimely 
+(AMP)
+Shopify profit + LTV
+Free plan; $49/month 
+(500 orders); Amazon 
++$75
+Free plan Shopify App Store
+Sellerboard Amazon only
+$19/month (3,000 
+orders); EU prices 
+exclude VAT
+1-month 
+trial, no 
+card
+sellerboard.com; 
+Method FBA
+Profit Calc Shopify
+$39/month (500 
+orders)
+15-day trial
+ProfitShield 
+comparison
+Where Margins365 can win in search: UK-first (GBP, VAT-inclusive prices, UK fee rules), Etsy 
+coverage (the big Shopify tools don't target Etsy), Shopify + Amazon + Etsy in one view, no store 
+connection needed (CSV), and the "margin leak in £ a month" angle. Where it can't easily win: 
+head terms owned by Shopify and Amazon's own calculators, and the bare "true profit" term.
+15. Part D — Content plan (approved: K76 calculators, K77 landing pages and help 
+articles)
+Approved by Akthar on 11 November 2026, 14:38 Europe/London. These are built and published after 
+the core v20 QA pass, and each goes live only after its own QA checks (suites PCALC and SEO). 
+Calculator requirements: spec 23.15; landing pages and articles: spec 23.16.
+15.1 Landing pages (proposed metadata)
+Page <title> Chars Meta description Chars
+Shopify 
+landing
+Shopify Profit Calculator 
+UK, with Fees & VAT | 
+Margins365
+58
+Work out true profit on Shopify after 
+product cost, Shopify Payments fees, 
+shipping, ads, refunds and VAT. In pounds, 
+for UK sellers.
+133
+Amazon 
+landing
+Amazon UK Fee & Profit 
+Calculator (FBA and FBM) 
+| Margins365
+60
+See what each Amazon UK sale leaves you 
+after referral, FBA, storage and digital 
+services fees, ads, returns and VAT.
+117
+Etsy landing
+Etsy Profit Calculator UK 
+with VAT on Fees | 
+Margins365
+55
+Etsy UK profit after transaction, processing, 
+listing and regulatory operating fees, VAT 
+on fees, postage and Offsite Ads.
+122
+Margin cluster
+Ecommerce Profit Margin 
+Calculator UK | 
+Margins365
+50
+Gross margin, contribution margin and true 
+profit per order for online sellers, with UK 
+VAT handled correctly. Free to use.
+123
+Profit leak 
+cluster
+Ecommerce Profit Leak 
+Checklist | Margins365
+44
+The six margin leaks that cost online sellers 
+most, how to spot each one in your own 
+orders and what it is worth a month.
+121
+Multi-channel
+Shopify, Amazon & Etsy 
+Profit in One Place | 
+Margins365
+55
+One true-profit view across Shopify, Amazon 
+and Etsy from your own CSV exports. No 
+store connection needed. Built for UK 
+sellers.
+129
+Page Proposed route H1
+Shopify landing /shopify-profit-calculator Shopify profit calculator for UK sellers
+Amazon landing /amazon-fee-calculator-uk Amazon UK fee and profit calculator
+Etsy landing /etsy-profit-calculator-uk Etsy profit calculator for UK sellers
+Page Proposed route H1
+Margin cluster /ecommerce-profit-margin-calculator Ecommerce profit margin calculator
+Profit leak cluster /profit-leak-checklist Find the profit leaks in your shop
+Multi-channel /multi-channel-profit
+Shopify, Amazon and Etsy profit in one 
+place
+• The four calculator pages carry a working free calculator that uses the product's own 
+calculation module and fee presets (K76, spec 23.15), so the word "calculator" in the title 
+matches what searchers want. 
+• Each page: 600–1,200 words of genuinely useful content, a worked UK example in £, the fee 
+table with "last checked" date and source links (as spec 16 does), a link to the Sample shop 
+and Pricing, FAQ section, BreadcrumbList. 
+• No competitor comparison page (not approved by Akthar). 
+• TikTok Shop: no landing page until the importer passes the K53 restore gate. 
+15.2 Help articles and guides (/help/<topic>; 2 a month is realistic)
+1. How Margins365 works out true profit (links to the formulas in plain English). 
+2. How to export orders from Shopify / Amazon Seller Central / Etsy (one each; also cuts support). 
+3. Amazon UK seller fees in 2026, explained (referral, FBA, storage, fuel surcharge, digital 
+services fee). 
+4. Etsy UK fees explained: VAT on fees and the regulatory operating fee. 
+5. Shopify Payments fees in the UK. 
+6. Break-even ROAS and maximum cost per order. 
+7. Contribution margin vs gross margin for online sellers. 
+8. The six margin leaks and how to fix each one. 
+9. Reading your Health Score. 
+10.VAT basics for marketplace sellers (clearly "not tax advice"; accountant review, as spec 12.8). 
+Each article: one search topic, a clear H1, date updated, author "Margins365 team", links to related 
+articles and Pricing.
+16. Part E — Listings and links (approved, after QA passes)
+Where
+Fit 
+today
+Note
+G2 Yes
+Free vendor profile; ask real customers for reviews (no incentives that 
+Where
+Fit 
+today
+Note
+break G2's rules or UK fake-review law).
+Capterra (with 
+GetApp and Software 
+Advice, one Gartner 
+listing)
+Yes Free basic listing; categories "Ecommerce analytics", "Profit analysis".
+Product Hunt
+Yes, 
+once
+Launch day after QA passes and the site is stable; prepare the OG 
+image, screenshots and Sample shop link.
+Shopify App Store
+Not 
+today
+Listing requires a real Shopify app built on Shopify's APIs and passing 
+Shopify's review. Margins365 uses CSV uploads, so this needs its own 
+product spec (a Shopify integration) before it can be built; it is not 
+part of K75–K79. Biggest single source of Shopify merchants if built.
+Amazon Selling 
+Partner Appstore, 
+Etsy app listing
+Not 
+today
+Same: needs API integration.
+Others Yes
+SaaSHub, AlternativeTo, BetaList, UK small-business and ecommerce 
+directories; guest articles and podcasts for UK seller communities; a 
+free calculator (Part D) is the most linkable asset.
+Avoid paid link schemes and link swaps: they break Google's spam policies.
+17. Build checklist for Development (K75)
+1. Prerender/SSR public routes (§3) — after K63 routes. 
+2. Real <a href> links everywhere (§11). 
+3. Per-page head tags from §5.1, canonical, robots, lang="en-GB", hreflang (§5, §13). 
+4. robots.txt, sitemap.xml, real 404 status (§4, §6). 
+5. Redirects and HSTS (§7). 
+6. OG/Twitter tags and image; favicons and manifest (§8, §9). 
+7. JSON-LD (§10), validated. 
+8. Speed and caching (§12), Lighthouse ≥ 90 performance on mobile with LCP < 2.5 s. 
+9. Hand Akthar the DNS TXT records for Search Console and Bing; he verifies and submits the 
+sitemap (§13). 
+10.K78 Home H1 with the prerendered Home page. 
+11.K79 consent banner, then Plausible analytics, with the v20.1 Cookie notice, Privacy Policy and 
+DPA page in the same release. 
+12.QA runs suites SEO, CONS and ANL (QA Prompt v20) with the core v20 pass. 
+13.After the core pass: K76 calculators (QA suite PCALC), then K77 landing pages and help 
+articles (SEO checks per page). 
+18. Sources
+• Google Search Central: JavaScript SEO basics; Dynamic rendering as a workaround; Title links; 
+Meta descriptions; Core Web Vitals; SoftwareApplication structured data. 
+• Search Engine Journal, Google drops FAQ rich results (10 May 2026). 
+• ICO, Storage and access technologies: exceptions. 
+• Search results pages and competitor pages cited in section 14 (all read 11 November 2026). 
+• Live audit files: /workspace/v20/audit/seo/ (Lighthouse JSON, rendered DOM), /workspace/app.js. 
+Prepared by Business & Product for Akthar Uddin. Requirements only: no code, no UI design, no 
+changes to the site.
