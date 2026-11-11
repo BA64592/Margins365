@@ -131,9 +131,11 @@ export function Modal({
   children: ReactNode
 }) {
   if (!open) return null
+  // K80 — fit visible viewport (dvh), scroll inside, sticky title/Close, safe-area bottom
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center p-3 sm:items-center sm:p-4"
+      style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           e.stopPropagation()
@@ -150,9 +152,10 @@ export function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-full max-w-md animate-fade-up rounded-2xl border border-border bg-elevated p-5 shadow-xl"
+        className="relative z-10 flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-elevated shadow-xl animate-fade-up"
+        style={{ maxHeight: 'calc(100dvh - 1.5rem)' }}
       >
-        <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border/60 bg-elevated px-5 pb-3 pt-5">
           <h3 className="font-display text-lg font-semibold text-ink">{title}</h3>
           <button
             type="button"
@@ -162,7 +165,9 @@ export function Modal({
             Close
           </button>
         </div>
-        {children}
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 pt-3">
+          {children}
+        </div>
       </div>
     </div>
   )
@@ -192,7 +197,8 @@ export function ConfirmDialog({
   if (!open) return null
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center p-3 sm:items-center sm:p-4"
+      style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
           e.stopPropagation()
@@ -210,13 +216,19 @@ export function ConfirmDialog({
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
-        className="relative z-10 w-full max-w-md animate-fade-up rounded-2xl border border-border bg-elevated p-5 shadow-xl"
+        className="relative z-10 flex w-full max-w-md flex-col overflow-hidden rounded-2xl border border-border bg-elevated shadow-xl animate-fade-up"
+        style={{ maxHeight: 'calc(100dvh - 1.5rem)' }}
       >
-        <h3 id="confirm-dialog-title" className="font-display text-lg font-semibold text-ink">
+        <h3
+          id="confirm-dialog-title"
+          className="shrink-0 px-5 pt-5 font-display text-lg font-semibold text-ink"
+        >
           {title}
         </h3>
-        <div className="mt-3 space-y-2 text-sm text-subtle">{children}</div>
-        <div className="mt-5 flex flex-wrap justify-end gap-2">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-3 text-sm text-subtle">
+          {children}
+        </div>
+        <div className="mt-3 flex shrink-0 flex-wrap justify-end gap-2 px-5 pb-5">
           <Button autoFocus variant="secondary" onClick={onCancel}>
             {cancelLabel}
           </Button>

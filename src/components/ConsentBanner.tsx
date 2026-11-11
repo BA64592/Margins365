@@ -88,7 +88,10 @@ export function ConsentBanner() {
   if (!visible) return null
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[60] border-t border-border bg-elevated p-4 shadow-lg sm:p-5">
+    <div
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-elevated p-4 shadow-lg sm:p-5"
+      style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+    >
       <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-ink">
           {PRODUCT_NAME} uses essential cookies to sign you in and protect the site. We’d also like to

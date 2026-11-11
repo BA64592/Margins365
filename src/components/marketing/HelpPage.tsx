@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useApp } from '../../context/AppContext'
 import { PRODUCT_NAME } from '../../lib/brand'
-import { Button, Input } from '../ui'
+import { Button, Input, Modal } from '../ui'
 
 const FAQ: { q: string; a: string }[] = [
   {
@@ -22,7 +22,7 @@ const FAQ: { q: string; a: string }[] = [
   },
 ]
 
-/** K65 — Help centre with Hard limits & billing FAQ + Contact us form. */
+/** K65 / K84 — Help centre with Hard limits & billing FAQ + Contact us form. */
 export function HelpPage() {
   const { user, setAuthOpen } = useApp()
   const [name, setName] = useState(user?.fullName || '')
@@ -31,23 +31,27 @@ export function HelpPage() {
   const [email, setEmail] = useState(user?.email || '')
   const [country, setCountry] = useState('GB')
   const [message, setMessage] = useState('')
+  const [honeypot, setHoneypot] = useState('')
+  const [filledAt] = useState(() => Date.now())
   const [status, setStatus] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [popupOpen, setPopupOpen] = useState(false)
 
   const submit = async () => {
     setStatus(null)
-    if (!name.trim() || !email.trim().includes('@') || !message.trim()) {
-      setStatus('Name, email and message are required.')
+    if (!name.trim() || !email.trim().includes('@') || !country.trim() || !message.trim()) {
+      setStatus('Name, email, country and message are required.')
       return
     }
-    if (message.trim().length > 4000) {
-      setStatus('Keep your message under 4,000 characters.')
+    if (message.trim().length < 10 || message.trim().length > 5000) {
+      setStatus('Message must be 10–5,000 characters.')
       return
     }
     setBusy(true)
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
@@ -56,6 +60,8 @@ export function HelpPage() {
           email: email.trim(),
           country: country.trim(),
           message: message.trim(),
+          companyWebsite: honeypot,
+          filledAt,
         }),
       })
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; message?: string }
@@ -64,10 +70,10 @@ export function HelpPage() {
         return
       }
       setMessage('')
-      setStatus(data.message || 'Thanks — we have your message. A copy is on its way to your inbox.')
-      window.alert('Message sent. Check your email for a copy.')
+      setStatus(data.message || 'Thanks — we have your message.')
+      setPopupOpen(true)
     } catch {
-      setStatus('Could not reach the server.')
+      setStatus('We couldn’t reach Margins365. Check your connection and try again.')
     } finally {
       setBusy(false)
     }
@@ -137,8 +143,18 @@ export function HelpPage() {
               className="min-h-32 w-full rounded-[10px] border border-border bg-elevated px-3 py-2 text-sm"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              maxLength={4000}
+              maxLength={5000}
               required
+            />
+          </label>
+          {/* K84 honeypot — hidden from users */}
+          <label className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+            Company website
+            <input
+              tabIndex={-1}
+              autoComplete="off"
+              value={honeypot}
+              onChange={(e) => setHoneypot(e.target.value)}
             />
           </label>
         </div>
@@ -149,6 +165,15 @@ export function HelpPage() {
           {status ? <p className="text-sm text-subtle">{status}</p> : null}
         </div>
       </section>
+
+      <Modal open={popupOpen} onClose={() => setPopupOpen(false)} title="Message sent">
+        <p className="text-sm text-ink">
+          Thanks — we have your message. We read every message, but we can’t promise a reply time.
+        </p>
+        <Button className="mt-4" onClick={() => setPopupOpen(false)}>
+          Close
+        </Button>
+      </Modal>
     </main>
   )
 }
