@@ -1,0 +1,170 @@
+{
+  "HARD_LIMITS_FAQ": [
+    {
+      "id": "how-to-use",
+      "order": 1,
+      "group": "getting-started",
+      "question": "How do I use this platform?",
+      "answer": "Start a 14-day free trial and choose a plan. Add your shop and pick the platform it uses (Shopify, Amazon or Etsy). Download the reports you already get from that platform and upload them — we never connect to your store. Add your product costs (and ads, shipping or overheads if you have them). Review the import, then see your true profit, a Health Score and the ranked fixes to make first. You can look at the Sample shop page first if you prefer. TikTok Shop UK Excel import is coming soon."
+    },
+    {
+      "id": "get-started",
+      "order": 2,
+      "group": "getting-started",
+      "question": "What exactly is needed to get started?",
+      "answer": "A verified account and a payment card to start the 14-day free trial — you pay nothing today. You upload reports you already download from your sales platforms. For Shopify, export the Orders CSV (the Shopify Payments transactions CSV is optional). For Amazon, download a Custom Unified Transaction CSV. For Etsy, download both the Orders CSV and the Order Items CSV (the Monthly Statement is optional). TikTok Shop UK (Beta): Excel import coming soon. You can also enter costs with the product CSV template or type them in. Buyer names, emails, addresses and similar personal details are removed at import. Your plan decides how many platforms you can use at once (Starter 1 of 3, Growth up to 2 of 3, Pro and Scale all 3, while TikTok is coming soon)."
+    },
+    {
+      "id": "suggest-feature",
+      "order": 3,
+      "group": "feedback-contact",
+      "question": "How can I recommend a new feature I want to see?",
+      "answer": "Signed in, open Suggest a feature, write a short note and send it. It goes straight to the Margins365 team. We can't promise a reply."
+    },
+    {
+      "id": "cancel-anytime",
+      "order": 4,
+      "group": "trial-plans-billing",
+      "question": "Can I cancel anytime?",
+      "answer": "Yes. Cancel any time in one click from Plan & billing — only the account holder (the owner) can do this. We don't accept cancellation by email. If you cancel during your 14-day trial, you pay nothing. You keep access until your trial or paid period ends; then your account is closed and your data is permanently deleted. Download your data before then."
+    },
+    {
+      "id": "after-trial",
+      "order": 5,
+      "group": "trial-plans-billing",
+      "question": "What happens after the 14-day trial?",
+      "answer": "A card is collected when you start, and you pay nothing today. Your trial gives you the plan you chose, with its features and order limit. Unless you cancel in Plan & billing before your trial ends (date shown at Checkout and in Plan & billing), that plan starts on day 15 at its price (or the founding price, if you have a founding place). We’ll email you a reminder before you’re charged. You can change plan during the trial; the trial end date stays the same. TikTok Shop UK Excel import is coming soon."
+    },
+    {
+      "id": "founding-offer",
+      "order": 6,
+      "group": "trial-plans-billing",
+      "question": "Is there a founding offer?",
+      "answer": "Yes, while places last. The first 100 paying customers get 50% off their first 6 monthly payments (Starter £19.50, Growth £39.50, Pro £64.50, Scale £99.50 a month including VAT), then the normal price. On an annual plan the first year is 25% off (Starter £292.50, Growth £592.50, Pro £967.50, Scale £1,492.50 including VAT), then the normal annual price. The number of places left shown on Pricing is the real count."
+    },
+    {
+      "id": "shops",
+      "order": 7,
+      "group": "order-limits-shops-seats",
+      "question": "What are shops?",
+      "answer": "A shop is one online store connected to this account. If you sell from two Shopify stores, that is two shops. Starter, Growth and Pro include 1 shop. Scale includes up to 3. Unique orders count toward the account’s monthly limit. The monthly order limit is counted across all your shops together, not separately per shop."
+    },
+    {
+      "id": "seats",
+      "order": 8,
+      "group": "order-limits-shops-seats",
+      "question": "What are seats?",
+      "answer": "A seat is a person who can sign in to this account. The owner always uses one seat. Extra seats are for people such as a bookkeeper or business partner. Starter and Growth include 1 seat (the owner). Pro includes 2. Scale includes 5. Only the account holder (the owner) can cancel the trial or subscription."
+    },
+    {
+      "id": "hit-order-limit",
+      "order": 9,
+      "group": "order-limits-shops-seats",
+      "question": "What happens if I hit my order limit?",
+      "answer": "Orders count once per billing month — re-uploading the same orders does not use your allowance again. We’ll warn you at 80% and name the next plan. If a file would take you over your limit, we won’t import part of it. You’ll see how many orders over you are and can upgrade. Upgrades take effect immediately with proration; re-upload after upgrading. Existing results stay visible. During a trial the limit is the limit of the plan you chose."
+    },
+    {
+      "id": "data-safe",
+      "order": 10,
+      "group": "data-privacy",
+      "question": "Is my data safe, and where is it stored?",
+      "answer": "Buyer names, emails, addresses and similar personal details are removed at import. The app, database and backups run on DigitalOcean in London. Transactional email is sent with Amazon SES in the EU (Stockholm). You can Download my data while your trial or subscription is active. If you cancel, you keep access until your trial or paid period ends; then your account is closed and your product data is permanently deleted. Backup copies are removed within 7 days. A GDPR / privacy contact address is in the privacy policy."
+    },
+    {
+      "id": "connect-store",
+      "order": 11,
+      "group": "getting-started",
+      "question": "Do you connect to my store?",
+      "answer": "No. We never connect to your store, and no 3PL integration is required. You download the reports you already get from Shopify, Amazon or Etsy and upload them here."
+    },
+    {
+      "id": "change-plan",
+      "order": 12,
+      "group": "trial-plans-billing",
+      "question": "Can I change plan?",
+      "answer": "Yes. You can upgrade at any time from Plan & billing. The upgrade takes effect immediately and we prorate the difference. After upgrading, re-upload if you were blocked by an order limit. During a trial you can change plan at any time; the trial end date stays the same and nothing is charged until day 15. Downgrades on a paid plan apply at renewal; features, shops or seats beyond the lower plan are locked, not deleted, and come back when you upgrade."
+    },
+    {
+      "id": "vat",
+      "order": 13,
+      "group": "trial-plans-billing",
+      "question": "Does the price include VAT?",
+      "answer": "Yes. All published prices and every Stripe price are tax-inclusive. Starter is £39 a month or £390 a year, Growth £79 / £790, Pro £129 / £1,290 and Scale £199 / £1,990, all including VAT."
+    },
+    {
+      "id": "order-limits",
+      "order": 14,
+      "group": "order-limits-shops-seats",
+      "question": "How do order limits work?",
+      "answer": "Orders count once per billing month — re-uploading the same orders does not use your allowance again. Your trial uses the order limit of the plan you chose. We warn you at 80% and name the next plan. If a file would take you over your limit, we won’t import part of it. Order limits reset every month, including on annual plans. Cancel and upgrades are in Plan & billing only."
+    },
+    {
+      "id": "annual-plans",
+      "order": 15,
+      "group": "trial-plans-billing",
+      "question": "What happens on annual plans?",
+      "answer": "Pay for 10 months and receive 12 months’ access (about 17% off the monthly rate). On the founding offer, the first year is 25% off (Starter £292.50, Growth £592.50, Pro £967.50, Scale £1,492.50 including VAT), then the normal annual price. Order usage still resets monthly inside the annual period. The annual total, renewal date and renewal terms are shown before checkout. Cancel any time in Plan & billing — we don’t accept cancellation by email."
+    }
+  ],
+  "HARD_LIMITS_FAQ_GROUPS": [
+    {
+      "id": "getting-started",
+      "title": "Getting started"
+    },
+    {
+      "id": "trial-plans-billing",
+      "title": "Trial, plans and billing"
+    },
+    {
+      "id": "order-limits-shops-seats",
+      "title": "Order limits, shops and seats"
+    },
+    {
+      "id": "data-privacy",
+      "title": "Data and privacy"
+    },
+    {
+      "id": "feedback-contact",
+      "title": "Feedback and contact"
+    }
+  ],
+  "HARD_LIMITS_FAQ_HELP_ORDER": {
+    "getting-started": [
+      "how-to-use",
+      "get-started",
+      "connect-store"
+    ],
+    "trial-plans-billing": [
+      "after-trial",
+      "founding-offer",
+      "change-plan",
+      "annual-plans",
+      "vat",
+      "cancel-anytime"
+    ],
+    "order-limits-shops-seats": [
+      "order-limits",
+      "hit-order-limit",
+      "shops",
+      "seats"
+    ],
+    "data-privacy": [
+      "data-safe"
+    ],
+    "feedback-contact": [
+      "suggest-feature"
+    ]
+  },
+  "HELP_SIGN_IN_FAQ": [
+    {
+      "id": "how-sign-in",
+      "question": "How do I sign in?",
+      "answer": "Use Continue with Google, or your email and password. You need to verify your email before you upload files or start a trial."
+    },
+    {
+      "id": "forgot-password",
+      "question": "I forgot my password.",
+      "answer": "Tap Forgot password? under the password field and enter your email. We’ll send a link that works once, for 60 minutes. If you signed up with Google, use Continue with Google instead."
+    }
+  ]
+}

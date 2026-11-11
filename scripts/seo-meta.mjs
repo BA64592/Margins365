@@ -1,7 +1,10 @@
 /**
  * K75 — public-route metadata for server-injected HTML (SPA prerender stub).
  * Mirrors src/lib/routes.ts titles/descriptions for crawlers.
+ * K87 — FAQPage JSON-LD + noscript FAQ from the single Hard limits source.
  */
+
+import { HARD_LIMITS_FAQ, faqPageJsonLd } from '../src/content/hard-limits-faq.mjs'
 
 const CANONICAL = 'https://margins365.com'
 
@@ -166,9 +169,23 @@ export function injectHtmlMeta(html, pathname) {
     )
   }
   if (meta.h1) {
-    const snippet = `<noscript><main><h1>${escapeHtml(meta.h1)}</h1><p>${escapeHtml(meta.description)}</p></main></noscript>`
+    const faqBlock =
+      meta.path === '/pricing' || meta.path === '/help'
+        ? HARD_LIMITS_FAQ.map(
+            (e) =>
+              `<section id="faq-${escapeAttr(e.id)}"><h2>${escapeHtml(e.question)}</h2><p>${escapeHtml(e.answer)}</p></section>`,
+          ).join('')
+        : ''
+    const snippet = `<noscript><main><h1>${escapeHtml(meta.h1)}</h1><p>${escapeHtml(meta.description)}</p>${faqBlock}</main></noscript>`
     if (!out.includes('</noscript>')) {
       out = out.replace('<div id="root"></div>', `<div id="root"></div>\n    ${snippet}`)
+    }
+  }
+  if (meta.path === '/pricing' || meta.path === '/help') {
+    const ld = faqPageJsonLd(meta.path)
+    const script = `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`
+    if (!out.includes('"@type":"FAQPage"') && !out.includes('"@type": "FAQPage"')) {
+      out = out.replace('</head>', `    ${script}\n  </head>`)
     }
   }
   return { html: out, meta, status: meta.known ? 200 : 404 }

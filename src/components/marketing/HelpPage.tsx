@@ -1,30 +1,19 @@
 import { useState } from 'react'
+import {
+  HARD_LIMITS_FAQ,
+  HARD_LIMITS_FAQ_GROUPS,
+  HARD_LIMITS_FAQ_HELP_ORDER,
+  HELP_SIGN_IN_FAQ,
+  type HardLimitsFaqEntry,
+} from '../../content/hard-limits-faq'
 import { useApp } from '../../context/AppContext'
 import { PRODUCT_NAME } from '../../lib/brand'
+import { FaqAccordion } from '../FaqAccordion'
 import { Button, Input, Modal } from '../ui'
 
-const FAQ: { q: string; a: string }[] = [
-  {
-    q: 'Can I cancel anytime?',
-    a: 'Yes. Cancel only in Plan & billing (Cancel trial or Cancel subscription). Only the account owner can cancel. There is no email, phone or support-ticket cancellation. You keep access until the trial or paid period ends; then the account is closed, the login is removed, and product data is permanently deleted. Download my data before then.',
-  },
-  {
-    q: 'What happens during the free trial?',
-    a: 'Every plan starts with a 14-day free trial of the plan you choose, with that plan’s features and order limit. You add a card at checkout and pay nothing today. Unless you cancel before day 15, we charge your chosen plan automatically. Cancel any time in Plan & billing — one click.',
-  },
-  {
-    q: 'What are the unique-order limits?',
-    a: 'Starter 500, Growth 2,000, Pro 5,000, Scale 15,000 unique orders per billing month, shared across all shops. If an upload would take you over the limit, it is blocked and your existing results stay unchanged.',
-  },
-  {
-    q: 'How many shops and seats do I get?',
-    a: 'Starter and Growth: 1 shop and 1 seat (the owner). Pro: 1 shop and 2 seats. Scale: up to 3 shops and 5 seats. Only the account owner can cancel, change billing, manage shops or invite the team.',
-  },
-]
-
-/** K65 / K84 — Help centre with Hard limits & billing FAQ + Contact us form. */
+/** K65 / K84 / K87 — Help centre: shared FAQ + Contact us. */
 export function HelpPage() {
-  const { user, setAuthOpen } = useApp()
+  const { user, setAuthOpen, setRoute } = useApp()
   const [name, setName] = useState(user?.fullName || '')
   const [phone, setPhone] = useState(user?.phone || '')
   const [business, setBusiness] = useState(user?.businessName || '')
@@ -92,17 +81,89 @@ export function HelpPage() {
 
       <section className="mt-10">
         <h2 className="font-display text-xl font-semibold text-navy">Hard limits &amp; billing</h2>
-        <div className="mt-4 space-y-4">
-          {FAQ.map((item) => (
-            <details key={item.q} className="rounded-2xl border border-border bg-elevated p-4">
-              <summary className="cursor-pointer text-sm font-semibold text-ink">{item.q}</summary>
-              <p className="mt-2 text-sm text-subtle">{item.a}</p>
-            </details>
-          ))}
+        <div className="mt-6 space-y-8">
+          {HARD_LIMITS_FAQ_GROUPS.map((group: { id: HardLimitsFaqEntry['group']; title: string }) => {
+            const ids = HARD_LIMITS_FAQ_HELP_ORDER[group.id]
+            const entries = ids
+              .map((id: string) => HARD_LIMITS_FAQ.find((e: HardLimitsFaqEntry) => e.id === id))
+              .filter((e): e is HardLimitsFaqEntry => Boolean(e))
+            return (
+              <div key={group.id}>
+                <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-accent">
+                  {group.title}
+                </h3>
+                <FaqAccordion
+                  entries={entries}
+                  itemClassName="border-t border-border"
+                  renderAnswer={(entry: HardLimitsFaqEntry) => {
+                    if (entry.id === 'suggest-feature') {
+                      return (
+                        <div className="space-y-2">
+                          <p>{entry.answer}</p>
+                          <p>
+                            <button
+                              type="button"
+                              className="font-semibold text-accent underline underline-offset-2"
+                              onClick={() => {
+                                if (user) {
+                                  setRoute('account-billing')
+                                  window.location.hash = 'suggest-feature'
+                                } else {
+                                  try {
+                                    sessionStorage.setItem('m365:afterAuth', 'suggest')
+                                  } catch {
+                                    /* ignore */
+                                  }
+                                  setAuthOpen(true)
+                                }
+                              }}
+                            >
+                              Suggest a feature
+                            </button>
+                            {!user ? ' — sign in first, then we’ll take you to the form.' : '.'}
+                          </p>
+                          <p>
+                            <a
+                              href="/help#contact"
+                              className="font-semibold text-accent underline underline-offset-2"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                document.getElementById('contact')?.scrollIntoView({
+                                  behavior: 'smooth',
+                                  block: 'start',
+                                })
+                                window.history.replaceState({}, '', '/help#contact')
+                              }}
+                            >
+                              Contact us
+                            </a>
+                          </p>
+                        </div>
+                      )
+                    }
+                    return <p>{entry.answer}</p>
+                  }}
+                />
+              </div>
+            )
+          })}
         </div>
       </section>
 
       <section className="mt-12">
+        <h2 className="font-display text-xl font-semibold text-navy">Sign-in and account</h2>
+        <FaqAccordion
+          entries={HELP_SIGN_IN_FAQ.map((e: { id: string; question: string; answer: string }) => ({
+            id: e.id,
+            order: 0,
+            group: 'feedback-contact' as const,
+            question: e.question,
+            answer: e.answer,
+          }))}
+        />
+      </section>
+
+      <section id="contact" className="mt-12 scroll-mt-24">
         <h2 className="font-display text-xl font-semibold text-navy">Contact us</h2>
         <p className="mt-1 text-sm text-subtle">
           We read every message. We don’t promise a reply time. Do not use this form to cancel.

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { AccountInfoPage } from './components/account/AccountInfoPage'
 import { ShopsPage } from './components/account/ShopsPage'
 import { TeamPage } from './components/account/TeamPage'
@@ -37,6 +38,29 @@ import { Button } from './components/ui'
 import { AppProvider, useApp } from './context/AppContext'
 import { en } from './i18n/en'
 import { PRODUCT_NAME } from './lib/brand'
+
+/** K87 — after sign-in from Suggest a feature, open the form. */
+function AfterAuthRedirect() {
+  const { user, setRoute, setAuthOpen } = useApp()
+  useEffect(() => {
+    if (!user) return
+    let intent: string | null = null
+    try {
+      intent = sessionStorage.getItem('m365:afterAuth')
+      if (intent) sessionStorage.removeItem('m365:afterAuth')
+    } catch {
+      return
+    }
+    if (intent !== 'suggest') return
+    setAuthOpen(false)
+    setRoute('account-billing')
+    requestAnimationFrame(() => {
+      window.location.hash = 'suggest-feature'
+      document.getElementById('suggest-feature')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }, [user, setRoute, setAuthOpen])
+  return null
+}
 
 function MarketingShell({ children }: { children: React.ReactNode }) {
   return (
@@ -219,6 +243,15 @@ function ProductShell() {
 }
 
 function AppShell() {
+  return (
+    <>
+      <AfterAuthRedirect />
+      <AppShellRoutes />
+    </>
+  )
+}
+
+function AppShellRoutes() {
   const { route } = useApp()
 
   if (route === 'home') {

@@ -1,5 +1,7 @@
 import { Fragment, useMemo, useState } from 'react'
+import { Store } from 'lucide-react'
 import { useApp } from '../context/AppContext'
+import { HARD_LIMITS_FAQ } from '../content/hard-limits-faq'
 import { PRODUCT_NAME } from '../lib/brand'
 import { en } from '../i18n/en'
 import {
@@ -19,6 +21,7 @@ import {
   type BillingInterval,
   type PlanId,
 } from '../lib/plans'
+import { FaqAccordion } from './FaqAccordion'
 import { Button } from './ui'
 
 type CompRow = {
@@ -161,72 +164,18 @@ const COMPARISON: CompRow[] = [
   },
 ]
 
-const FAQ = [
-  {
-    q: 'How do I use this platform?',
-    a: 'Start a 14-day free trial and choose a plan. Add your shop and pick the platform it uses (Shopify, Amazon or Etsy). Download the reports you already get from that platform and upload them — we never connect to your store. Add your product costs (and ads, shipping or overheads if you have them). Review the import, then see your true profit, a Health Score and the ranked fixes to make first. You can look at the sample report first if you prefer. TikTok Shop UK Excel import is coming soon.',
-  },
-  {
-    q: 'What exactly is needed to get started?',
-    a: 'A verified account and a payment card to start the 14-day free trial — you pay nothing today. You upload reports you already download from your sales platforms. For Shopify, export the Orders CSV (the Shopify Payments transactions CSV is optional). For Amazon, download a Custom Unified Transaction CSV. For Etsy, download both the Orders CSV and the Order Items CSV (the Monthly Statement is optional). TikTok Shop UK (Beta): Excel import coming soon. You can also enter costs with the product CSV template or type them in. Buyer names, emails, addresses and similar personal details are removed at import. Your plan decides how many platforms you can use at once (Starter 1 of 3, Growth up to 2 of 3, Pro and Scale all 3, while TikTok is coming soon).',
-  },
-  {
-    q: 'How can I recommend a new feature I want to see?',
-    a: 'Signed in, open Suggest a feature, write a short note and send it. We save it for review. We don’t publish an email address for this, and we can’t promise a reply.',
-  },
-  {
-    q: 'Can I cancel anytime?',
-    a: 'Yes. Cancel only in Plan & billing (Cancel trial or Cancel subscription). Only the account owner can cancel. There is no email, phone or support-ticket cancellation. You keep access until the trial or paid period ends; then the account is closed, the login is removed, and product data is permanently deleted. Download my data before then.',
-  },
-  {
-    q: 'What happens after the 14-day trial?',
-    a: `Your trial includes the plan you choose — its features and order limit — for ${TRIAL_DAYS} days. Unless you cancel in Plan & billing, we charge that plan on day 15. Cancel any time before then in one click.`,
-  },
-  {
-    q: 'What are shops?',
-    a: `${SHOP_HELP} Starter, Growth and Pro include 1 shop. Scale includes up to 3. On Scale, the unique-order limit is counted account-wide across those shops.`,
-  },
-  {
-    q: 'What are seats?',
-    a: `${SEAT_HELP} Starter and Growth include 1 seat (the owner). Pro includes 2. Scale includes 5. Only the account owner can cancel.`,
-  },
-  {
-    q: 'What happens if I hit my order limit?',
-    a: 'We warn at 80% of your unique-order allowance and name the next plan. If a file would take you over the limit, we import nothing and show the overage — there is no partial import. Your trial uses your chosen plan’s order limit. Re-uploading the same order IDs does not use allowance again.',
-  },
-  {
-    q: 'Is my data safe, and where is it stored?',
-    a: 'Buyer names, emails, addresses and similar personal details are stripped at import and are never stored. Original upload files are deleted as soon as they are imported. Product diagnosis data is held for your account while you have access; when access ends after cancel, product data is permanently wiped and the login is removed. Hosting is on DigitalOcean (London) with Stripe for payments and Amazon SES for mail.',
-  },
-  {
-    q: 'Do you connect to my store?',
-    a: 'No. You upload the CSV reports you already download from Shopify, Amazon or Etsy. There is no live API connection to your store.',
-  },
-  {
-    q: 'Can I change plan?',
-    a: 'Yes. Choose a different plan from Pricing or Plan & billing. During a trial you may change plan; the trial end date stays the same and you are not charged today. Paid upgrades follow the checkout terms shown.',
-  },
-  {
-    q: 'Does the price include VAT?',
-    a: 'Yes. Published prices include VAT. Checkout shows the amount including VAT and the charge date before you confirm.',
-  },
-  {
-    q: 'How do order limits work?',
-    a: 'Orders count once per billing month — re-uploading the same orders does not use allowance again. Your trial uses your chosen plan’s order limit. We warn at 80% and name the next plan. If a file would take you over, we import nothing and show the overage.',
-  },
-  {
-    q: 'What happens on annual plans?',
-    a: 'Pay for 10 months and receive 12. Order usage still resets monthly inside the annual period. Renewal date and terms are shown before checkout.',
-  },
-]
-
 export function PricingPage() {
-  const { setUpgradeOpen, setRoute, setAuthOpen, user, foundingLeft } = useApp()
+  const { setUpgradeOpen, setRoute, setAuthOpen, user, access, foundingLeft } = useApp()
   const [interval, setInterval] = useState<BillingInterval>('month')
 
   const chargeHint = useMemo(() => trialChargeDateLabel(), [])
   const foundingLine = foundingOfferLine(foundingLeft)
   const showFounding = foundingLeft > 0
+  const onPlan =
+    access === 'trial' ||
+    access === 'active' ||
+    access === 'legacy' ||
+    access === 'canceled_access'
 
   return (
     <main>
@@ -447,29 +396,56 @@ export function PricingPage() {
         <h2 className="font-[family-name:var(--font-marketing)] text-[1.75rem] font-semibold text-navy sm:text-3xl">
           Hard limits &amp; billing FAQ
         </h2>
-        <div className="mt-8 space-y-0">
-          {FAQ.map((item) => (
-            <details key={item.q} className="group border-t border-border py-4">
-              <summary className="min-h-11 cursor-pointer list-none font-semibold text-navy outline-none marker:content-none">
-                <span className="flex items-center justify-between gap-3">
-                  {item.q}
-                  <span className="text-accent transition group-open:rotate-45">+</span>
-                </span>
-              </summary>
-              <p className="mt-3 text-sm leading-relaxed text-subtle sm:text-base">{item.a}</p>
-            </details>
-          ))}
+        <div className="mt-8">
+          <FaqAccordion entries={HARD_LIMITS_FAQ} />
         </div>
-        <div className="mt-10 flex flex-wrap gap-3">
-          <Button onClick={() => setUpgradeOpen(true)}>{PRIMARY_TRIAL_CTA}</Button>
-          <Button variant="ghost" onClick={() => setRoute('sample')}>
-            View sample report
-          </Button>
-          <Button variant="ghost" onClick={() => setAuthOpen(true)}>
-            {user ? 'Account' : 'Sign in'}
-          </Button>
+        <p className="mt-6 text-sm text-subtle">
+          More help, and our contact form, in the{' '}
+          <button
+            type="button"
+            className="font-semibold text-accent underline underline-offset-2"
+            onClick={() => setRoute('help')}
+          >
+            Help centre
+          </button>
+          .
+        </p>
+        <div className="mt-8 flex flex-wrap items-center gap-3">
+          {!user ? (
+            <>
+              <Button onClick={() => setUpgradeOpen(true)}>{PRIMARY_TRIAL_CTA}</Button>
+              <OpenSampleShopButton onClick={() => setRoute('sample')} />
+              <Button variant="ghost" onClick={() => setAuthOpen(true)}>
+                Sign in
+              </Button>
+            </>
+          ) : onPlan ? (
+            <>
+              <Button onClick={() => setRoute('app')}>Go to Control room</Button>
+              <OpenSampleShopButton onClick={() => setRoute('sample')} />
+            </>
+          ) : (
+            <>
+              <Button onClick={() => setUpgradeOpen(true)}>Choose a plan</Button>
+              <OpenSampleShopButton onClick={() => setRoute('sample')} />
+            </>
+          )}
         </div>
       </section>
     </main>
+  )
+}
+
+function OpenSampleShopButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-[10px] bg-[#34726B] text-white transition hover:bg-[#2c615b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+      aria-label="Open Sample Shop"
+      title="Open Sample Shop"
+    >
+      <Store className="h-5 w-5" aria-hidden />
+    </button>
   )
 }

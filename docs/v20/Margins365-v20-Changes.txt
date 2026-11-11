@@ -1,4 +1,4 @@
-Margins365 spec v20 — Developer change pack (K59–K86)
+Margins365 spec v20 — Developer change pack (K59–K87)
 Status: APPROVED — Akthar Uddin, 11 November 2026, 13:36 Europe/London, with his 
 follow-up decisions the same afternoon (founding offer 6 months; Sample shop buttons 
 and full product architecture delegated to the Business & Product Agent). For: Design & 
@@ -24,26 +24,21 @@ and Sample shop swap places
 —
 K62 Every navigation opens at the top of the page —
 K63
-Real URL routes: refresh keeps the page; deep links and 
-back/forward work
+Real URL routes: refresh keeps the page; deep links and back/forward 
+work
 —
-K64
-Footer: copyright line; old sentence removed; Help and Legal 
-columns
-7 Nov footer handoff
+K64 Footer: copyright line; old sentence removed; Help and Legal columns 7 Nov footer handoff
 K65
-New Help centre page with the Hard limits & billing FAQ and a 
-Contact us form
+New Help centre page with the Hard limits & billing FAQ and a Contact 
+us form
 7 Nov form rules
 K66
 Sample shop page buttons: new text; second button becomes a shop 
 icon
 K55 button text
+K67 Signed-in header: no trial CTA, business-name account button and 15.4 signed-in rules
 ID Decision Replaces
-K67
-Signed-in header: no trial CTA, business-name account button and 
 menu, Info and Control room
-15.4 signed-in rules
 K68 Shops/multi-shop and seats/multi-seat fully built OD5, Q22, Q23 defaults
 K69 The trial gives the tier the customer chose K52 reverse trial
 K70 Professional account profile (Info) 5 “Profile & sign-in”
@@ -89,9 +84,7 @@ K82
 Every page opens at the top instantly, with no animated scroll (fixes 
 K62 on iPhone)
 —
-K83
-Suggest a feature is emailed to info.marginos@gmail.com (and 
-stored)
+K83 Suggest a feature is emailed to info.marginos@gmail.com (and stored)
 Q33 store-only default 
 (S58)
 K84
@@ -108,6 +101,11 @@ K86
 SES email set up and proven before release (verified domain, DKIM, 
 MAIL FROM, production access, SPF, DMARC)
 —
+K87
+Hard limits & billing FAQ on both Pricing and the Help centre from one 
+source; grouped accordion; Suggest a feature and Contact us links; 
+“View sample report” → “Open Sample Shop”
+K65 “move”
 What the live site does today (checked 11 November 2026, live bundle)
 • Brand shows “Margins 365” (with a space). No “Margins365” string. 
 • No page routing: refresh always returns to Home; pages don't scroll to the top on change. 
@@ -173,13 +171,12 @@ sentence is absent; every footer link works; legal links open in a new tab at th
 document. v19 sections affected. 10.1, 15.4; replaces the 7 November footer handoff. 
 K65 — Help centre and Contact us form
 Requirement. New public page /help, reachable from the footer and the account menu. The Hard 
-limits & billing FAQ moves here from Pricing (Pricing keeps a one-line link “Questions about limits 
-and billing? See the Help centre.”). The Contact us form has Name, Phone number, Business 
-name, Email, Country, Message. Submissions go to info.marginos@gmail.com, a pop-up 
-confirms success, and a copy is emailed to the visitor's address through SES. Full behaviour, 
-validation, limits and spam protection: spec 23.11. Acceptance. HC-1 to HC-6 in spec 23.11. v19 
-sections affected. 3.2, 10.1, 15.4, Q33; replaces section 1 of the 7 November handoff (fields, 
-notification and reply rules).
+limits & billing FAQ appears here and stays on Pricing (K87 supersedes the original move; one 
+content source). The Contact us form has Name, Phone number, Business name, Email, 
+Country, Message. Submissions go to info.marginos@gmail.com, a pop-up confirms success, and 
+a copy is emailed to the visitor's address through SES. Full behaviour, validation, limits and spam 
+protection: spec 23.11. Acceptance. HC-1 to HC-6 in spec 23.11. v19 sections affected. 3.2, 10.1, 
+15.4, Q33; replaces section 1 of the 7 November handoff (fields, notification and reply rules).
 K66 — Sample shop page buttons
 Requirement.
 • First button (opening section, green): signed out Start your own shop → starts the 14-day 
@@ -636,6 +633,30 @@ to EML-25.
 D-1 (defect against K72, P0). Founding prices must show pence: £19.50, £39.50, £64.50, £99.50, 
 £292.50, £592.50, £967.50, £1,492.50, in the plans pop-up, on cards, at Checkout, in Plan & billing 
 and in emails. The trial disclosure must state the exact amount that will be charged. QA OFF-17.
+K87 — The FAQ stays on Pricing and is copied to the Help centre, from one source
+Status. Requested by Akthar, 11 November 2026 (“Copy all these questions to Help center”). This 
+supersedes the K65 “move”.
+Requirement.
+• Same FAQ in both places. The Hard limits & billing FAQ (spec 3.2, 15 entries: the 14 on the 
+live Pricing page plus the approved founding-offer question) shows in full on Pricing and in 
+the Help centre. 
+• One content source feeds both pages, their prerendered HTML and their FAQPage JSON-LD, 
+so the two can't drift apart. 
+• Help centre layout: 
+• five group headings with an accordion; 
+• a link to Suggest a feature from Q3 (signed out: sign in first); 
+• a Contact us link to the form; 
+• anchors for each answer; 
+• links to other pages open at the top (K82). 
+• No duplicates. The four overlapping Help-only questions on the live site are retired and 
+folded in. The two Help-only sign-in and password answers stay. 
+• Button rename. The button under the Pricing FAQ, “View sample report”, becomes “Open 
+Sample Shop” (K60, K66). No trial button is shown to trial or paid users (K67), and there's no 
+Sign in or Account button when signed in. 
+• Answers corrected. The live answers are reconciled with K60, K69, K72 (pence and annual), 
+K81, K83 and K36. 
+Spec 3.2 and 23.20.
+Acceptance. FQ-1 to FQ-6; QA HELP-25 to HELP-32.
 Build order
 1. K73 domain and K59 brand (configuration; unblocks emails and sign-in). 
 2. K63 routes and K62 scroll (every other change depends on addresses). 
@@ -654,7 +675,8 @@ Privacy Policy and DPA page published in the same release.
 K80–K86 (Akthar's iPhone test), slotted into the order above: K86 SES setup and production 
 access go with step 1 (every email depends on it). K82 scroll fix goes with step 2. K80 pop-ups, site-
 wide mobile check and K81 banner removal go with step 7. K85 forgot password goes with step 4. K83 
-and K84 go with step 8. Fix D-1 (pence in founding prices) goes with step 5.
+and K84 go with step 8. Fix D-1 (pence in founding prices) goes with step 5. K87 (FAQ on Pricing and 
+Help centre from one source, button rename) goes with step 8.
 Phase 2 (after the core v20 QA pass):
 12.K76 calculators on the shared calculation module; QA suite PCALC before they go live. 
 13.K77 landing pages, then help articles at about 2 a month; SEO checks per page. 
@@ -666,7 +688,7 @@ subdomain of it).
 12.12 tables. 
 • Stripe test mode has all prices, trials and both founding coupons; SES sends from 
 margins365.com and passes SPF/DKIM/DMARC. 
-• K80–K86 and fix D-1 are built. The K86 proof is attached: SES console screenshots (identity 
+• K80–K87 and fix D-1 are built. The K86 proof is attached: SES console screenshots (identity 
 Verified, DKIM and MAIL FROM Successful, production access) and passing headers for each 
 email at Gmail, Outlook and iCloud. 
 • Registered address, company number and ICO number to be added before launch if required 
@@ -722,8 +744,9 @@ Escape or outside tap):
 Item Who sees it Goes to
 Business name, signed-in person's name and email, 
 role badge (Owner or Member), plan badge (for 
-example “Growth · Trial ends 25 Nov”)
 Everyone —
+Item Who sees it Goes to
+example “Growth · Trial ends 25 Nov”)
 Shop switcher (list of shops, current one ticked, 
 Add shop if allowed)
 Scale (trial or paid)
@@ -821,7 +844,6 @@ Invite, revoke invites, remove members Yes No
 Edit business Info (business name, country, VAT number, address) Yes View only
 Edit own name, phone, password, Google link Yes
 Yes (own 
-Action Owner Member
 only)
 Plan & billing: change plan, payment method, invoices Yes No
 Cancel trial or subscription Yes No (K50)
@@ -865,6 +887,7 @@ Info fields.
 Field Required? Why (UK GDPR data minimisation)
 Your name Required
 Identify the person signed in and on the 
+Field Required? Why (UK GDPR data minimisation)
 team
 Business name Required
 Account identity, header button, invoices 
@@ -1032,7 +1055,6 @@ changed / Your sign-in (Google-only)
 Invitation Owner invites Invitee
 You no longer have access Owner removes member Member
 Trial started Checkout complete Owner
-Email Trigger To
 Trial reminder
 3 days before trial end 
 (default)
@@ -1046,6 +1068,7 @@ First time usage crosses
 80% in a billing month
 Owner and members
 Payment failed / final failure Stripe events Owner
+Email Trigger To
 Cancellation confirmation
 Cancel confirmed or provider 
 cancel
@@ -1071,11 +1094,11 @@ link for reporting
 Founding place record DigitalOcean London
 Account closure; a count without personal 
 data is kept to honour the 100 limit
-Contact messages DigitalOcean London and the 
+Contact messages
+DigitalOcean London and the 
 info.marginos@gmail.com 
-12 months after receipt
-Data Where Kept until
 mailbox
+12 months after receipt
 Legal acceptance 
 (document, version, 
 time)
@@ -1116,12 +1139,11 @@ $100 per order, converted) counted as ad spend
 Amazon UK fee 
 and profit 
 calculator (FBA 
+and FBM)
 /amazon-fee-calculator-uk
 Referral fee by category from the 16.2 Amazon 
 table, default "Everything else" 15%, minimum 
 £0.25 per item, on the total the buyer pays 
-Calculator Route Fee presets used (16.2, UK row)
-and FBM)
 (Development confirms the fee base on 
 sell.amazon.co.uk and records the source, as 16.2 
 requires); FBA fulfilment, storage and other 
@@ -1222,7 +1244,6 @@ Revenue £44.99; fees £1.15; return cost £2.25;
 CM £24.39 (54.2%); true profit £16.39 (36.4%), 
 Healthy; break-even ROAS 1.84×; target price 
 £25.68; break-even price £22.38
-Example Inputs Expected results
 Margin 
 (generic)
 Prices include 20% VAT; price £18.00; 
@@ -1423,8 +1444,8 @@ show success (the suggestion is stored), raise an admin alert and retry automati
 sent. 
 • Limits. 5 per account per hour and 20 per day, held in shared storage. A double tap sends 
 once. HTML is shown as text everywhere. 
-• FAQ wording (3.2 and the Help centre): "Signed in, open Suggest a feature, write a short note 
-and send it. It goes straight to the Margins365 team. We can't promise a reply." 
+• FAQ wording: 3.2 entry 3 (K87), which begins "Signed in, open Suggest a feature, write a 
+short note and send it. It goes straight to the Margins365 team. We can't promise a reply." 
 Legal follow-up (needs Akthar's approval): the Privacy Policy and DPA list the Gmail mailbox for 
 contact messages only. In the next legal version, add "and feature suggestions" to the Google (Gmail) 
 recipient line, and add a "Feature suggestions" row: account name, email, business name, plan and 
@@ -1553,6 +1574,85 @@ Acceptance.
 • ES-3: Every listed email passes SPF, DKIM and DMARC at three providers. 
 • ES-4: Bounce and complaint handling has been tested with the SES mailbox simulator. 
 • ES-5: The apex SPF and DMARC reporting records are published. 
+B.20 FAQ on Pricing and in the Help centre (K87)
+Source. Akthar, 11 November 2026: “Copy all these questions to Help center.” The Hard limits & 
+billing FAQ shown on the live Pricing page (14 questions) appears in full in the Help centre and stays 
+on Pricing. This supersedes the K65 “move”.
+One source. The 15 entries in 3.2 are the 14 live questions plus the approved “Is there a founding 
+offer?”, which was missing from the live list. They are held once, each with an ID, question, answer, 
+group and order. Pricing, the Help centre, their prerendered HTML and their FAQPage JSON-LD are all 
+generated from that source. Editing one answer changes it everywhere. Neither page keeps its own 
+text.
+Pricing. Heading “Hard limits & billing FAQ”. All 15 entries in the 3.2 order, shown as an accordion. A 
+line under the list: “More help, and our contact form, in the Help centre.” The buttons under the FAQ 
+follow K61, K66 and K67:
+• signed out: Start 14-day free trial, Open Sample Shop (shop icon, K66), Sign in; 
+• signed in without a plan: Choose a plan and Open Sample Shop; 
+• on a trial or paid plan: Go to Control room and Open Sample Shop. 
+There is no trial button for trial or paid users, and no Sign in or Account button when signed in (the 
+header has the account button). The stale label “View sample report” is retired (K60 rename).
+Help centre (/help). Section “Hard limits & billing” holds the same 15 entries under five group 
+headings, in this order. The number in brackets is the 3.2 entry number.
+1. Getting started: - How do I use this platform? (1) - What exactly is needed to get started? (2) 
+- Do you connect to my store? (11) 
+2. Trial, plans and billing: - What happens after the 14-day trial? (5) - Is there a founding offer? 
+(6) - Can I change plan? (12) - What happens on annual plans? (15) - Does the price include 
+VAT? (13) - Can I cancel anytime? (4) 
+3. Order limits, shops and seats: - How do order limits work? (14) - What happens if I hit my 
+order limit? (9) - What are shops? (7) - What are seats? (8) 
+4. Data and privacy: Is my data safe, and where is it stored? (10) 
+5. Feedback and contact: How can I recommend a new feature I want to see? (3), followed by a 
+Contact us link to the form on the same page (/help#contact). 
+A separate “Sign-in and account” section keeps the two Help-only answers from 23.11, which aren't in 
+the Pricing list:
+• How do I sign in? Use Continue with Google, or your email and password. You need to verify 
+your email before you upload files or start a trial. 
+• I forgot my password. Tap Forgot password? under the password field and enter your email. 
+We'll send a link that works once, for 60 minutes. If you signed up with Google, use Continue 
+with Google instead. 
+No duplicates. The four Help-only questions on the live Help centre are retired, and their content is 
+folded into the single source:
+Retired question Folded into
+“Can I cancel anytime?” (a duplicate) 4
+“What happens during the free trial?” 5
+“What are the unique-order limits?” 14
+“How many shops and seats do I 
+get?”
+7 and 8
+Each question appears once per page.
+Accordion.
+• Every answer starts closed. A tap, click, Enter or Space opens or closes it, and several can be 
+open at once. 
+• Each question is a button with aria-expanded, and targets are at least 44 px. 
+• Every entry has an anchor (/help#faq-<id>, /pricing#faq-<id>). Opening an anchor link opens that 
+answer and scrolls to it (an in-page jump, so smooth scrolling is allowed, K82). The answer 
+stays open after a refresh. 
+• Answer text is in the prerendered HTML even when closed (K75). 
+Links.
+• Suggest a feature (entry 3): signed in, it opens the Suggest a feature box in the account 
+area; signed out, it goes to Sign in and then returns to that box. 
+• Contact us: goes to the Help centre form, with the form in view. 
+• Page position: every link to another page opens it at the top (K82). 
+Answer reconciliation (K87). The live answers differ from the approved 3.2 copy. 3.2 now applies:
+• The “sample report” wording becomes Sample shop (K60). 
+• “We save it for review” becomes the K83 wording. 
+• After the trial: “before day 14” becomes “before your trial ends (date shown at Checkout and 
+in Plan & billing)”. This matches the dated trial terms and drops the retired banner phrase 
+(K81). 
+• The founding offer is added, with pence and the annual prices (K72, D-1). 
+• Data: SES is located in the EU (Stockholm) (K36). 
+• Shops and seats: the repeated sentences are removed. 
+• New approved copy for “How do order limits work?” and “What happens on annual plans?”: the 
+trial is the plan you choose (K69); founding is 25% off year 1 on annual plans; order limits reset 
+monthly; cancelling is in Plan & billing only (K50). 
+Acceptance.
+• FQ-1: The same 15 questions and answers, word for word, on Pricing and the Help centre. 
+Changing one answer in staging updates both pages and the JSON-LD. 
+• FQ-2: Help centre groups and order as listed, with no duplicate questions. 
+• FQ-3: The accordion behaves as specified (keyboard, screen reader, anchors, refresh). 
+• FQ-4: The Suggest a feature and Contact us links work signed in and signed out. 
+• FQ-5: The Pricing FAQ buttons follow the state rules, and “View sample report” is gone. 
+• FQ-6: Every answer passes the HELP-29 content audit. 
 Files
 • /workspace/v20/Margins365-v20-Changes.md and .pdf (this pack) 
 • /workspace/v20/Margins365-Spec-v20.md and .pdf 

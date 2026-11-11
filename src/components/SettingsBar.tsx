@@ -351,7 +351,7 @@ export function SettingsBar() {
         </div>
       )}
 
-      <Card className="mt-4">
+      <Card id="suggest-feature" className="mt-4 scroll-mt-24">
         <p className="mb-1 text-sm font-semibold text-ink">Suggest a feature</p>
         <p className="mb-2 text-xs text-subtle">
           Signed-in only. We save your note for review — we don’t promise a reply.
