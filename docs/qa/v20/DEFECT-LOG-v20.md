@@ -98,8 +98,8 @@ See `DESIGN-DEV-RESPONSE-v20.md`.
 
 | ID | Status |
 |----|--------|
-| DEF-MOB-001 | **Fixed** — body/`html` scroll lock + iOS `position:fixed` pin while Modal/ConfirmDialog open |
-| DEF-BN-001 | **Fixed** — removed unused `TRIAL_BANNER_LINE` from client bundle |
+| DEF-MOB-001 | **Fixed & verified on prod** (`7243dd7`, DO ACTIVE) — body/`html` scroll lock + iOS `position:fixed` pin while Modal/ConfirmDialog open |
+| DEF-BN-001 | **Fixed & verified on prod** — removed unused `TRIAL_BANNER_LINE` from client bundle |
 | DEF-EML-K86 | **Open / ops** — apex SPF empty; DMARC `p=none`; SES production access proof not attached |
 
 ### DEF-MOB-001

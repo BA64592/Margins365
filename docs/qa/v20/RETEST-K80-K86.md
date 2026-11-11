@@ -25,7 +25,7 @@
 | MOB-12 / K81 | Pass | Sticky banner gone; header is top chrome |
 | MOB-13 / BN-3 | Pass | Trial terms remain on Pricing cards + plans modal |
 | OFF / D-1 | Pass | £19.50 / £39.50 / £64.50 / £99.50 shown under founding |
-| MOB-01 | Fail → fixed | Background scrolled behind modal; body scroll lock added |
+| MOB-01 | **Pass** (post-deploy `7243dd7`) | Body scroll lock verified at 390px; evidence `/opt/cursor/artifacts/qa-v20-k80/` |
 | MOB-06 | N/A | Cookie consent already stored in session |
 | K82 / NAV | Pass | Instant jump to top on Pricing nav |
 | HELP form present (K84 UI) | Pass | Not submitted (no live SES proof this pass) |
@@ -39,6 +39,6 @@ Not fully met until: (1) MOB retest on real iPhone Safari (bar shown/hidden), An
 
 | ID | Sev | Status | Summary |
 | --- | --- | --- | --- |
-| DEF-MOB-001 | P0 | Fixed (pending deploy) | Modal open: page behind scrolled (MOB-01/07) |
-| DEF-BN-001 | P1 | Fixed (pending deploy) | Banner copy still present in JS as `TRIAL_BANNER_LINE` (text-search fail for MOB-12) |
+| DEF-MOB-001 | P0 | **Fixed & verified on prod** | Modal open: page behind scrolled (MOB-01/07) |
+| DEF-BN-001 | P1 | **Fixed & verified on prod** | Banner exact copy absent from live JS |
 | DEF-EML-K86 | P1 | Open / ops | Apex SPF empty; DMARC `p=none`; SES production access not proven in this pass |
