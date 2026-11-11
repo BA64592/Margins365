@@ -5,42 +5,49 @@ import { Button, Input, SectionHeading } from '../ui'
 
 type Shop = { id: string; name: string }
 
-const STORE_KEY = 'm365_shops'
-
-function loadShops(): Shop[] {
-  try {
-    const raw = localStorage.getItem(STORE_KEY)
-    if (!raw) return [{ id: 'shop_default', name: 'Main shop' }]
-    const parsed = JSON.parse(raw) as Shop[]
-    return parsed.length ? parsed : [{ id: 'shop_default', name: 'Main shop' }]
-  } catch {
-    return [{ id: 'shop_default', name: 'Main shop' }]
-  }
-}
-
-/** K68 — shops UI (client store until server SoT lands). */
+/** K68 — shops UI backed by `/api/shops` (server SoT). */
 export function ShopsPage() {
   const { user, plan, access, setAuthOpen, setUpgradeOpen, setRoute } = useApp()
-  const [shops, setShops] = useState<Shop[]>(() => loadShops())
+  const [shops, setShops] = useState<Shop[]>([])
   const [name, setName] = useState('')
   const [msg, setMsg] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!user) setAuthOpen(true)
-  }, [user, setAuthOpen])
+  const [busy, setBusy] = useState(false)
 
   const maxShops =
     plan === 'starter' || plan === 'growth' || plan === 'pro' || plan === 'scale'
       ? PLANS[plan as PlanId].shops
       : 1
-  const canAdd = hasPaidAccess(access) && plan === 'scale' && shops.length < maxShops
 
-  const persist = (next: Shop[]) => {
-    setShops(next)
-    localStorage.setItem(STORE_KEY, JSON.stringify(next))
+  const load = async () => {
+    if (!user) return
+    setBusy(true)
+    try {
+      const res = await fetch('/api/shops', { credentials: 'include' })
+      const data = (await res.json()) as { ok?: boolean; shops?: Shop[]; message?: string }
+      if (!res.ok || !data.ok) {
+        setMsg(data.message || 'Could not load shops.')
+        return
+      }
+      setShops(data.shops || [])
+      setMsg(null)
+    } catch {
+      setMsg('Could not reach shops API.')
+    } finally {
+      setBusy(false)
+    }
   }
 
-  const add = () => {
+  useEffect(() => {
+    if (!user) {
+      setAuthOpen(true)
+      return
+    }
+    void load()
+  }, [user, setAuthOpen])
+
+  const canAdd = hasPaidAccess(access) && plan === 'scale' && shops.length < maxShops
+
+  const add = async () => {
     setMsg(null)
     if (plan !== 'scale') {
       setUpgradeOpen(true)
@@ -56,21 +63,53 @@ export function ShopsPage() {
       setMsg('Shop name must be 1–60 characters.')
       return
     }
-    if (shops.some((s) => s.name.toLowerCase() === n.toLowerCase())) {
-      setMsg('That shop name is already used.')
-      return
+    setBusy(true)
+    try {
+      const res = await fetch('/api/shops', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: n }),
+      })
+      const data = (await res.json()) as { ok?: boolean; shops?: Shop[]; message?: string }
+      if (!res.ok || !data.ok) {
+        setMsg(data.message || 'Could not add shop.')
+        return
+      }
+      setShops(data.shops || [])
+      setName('')
+    } catch {
+      setMsg('Could not add shop.')
+    } finally {
+      setBusy(false)
     }
-    persist([...shops, { id: `shop_${crypto.randomUUID().slice(0, 8)}`, name: n }])
-    setName('')
   }
 
-  const rename = (id: string, nextName: string) => {
+  const rename = async (id: string, nextName: string) => {
     const n = nextName.trim()
     if (!n || n.length > 60) return
-    persist(shops.map((s) => (s.id === id ? { ...s, name: n } : s)))
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/shops/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: n }),
+      })
+      const data = (await res.json()) as { ok?: boolean; shops?: Shop[]; message?: string }
+      if (!res.ok || !data.ok) {
+        setMsg(data.message || 'Could not rename shop.')
+        return
+      }
+      setShops(data.shops || [])
+    } catch {
+      setMsg('Could not rename shop.')
+    } finally {
+      setBusy(false)
+    }
   }
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
     if (shops.length <= 1) {
       setMsg('The last shop cannot be removed — use Start Fresh to empty it.')
       return
@@ -82,7 +121,23 @@ export function ShopsPage() {
       setMsg('Removal cancelled.')
       return
     }
-    persist(shops.filter((s) => s.id !== id))
+    setBusy(true)
+    try {
+      const res = await fetch(`/api/shops/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      })
+      const data = (await res.json()) as { ok?: boolean; shops?: Shop[]; message?: string }
+      if (!res.ok || !data.ok) {
+        setMsg(data.message || 'Could not remove shop.')
+        return
+      }
+      setShops(data.shops || [])
+    } catch {
+      setMsg('Could not remove shop.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   if (!user) {
@@ -98,22 +153,23 @@ export function ShopsPage() {
       <SectionHeading
         eyebrow="Account"
         title="Shops"
-        description={`Your plan allows ${maxShops} shop${maxShops === 1 ? '' : 's'}. Order limits are account-wide.`}
+        description={`Your plan allows ${maxShops} shop${maxShops === 1 ? '' : 's'}. Order limits are account-wide. Saved on the server.`}
       />
       <ul className="space-y-3">
         {shops.map((s) => (
           <li key={s.id} className="rounded-2xl border border-border bg-elevated p-4">
             <Input
               defaultValue={s.name}
-              onBlur={(e) => rename(s.id, e.target.value)}
+              onBlur={(e) => void rename(s.id, e.target.value)}
               aria-label={`Rename ${s.name}`}
+              disabled={busy}
             />
             <div className="mt-2 flex gap-2">
               <Button size="sm" variant="secondary" onClick={() => setRoute('app')}>
                 Open Control room
               </Button>
               {shops.length > 1 ? (
-                <Button size="sm" variant="danger" onClick={() => remove(s.id)}>
+                <Button size="sm" variant="danger" disabled={busy} onClick={() => void remove(s.id)}>
                   Remove
                 </Button>
               ) : null}
@@ -124,9 +180,11 @@ export function ShopsPage() {
       <div className="mt-6 flex flex-wrap items-end gap-2">
         <label className="min-w-[12rem] flex-1 text-sm">
           <span className="mb-1 block text-xs font-semibold text-subtle">New shop name</span>
-          <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} />
+          <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} disabled={busy} />
         </label>
-        <Button onClick={add}>{plan === 'scale' ? 'Add shop' : 'Add shop (Scale)'}</Button>
+        <Button disabled={busy} onClick={() => void add()}>
+          {plan === 'scale' ? 'Add shop' : 'Add shop (Scale)'}
+        </Button>
       </div>
       {msg ? <p className="mt-3 text-sm text-subtle">{msg}</p> : null}
     </main>
