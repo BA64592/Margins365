@@ -1,11 +1,10 @@
 /**
- * K58 / OD3 / K37 — single product name + domain config.
- * Canonical public host: margins365.com (marginos.online kept as alias/redirect).
+ * K59 / K73 — product name Margins365 (one word) + margins365.com only.
  */
 export const PRODUCT_NAME =
-  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_PRODUCT_NAME) || 'Margins 365'
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_PRODUCT_NAME) || 'Margins365'
 
-/** Live public host. */
+/** Live public host — margins365.com only (K73). */
 export const PRODUCT_DOMAIN =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_PRODUCT_DOMAIN) || 'margins365.com'
 
@@ -16,16 +15,15 @@ export const TARGET_PRODUCT_DOMAIN =
 
 export const SUPPORT_EMAIL =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPPORT_EMAIL) ||
-  `support@${PRODUCT_DOMAIN}`
+  `info.marginos@gmail.com`
 
 export const NOREPLY_EMAIL =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_NOREPLY_EMAIL) ||
   `noreply@${PRODUCT_DOMAIN}`
 
 /**
- * Statement descriptor — keep the live Stripe value until cutover confirms a replacement.
- * Do not invent a new descriptor here (spec 20.5).
+ * Statement descriptor — ask Stripe to update from MARGINOS to Margins365 (K73).
  */
 export const STATEMENT_DESCRIPTOR =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_STATEMENT_DESCRIPTOR) ||
-  'LINK.COM* MARGINOS'
+  'LINK.COM* MARGINS365'

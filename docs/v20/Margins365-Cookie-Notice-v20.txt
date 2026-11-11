@@ -1,0 +1,90 @@
+Margins365 — Cookie notice
+Version 20.1 · Effective date: 11 November 2026 · Approved (v20.1 adds optional, consent-
+based analytics; it is published in the release that turns analytics on)
+Margins365 uses essential cookies and browser storage that are needed to sign you in, protect 
+the site and make it work. These don't need consent under UK PECR and the EU ePrivacy rules.
+We also use privacy-friendly analytics (Plausible Analytics) on our public pages, only if you 
+click "Accept analytics". Plausible sets no cookies and stores nothing on your device; it doesn't 
+store your IP address or follow you to other sites. If you reject, or close the banner, or your browser 
+sends a Global Privacy Control signal, the analytics script is never loaded. We don't use advertising or 
+cross-site tracking cookies.
+Essential (always on)
+Name Type Provider Purpose How long
+__cf_bm
+Cookie 
+(secure, 
+HttpOnly)
+Cloudflare, 
+Inc.
+Essential security cookie. 
+Distinguishes people from bots and 
+helps protect the site.
+30 minutes
+marginos_session
+Cookie 
+(secure, 
+HttpOnly)
+Margins365 Keeps you signed in
+30 days or until 
+you sign out
+m365_consent
+Browser 
+local 
+storage
+Margins365
+Remembers your analytics choice 
+(accepted or rejected, the notice 
+version and the date) so we don't 
+ask on every page
+12 months, or 
+until this notice 
+changes
+App preferences 
+and cache
+Browser 
+local 
+storage
+Margins365
+Remembers screen preferences and 
+speeds up the app
+Cleared when you 
+sign out or your 
+account closes
+Optional (only with your consent)
+Service Provider What it does
+Stored on 
+your 
+device
+Where data 
+goes
+Website Plausible Counts page views and a few actions (for Nothing (no EU only 
+Service Provider What it does
+Stored on 
+your 
+device
+Where data 
+goes
+analytics
+Analytics 
+(Plausible 
+Insights OÜ, 
+Estonia)
+example "calculator used" or "start trial 
+clicked") on public pages, so we can see 
+which pages help people. Never used in the 
+signed-in app. Never receives what you type 
+into calculators or forms.
+cookies, no 
+local 
+storage)
+(servers in 
+Germany and 
+Finland)
+Change your mind at any time: use Cookie settings in the footer. Withdrawing is as easy as 
+accepting and takes effect straight away.
+Other sites. When you pay, Stripe Checkout (Link) runs on Stripe's own pages. When you choose 
+“Continue with Google”, Google's sign-in page runs on Google's site. Those companies set their own 
+cookies under their own policies.
+If we add any other non-essential cookie or tracker, we will ask for your consent first and update this 
+notice.
+Questions: info.marginos@gmail.com or the Help centre contact form.

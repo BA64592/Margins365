@@ -505,6 +505,49 @@ export async function handleAuthLogoutAll(req) {
   }
 }
 
+/** K65 — public Help centre Contact us form → info.marginos@gmail.com + visitor copy. */
+export async function handleContactForm(req, body) {
+  const name = String(body?.name || '').trim()
+  const phone = String(body?.phone || '').trim()
+  const businessName = String(body?.businessName || '').trim()
+  const email = String(body?.email || '')
+    .trim()
+    .toLowerCase()
+  const country = String(body?.country || '').trim().toUpperCase()
+  const message = String(body?.message || '').trim()
+  const ip = req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() || 'local'
+  if (!rateLimit(`contact:${ip}`, 5, 60 * 60 * 1000)) {
+    return { status: 429, body: { ok: false, message: 'Please wait before sending another message.' } }
+  }
+  if (!name || !email.includes('@') || !message) {
+    return { status: 400, body: { ok: false, message: 'Name, email and message are required.' } }
+  }
+  if (message.length > 4000) {
+    return { status: 400, body: { ok: false, message: 'Keep your message under 4,000 characters.' } }
+  }
+  const inbox = process.env.CONTACT_INBOX || 'info.marginos@gmail.com'
+  const subject = `Margins365 contact — ${name}`
+  const text = `Name: ${name}\nPhone: ${phone || '—'}\nBusiness: ${businessName || '—'}\nEmail: ${email}\nCountry: ${country || '—'}\n\n${message}\n`
+  const html = `<p><strong>Name:</strong> ${name}</p><p><strong>Phone:</strong> ${phone || '—'}</p><p><strong>Business:</strong> ${businessName || '—'}</p><p><strong>Email:</strong> ${email}</p><p><strong>Country:</strong> ${country || '—'}</p><p>${message.replace(/\n/g, '<br/>')}</p>`
+  const toInbox = await sendSesSimple(inbox, subject, text, html)
+  if (!toInbox.ok) {
+    return {
+      status: 502,
+      body: { ok: false, message: 'Could not send your message. Try again shortly.' },
+    }
+  }
+  await sendSesSimple(
+    email,
+    'We received your Margins365 message',
+    `Thanks ${name}. We have your message to Margins365.\n\nWe read every message but do not promise a reply time. This is not a cancellation route — cancel only in Plan & billing.\n\n— Margins365\n`,
+    `<p>Thanks ${name}. We have your message to <strong>Margins365</strong>.</p><p>We read every message but do not promise a reply time. This is not a cancellation route — cancel only in Plan &amp; billing.</p><p>— Margins365</p>`,
+  )
+  return {
+    status: 200,
+    body: { ok: true, message: 'Thanks — we have your message. A copy is on its way to your inbox.' },
+  }
+}
+
 /** Authenticated feature suggestion (max 1000 chars). */
 export async function handleFeatureSuggestion(req, body) {
   if (!dbConfigured()) {

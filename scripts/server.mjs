@@ -11,6 +11,7 @@ import {
   handleAuthLogoutAll,
   handleAuthLogoutDestroy,
   handleAuthMe,
+  handleContactForm,
   handleFeatureSuggestion,
   handleGoogleContinue,
   handleRequestPasswordReset,
@@ -195,6 +196,19 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'POST' && url === '/api/auth/logout-all') {
       const result = await handleAuthLogoutAll(req)
       json(res, result.status, result.body, result.headers || {})
+      return
+    }
+
+    if (req.method === 'POST' && url === '/api/contact') {
+      let body = {}
+      try {
+        body = await parseJson(req)
+      } catch {
+        json(res, 400, { ok: false, message: 'Invalid JSON' })
+        return
+      }
+      const result = await handleContactForm(req, body)
+      json(res, result.status, result.body)
       return
     }
 

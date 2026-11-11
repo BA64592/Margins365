@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { PRODUCT_NAME } from '../lib/brand'
 import { en } from '../i18n/en'
-import { PLANS, formatGbp, hasPaidAccess } from '../lib/plans'
+import { hasPaidAccess } from '../lib/plans'
 import type { HomeCurrency } from '../lib/types'
 import { StartFreshButton } from './ConfirmActions'
 import { Button, Card, ConfirmDialog, Input, SectionHeading } from './ui'
@@ -23,7 +23,6 @@ export function SettingsBar() {
     entitlementPlan,
     trialEndsAt,
     accessEndsAt,
-    billingInterval,
     usageUniqueOrderCount,
     orderLimit,
     hasFeature,
@@ -33,7 +32,6 @@ export function SettingsBar() {
     setUpgradeOpen,
     setAuthOpen,
     signOut,
-    keepPro,
     cancelAccess,
   } = useApp()
   const [overheadsText, setOverheadsText] = useState(() =>
@@ -75,7 +73,7 @@ export function SettingsBar() {
   const authBadge =
     user?.authProvider === 'google' ? 'Connected via Google OAuth' : 'Password Auth Active'
 
-  const limit = orderLimit ?? (access === 'trial' ? PLANS.pro.orderLimit : null)
+  const limit = orderLimit
   const usageLine =
     limit != null
       ? en.orderUsage(usageUniqueOrderCount, limit)
@@ -199,20 +197,6 @@ export function SettingsBar() {
           <Button size="sm" onClick={() => setUpgradeOpen(true)}>
             {hasPaidAccess(access) ? 'Change plan' : 'View plans & start trial'}
           </Button>
-          {access === 'trial' && plan !== 'pro' && plan !== 'scale' && plan !== 'legacy' ? (
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                const res = keepPro()
-                setStatusMsg(res.message)
-              }}
-            >
-              {billingInterval === 'year'
-                ? `Keep Pro for ${formatGbp(PLANS.pro.annualGbp)} a year`
-                : `Keep Pro for ${formatGbp(PLANS.pro.monthlyGbp)}/mo`}
-            </Button>
-          ) : null}
           {hasPaidAccess(access) && access !== 'canceled_access' ? (
             <Button size="sm" variant="danger" onClick={() => setCancelOpen(true)}>
               {access === 'trial' ? 'Cancel trial' : 'Cancel subscription'}

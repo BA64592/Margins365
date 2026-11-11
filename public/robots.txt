@@ -1,0 +1,10 @@
+# Margins365 — K75
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /account
+Disallow: /welcome
+Disallow: /invite
+Disallow: /legal-pdfs/
+
+Sitemap: https://margins365.com/sitemap.xml

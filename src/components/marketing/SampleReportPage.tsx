@@ -1,6 +1,7 @@
+import { Store } from 'lucide-react'
 import { useApp } from '../../context/AppContext'
 import { PRODUCT_NAME } from '../../lib/brand'
-import { TRIAL_DAYS } from '../../lib/plans'
+import { hasPaidAccess, TRIAL_DAYS } from '../../lib/plans'
 import { Button } from '../ui'
 
 const LEAKS = [
@@ -27,37 +28,58 @@ const LEAKS = [
   },
 ]
 
+/** K60/K66 — Sample shop page. */
 export function SampleReportPage() {
-  const { setRoute, loadSample } = useApp()
+  const { setRoute, loadSample, setUpgradeOpen, setAuthOpen, user, access } = useApp()
+  const signedInPaid = Boolean(user && hasPaidAccess(access))
+  const signedInNoPlan = Boolean(user && !hasPaidAccess(access))
+
+  const primaryLabel = signedInPaid
+    ? 'Go to Control room'
+    : signedInNoPlan
+      ? 'Choose a plan'
+      : 'Start your own shop'
+
+  const onPrimary = () => {
+    if (signedInPaid) {
+      setRoute('app')
+      return
+    }
+    if (signedInNoPlan) {
+      setUpgradeOpen(true)
+      return
+    }
+    setUpgradeOpen(true)
+  }
+
+  const openSampleControlRoom = () => {
+    if (!user) {
+      setAuthOpen(true)
+      return
+    }
+    loadSample()
+    setRoute('app')
+  }
 
   return (
     <main>
       <section
         className="border-b border-border px-4 py-14 sm:px-6 sm:py-16"
         style={{
-          background:
-            'linear-gradient(180deg, #e7f7f6 0%, #f5f7fb 55%, #f5f7fb 100%)',
+          background: 'linear-gradient(180deg, #e7f7f6 0%, #f5f7fb 55%, #f5f7fb 100%)',
         }}
       >
         <div className="mx-auto flex max-w-6xl flex-col items-center text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">Sample report</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">Sample shop</p>
           <h1 className="mt-3 max-w-2xl font-[family-name:var(--font-marketing)] text-4xl font-semibold tracking-tight text-navy sm:text-5xl">
             What a {PRODUCT_NAME} diagnosis looks like
           </h1>
           <p className="mt-4 max-w-xl text-base text-subtle sm:text-lg">
             Synthetic sample data — labelled and never counted toward order limits. Explore the ranked
-            leaks, then open the live sample shop or start a {TRIAL_DAYS}-day trial.
+            leaks, then start your own shop or open the sample Control room.
           </p>
-          {/* K55 — opening section: Open Sample Shop (not trial CTA); header keeps Start 14-day free trial */}
           <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <Button
-              onClick={() => {
-                loadSample()
-                setRoute('app')
-              }}
-            >
-              Open Sample Shop
-            </Button>
+            <Button onClick={onPrimary}>{primaryLabel}</Button>
             <Button variant="ghost" onClick={() => setRoute('pricing')}>
               Compare plans
             </Button>
@@ -115,7 +137,8 @@ export function SampleReportPage() {
               ))}
             </dl>
             <p className="mt-5 text-xs text-subtle">
-              Sample data is labelled in-app. Upload your own CSV after sign-in to replace it.
+              Sample data is labelled in-app. Upload your own CSV after sign-in to replace it. A{' '}
+              {TRIAL_DAYS}-day trial starts on the plan you choose.
             </p>
             <Button className="mt-5 w-full" variant="secondary" onClick={() => setRoute('pricing')}>
               See plans
@@ -123,17 +146,15 @@ export function SampleReportPage() {
           </aside>
         </div>
 
-        {/* K54 — secondary-but-green Open Sample Shop exception (#34726B) */}
         <div className="mt-12 flex justify-center">
           <button
             type="button"
-            className="min-h-11 rounded-[10px] bg-[#34726B] px-6 text-sm font-semibold text-white transition hover:bg-[#2c615b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
-            onClick={() => {
-              loadSample()
-              setRoute('app')
-            }}
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-[10px] bg-[#34726B] text-white transition hover:bg-[#2c615b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+            aria-label="Open Sample Shop"
+            title="Open Sample Shop"
+            onClick={openSampleControlRoom}
           >
-            Open Sample Shop
+            <Store className="h-5 w-5" aria-hidden />
           </button>
         </div>
       </section>

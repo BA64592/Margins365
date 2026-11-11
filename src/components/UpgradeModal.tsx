@@ -13,7 +13,6 @@ import {
   formatGbp,
   hasPaidAccess,
   trialChargeDateLabel,
-  trialCheckoutSummary,
   trialEntitlementFor,
   type BillingInterval,
   type PlanId,
@@ -64,7 +63,6 @@ export function UpgradeModal() {
   const [message, setMessage] = useState<string | null>(null)
 
   const chargeHint = useMemo(() => trialChargeDateLabel(), [])
-  const summary = trialCheckoutSummary(selected, interval, false)
   const entitlement = trialEntitlementFor(selected)
   const price =
     interval === 'year' ? PLANS[selected].annualGbp : PLANS[selected].monthlyGbp
@@ -128,33 +126,22 @@ export function UpgradeModal() {
         })}
       </div>
 
-      {/* K43 + K52 checkout disclosure */}
+      {/* K69 checkout disclosure — trial of chosen plan */}
       <div className="mb-4 rounded-[12px] border border-border bg-muted/60 p-3 text-sm leading-relaxed text-ink">
-        {summary.reverseTrial ? (
-          <p>
-            You’ll try <strong>Pro</strong> free for {TRIAL_DAYS} days. Unless you cancel, your{' '}
-            <strong>{PLANS[selected].name}</strong> plan starts on {chargeHint} at{' '}
-            {formatGbp(price)} including VAT
-            {interval === 'year' ? ' per year' : ' per month'}.
-          </p>
-        ) : (
-          <p>
-            You’re starting a {PLANS[selected].name} free trial until {chargeHint}. Unless you cancel,
-            we’ll charge {formatGbp(price)} including VAT
-            {interval === 'year' ? ' per year' : ' per month'}.
-          </p>
-        )}
-        <p className="mt-2 text-subtle">
-          We’ll ask for a card now so your plan can continue after the trial if you keep it. You pay
-          nothing today. Cancel any time before {chargeHint} in Plan &amp; billing — it takes one
-          click. We’ll email you a reminder before you’re charged. There is no email cancellation
-          route.
+        <p>
+          Your {TRIAL_DAYS}-day free trial of <strong>{PLANS[selected].name}</strong> starts today.
+          We’ll ask for a card now so your plan can continue after the trial. You pay nothing today.
+          Unless you cancel, we will automatically charge {formatGbp(price)} including VAT on{' '}
+          {chargeHint} for your {interval === 'year' ? 'annual' : 'monthly'} {PLANS[selected].name}{' '}
+          plan. Cancel any time before {chargeHint} in Plan &amp; billing — it takes one click. We’ll
+          email you a reminder before you’re charged.
         </p>
+        <p className="mt-2 text-subtle">There is no email cancellation route.</p>
       </div>
 
       <ul className="mb-4 space-y-1.5 text-sm text-ink">
         {[
-          `Trial entitlement: ${PLANS[entitlement].name} features for ${TRIAL_DAYS} days`,
+          `${PLANS[entitlement].name} features and order limit for ${TRIAL_DAYS} days`,
           'True profit, Health Score, six leaks with £ impact',
           'TikTok Shop UK (Beta): Excel import coming soon',
         ].map((p) => (

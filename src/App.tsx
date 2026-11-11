@@ -13,10 +13,14 @@ import { InactivityBanner } from './components/InactivityBanner'
 import { ReverseTrialBanner } from './components/ReverseTrialBanner'
 import { LeaksPanel } from './components/LeaksPanel'
 import { MetricStrip } from './components/MetricStrip'
+import { HelpPage } from './components/marketing/HelpPage'
 import { HomePage } from './components/marketing/HomePage'
+import { LegalPage } from './components/marketing/LegalPage'
 import { MarketingChrome } from './components/marketing/MarketingChrome'
+import { NotFoundPage } from './components/marketing/NotFoundPage'
 import { SampleReportPage } from './components/marketing/SampleReportPage'
 import { PricingPage } from './components/PricingPage'
+import { LEGAL_BY_ROUTE } from './content/legal'
 import { ProductWorkspace } from './components/ProductWorkspace'
 import { RecommendationsPanel } from './components/RecommendationsPanel'
 import { SavedDatasets } from './components/SavedDatasets'
@@ -170,7 +174,7 @@ function DashboardMain() {
             Home
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setRoute('sample')}>
-            Sample report
+            Sample shop
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setRoute('pricing')}>
             Pricing
@@ -215,6 +219,27 @@ function AppShell() {
     return (
       <MarketingShell>
         <SampleReportPage />
+      </MarketingShell>
+    )
+  }
+  if (route === 'help') {
+    return (
+      <MarketingShell>
+        <HelpPage />
+      </MarketingShell>
+    )
+  }
+  if (route in LEGAL_BY_ROUTE) {
+    return (
+      <MarketingShell>
+        <LegalPage route={route} />
+      </MarketingShell>
+    )
+  }
+  if (route === 'not-found') {
+    return (
+      <MarketingShell>
+        <NotFoundPage />
       </MarketingShell>
     )
   }

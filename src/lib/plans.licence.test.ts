@@ -12,7 +12,7 @@ function assert(cond: unknown, msg: string) {
   const s = localStateFromLicence({ plan: 'starter', licenceState: 'trialing', billingInterval: 'month' })
   assert(s.plan === 'starter', 'starter plan')
   assert(s.access === 'trial', 'trial access')
-  assert(s.trialEntitlement === 'pro', 'K52 reverse trial → Pro entitlement')
+  assert(s.trialEntitlement === 'starter', 'K69 trial → chosen tier entitlement')
   assert(s.billingInterval === 'month', 'month interval')
 }
 

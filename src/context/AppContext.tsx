@@ -35,6 +35,16 @@ import { buildDemoStore, type DemoStoreId } from '../lib/demo/stores'
 import { clearAllState, loadState, saveState } from '../lib/storage'
 import { evaluateOrderImport, uniqueOrderIds } from '../lib/orders/uniqueOrders'
 import {
+  normalizePathname,
+  pageDescription,
+  pageTitle,
+  pathToRoute,
+  routeToPath,
+  type AppRoute,
+} from '../lib/routes'
+
+export type { AppRoute }
+import {
   LAUNCH_PLATFORMS,
   PLANS,
   TRIAL_DAYS,
@@ -95,8 +105,6 @@ function authUserFromSession(session: AuthSession, fallback?: AuthUser | null): 
     googleEmailVerified: fallback?.googleEmailVerified,
   }
 }
-
-type AppRoute = 'home' | 'pricing' | 'sample' | 'app' | 'legal'
 
 function normalizePlan(raw: Plan | 'free' | undefined | null): Plan {
   if (!raw || raw === 'free') return 'none'
@@ -360,7 +368,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [usageUniqueOrderIds, setUsageUniqueOrderIds] = useState<string[]>(
     saved?.usageUniqueOrderIds ?? [],
   )
-  const [route, setRoute] = useState<AppRoute>('home')
+  const [route, setRouteState] = useState<AppRoute>(() =>
+    typeof window !== 'undefined' ? pathToRoute(window.location.pathname) : 'home',
+  )
+
+  const setRoute = (next: AppRoute) => {
+    setRouteState(next)
+    if (typeof window === 'undefined') return
+    const path = routeToPath(next)
+    const current = normalizePathname(window.location.pathname)
+    if (current !== path) {
+      window.history.pushState({ route: next }, '', path)
+    }
+    // K62 — open every new page at the top
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    document.title = pageTitle(next)
+    const meta = document.querySelector('meta[name="description"]')
+    if (meta) meta.setAttribute('content', pageDescription(next))
+  }
+
+  // K63 — sync URL on load / back-forward; redirect /sample-report
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const syncFromLocation = (scrollTop: boolean) => {
+      const raw = window.location.pathname
+      const normalized = normalizePathname(raw)
+      if (raw.replace(/\/+$/, '') === '/sample-report' || (raw.endsWith('/') && raw !== '/')) {
+        window.history.replaceState({}, '', normalized)
+      }
+      const next = pathToRoute(window.location.pathname)
+      setRouteState(next)
+      document.title = pageTitle(next)
+      const meta = document.querySelector('meta[name="description"]')
+      if (meta) meta.setAttribute('content', pageDescription(next))
+      if (scrollTop) window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    }
+    syncFromLocation(true)
+    const onPop = () => syncFromLocation(false)
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
   const [sampleClearedNotice, setSampleClearedNotice] = useState<string | null>(null)
   const [freeClocks, setFreeClocks] = useState<FreeRetentionClock[]>(
     hasPaidAccess(initialAccess) ? [] : (saved?.freeClocks ?? []),

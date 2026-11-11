@@ -170,14 +170,14 @@ export function effectivePlanId(plan: PlanId | 'none' | 'legacy' | null | undefi
 }
 
 /**
- * K52 reverse trial: Starter/Growth/Pro trials receive Pro features + 5,000-order limit.
- * Scale trials receive Scale.
+ * K69 — trial gives the chosen tier (replaces K52 reverse trial).
+ * Starter trial → Starter, Growth → Growth, Pro → Pro, Scale → Scale.
  */
 export function trialEntitlementFor(chosen: PlanId): PlanId {
-  return chosen === 'scale' ? 'scale' : 'pro'
+  return chosen
 }
 
-/** Plan used for entitlements while access is trial (K52). */
+/** Plan used for entitlements while access is trial (K69). */
 export function entitlementPlanId(
   access: AccessKind,
   chosen: PlanId | 'none' | 'legacy' | null | undefined,
@@ -187,7 +187,7 @@ export function entitlementPlanId(
   if (access === 'trial') {
     if (trialEntitlement) return trialEntitlement
     if (chosenId) return trialEntitlementFor(chosenId)
-    return 'pro'
+    return chosenId
   }
   return chosenId
 }
@@ -305,7 +305,8 @@ export function trialCheckoutSummary(plan: PlanId, interval: BillingInterval, _f
     interval,
     planName: def.name,
     entitlementName: PLANS[entitlement].name,
-    reverseTrial: plan !== 'pro' && plan !== 'scale',
+    // K69 — trial matches chosen plan (no reverse trial)
+    reverseTrial: false,
   }
 }
 
