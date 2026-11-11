@@ -153,14 +153,14 @@ async function sendVerifyEmail(to, verifyUrl) {
       Destination: { ToAddresses: [to] },
       Content: {
         Simple: {
-          Subject: { Data: 'Verify your Margins 365 email', Charset: 'UTF-8' },
+          Subject: { Data: 'Verify your Margins365 email', Charset: 'UTF-8' },
           Body: {
             Text: {
-              Data: `Verify your Margins 365 email.\n\nOpen this link within 24 hours (any device — your other signed-in devices will update automatically):\n${verifyUrl}\n\nNo code is required. Do not reply to this email.\n`,
+              Data: `Verify your Margins365 email.\n\nOpen this link within 24 hours (any device — your other signed-in devices will update automatically):\n${verifyUrl}\n\nNo code is required. Do not reply to this email.\n`,
               Charset: 'UTF-8',
             },
             Html: {
-              Data: `<p>Verify your <strong>Margins 365</strong> email address.</p><p><a href="${verifyUrl}">Confirm email</a></p><p style="color:#555;font-size:14px">Open the link on any device. Your other signed-in sessions update automatically — there is no code to type.</p><p style="color:#555;font-size:14px">${verifyUrl}</p>`,
+              Data: `<p>Verify your <strong>Margins365</strong> email address.</p><p><a href="${verifyUrl}">Confirm email</a></p><p style="color:#555;font-size:14px">Open the link on any device. Your other signed-in sessions update automatically — there is no code to type.</p><p style="color:#555;font-size:14px">${verifyUrl}</p>`,
               Charset: 'UTF-8',
             },
           },
@@ -649,23 +649,23 @@ async function sendSesSimple(to, subject, text, html) {
 }
 
 async function sendPasswordResetEmail(to, resetUrl) {
-  const subject = 'Reset your Margins 365 password'
-  const text = `Reset your Margins 365 password.\n\nSet a new password within ${RESET_MINUTES} minutes:\n${resetUrl}\n\nIf you did not ask for this, you can ignore this email.\n`
-  const html = `<p>Reset your Margins 365 password.</p><p><a href="${resetUrl}">Set a new password</a></p><p style="color:#555;font-size:14px">This link expires in ${RESET_MINUTES} minutes.</p><p style="color:#555;font-size:14px">${resetUrl}</p><p style="color:#555;font-size:14px">If you did not ask for this, you can ignore this email.</p>`
+  const subject = 'Reset your Margins365 password'
+  const text = `Reset your Margins365 password.\n\nSet a new password within ${RESET_MINUTES} minutes:\n${resetUrl}\n\nIf you did not ask for this, you can ignore this email.\n`
+  const html = `<p>Reset your Margins365 password.</p><p><a href="${resetUrl}">Set a new password</a></p><p style="color:#555;font-size:14px">This link expires in ${RESET_MINUTES} minutes.</p><p style="color:#555;font-size:14px">${resetUrl}</p><p style="color:#555;font-size:14px">If you did not ask for this, you can ignore this email.</p>`
   return sendSesSimple(to, subject, text, html)
 }
 
 async function sendGoogleOnlyResetEmail(to) {
-  const subject = 'Your Margins 365 sign-in'
-  const text = `You asked about a password for this Margins 365 account. This account uses Google to sign in. Use Continue with Google on the sign-in screen — there is no password to reset. If you didn’t ask for this, you can ignore this email.\n`
-  const html = `<p>You asked about a password for this <strong>Margins 365</strong> account.</p><p>This account uses Google to sign in. Use <strong>Continue with Google</strong> on the sign-in screen — there is no password to reset.</p><p style="color:#555;font-size:14px">If you didn’t ask for this, you can ignore this email.</p>`
+  const subject = 'Your Margins365 sign-in'
+  const text = `You asked about a password for this Margins365 account. This account uses Google to sign in. Use Continue with Google on the sign-in screen — there is no password to reset. If you didn’t ask for this, you can ignore this email.\n`
+  const html = `<p>You asked about a password for this <strong>Margins365</strong> account.</p><p>This account uses Google to sign in. Use <strong>Continue with Google</strong> on the sign-in screen — there is no password to reset.</p><p style="color:#555;font-size:14px">If you didn’t ask for this, you can ignore this email.</p>`
   return sendSesSimple(to, subject, text, html)
 }
 
 async function sendPasswordChangedEmail(to) {
   const subject = 'Your password was changed'
-  const text = `Your Margins 365 password was changed.\n\nAll other signed-in sessions were signed out. If you did not make this change, reply to this email or contact support from the privacy policy contact address.\n`
-  const html = `<p>Your Margins 365 password was changed.</p><p>All other signed-in sessions were signed out.</p><p style="color:#555;font-size:14px">If you did not make this change, reply to this email or use the privacy policy contact address.</p>`
+  const text = `Your Margins365 password was changed.\n\nAll other signed-in sessions were signed out. If you did not make this change, reply to this email or contact support from the privacy policy contact address.\n`
+  const html = `<p>Your Margins365 password was changed.</p><p>All other signed-in sessions were signed out.</p><p style="color:#555;font-size:14px">If you did not make this change, reply to this email or use the privacy policy contact address.</p>`
   return sendSesSimple(to, subject, text, html)
 }
 

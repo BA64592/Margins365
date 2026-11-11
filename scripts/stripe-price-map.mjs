@@ -1,5 +1,5 @@
 /**
- * Resolve Stripe Price IDs for Margins 365 subscription tiers.
+ * Resolve Stripe Price IDs for Margins365 subscription tiers.
  * Shared by DigitalOcean runtime checkout.
  */
 

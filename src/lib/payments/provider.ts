@@ -55,11 +55,14 @@ export interface CheckoutResult {
   checkoutUrl?: string
 }
 
-/** K42 — founding prices removed; `founding` arg ignored. */
-export function priceForPlan(planId: PlanId, interval: BillingInterval, _founding = false) {
+/** K72 — normal or founding price (annual founding = 25% off year 1). */
+export function priceForPlan(planId: PlanId, interval: BillingInterval, founding = false) {
   const def = PLANS[planId]
-  if (interval === 'year') return def.annualGbp
-  return def.monthlyGbp
+  if (interval === 'year') {
+    if (!founding) return def.annualGbp
+    return Math.round(def.annualGbp * 0.75 * 100) / 100
+  }
+  return founding ? def.foundingMonthlyGbp : def.monthlyGbp
 }
 
 /** @deprecated */
@@ -106,7 +109,8 @@ function validateCheckoutGates(args: CheckoutArgs): CheckoutResult | null {
 export function mockStartCheckout(args: CheckoutArgs): CheckoutResult {
   const gate = validateCheckoutGates(args)
   if (gate) return gate
-  const amount = priceForPlan(args.planId, args.interval, false)
+  const founding = foundingPlacesLeft(args.foundingSold) > 0
+  const amount = priceForPlan(args.planId, args.interval, founding)
   const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString()
   const licence: LicenceRecord = {
     id: `lic_${Date.now()}`,
@@ -116,7 +120,7 @@ export function mockStartCheckout(args: CheckoutArgs): CheckoutResult {
     interval: args.interval,
     pricePaid: amount,
     currency: 'GBP',
-    founding: false,
+    founding,
     amountRefunded: 0,
     disputeState: 'none',
     state: 'trialing',
@@ -125,9 +129,9 @@ export function mockStartCheckout(args: CheckoutArgs): CheckoutResult {
   }
   return {
     ok: true,
-    message: `${PLANS[args.planId].name} trial started — ${TRIAL_DAYS} days free, then ${formatMoney(amount, 'GBP', true)}${args.interval === 'year' ? '/year' : '/month'}.`,
+    message: `${PLANS[args.planId].name} trial started — ${TRIAL_DAYS} days free, then ${formatMoney(amount, 'GBP', true)}${args.interval === 'year' ? '/year' : '/month'}${founding ? ' (founding)' : ''}.`,
     licence,
-    foundingSold: args.foundingSold,
+    foundingSold: founding ? args.foundingSold + 1 : args.foundingSold,
   }
 }
 
@@ -145,7 +149,7 @@ export async function stripeStartCheckout(args: CheckoutArgs): Promise<CheckoutR
         billingCountry: args.billingCountry,
         planId: args.planId,
         interval: args.interval,
-        founding: false,
+        founding: foundingPlacesLeft(args.foundingSold) > 0,
         trialDays: TRIAL_DAYS,
         successUrl: `${window.location.origin}/?checkout=success`,
         cancelUrl: `${window.location.origin}/?checkout=cancel`,

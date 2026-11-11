@@ -106,8 +106,8 @@ export function AuthModal() {
 
   const submitProfile = async () => {
     resetFeedback()
-    if (!fullName.trim() || !businessName.trim() || !phone.trim()) {
-      setError('Name, business name and phone number are required.')
+    if (!fullName.trim() || !businessName.trim()) {
+      setError('Name and business name are required.')
       return
     }
     if (platforms.length < 1) {
@@ -330,7 +330,7 @@ export function AuthModal() {
               </label>
               <label className="block text-sm">
                 <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-subtle">
-                  Phone number
+                  Phone number (optional)
                 </span>
                 <Input
                   value={phone}

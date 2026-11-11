@@ -8,6 +8,17 @@ export type AppRoute =
   | 'sample'
   | 'help'
   | 'app'
+  | 'app-shops'
+  | 'app-team'
+  | 'account-info'
+  | 'account-billing'
+  | 'account-data'
+  | 'calc-etsy'
+  | 'calc-amazon'
+  | 'calc-shopify'
+  | 'calc-ecommerce'
+  | 'landing-profit-leak'
+  | 'landing-multi-channel'
   | 'legal-terms'
   | 'legal-privacy'
   | 'legal-refunds'
@@ -21,6 +32,17 @@ const PATH_BY_ROUTE: Record<AppRoute, string> = {
   sample: '/sample-shop',
   help: '/help',
   app: '/app',
+  'app-shops': '/app/shops',
+  'app-team': '/app/team',
+  'account-info': '/account/info',
+  'account-billing': '/account/billing',
+  'account-data': '/account/data',
+  'calc-etsy': '/etsy-profit-calculator-uk',
+  'calc-amazon': '/amazon-fee-calculator-uk',
+  'calc-shopify': '/shopify-profit-calculator',
+  'calc-ecommerce': '/ecommerce-profit-margin-calculator',
+  'landing-profit-leak': '/profit-leak-checklist',
+  'landing-multi-channel': '/multi-channel-profit',
   'legal-terms': '/legal/terms',
   'legal-privacy': '/legal/privacy',
   'legal-refunds': '/legal/refunds-and-cancellation',
@@ -71,6 +93,28 @@ export function pageTitle(route: AppRoute): string {
       return 'Margins365 Cookie Notice'
     case 'app':
       return 'Margins365 — Control room'
+    case 'app-shops':
+      return 'Shops | Margins365'
+    case 'app-team':
+      return 'Team | Margins365'
+    case 'account-info':
+      return 'Account info | Margins365'
+    case 'account-billing':
+      return 'Plan & billing | Margins365'
+    case 'account-data':
+      return 'Data & privacy | Margins365'
+    case 'calc-etsy':
+      return 'Etsy Profit Calculator UK | Margins365'
+    case 'calc-amazon':
+      return 'Amazon Fee Calculator UK | Margins365'
+    case 'calc-shopify':
+      return 'Shopify Profit Calculator | Margins365'
+    case 'calc-ecommerce':
+      return 'Ecommerce Profit Margin Calculator | Margins365'
+    case 'landing-profit-leak':
+      return 'Profit Leak Checklist | Margins365'
+    case 'landing-multi-channel':
+      return 'Multi-Channel Profit | Margins365'
     case 'not-found':
       return 'Page not found | Margins365'
     default:

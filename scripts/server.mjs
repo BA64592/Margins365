@@ -22,6 +22,8 @@ import {
   handleVerifyToken,
 } from './auth-handlers.mjs'
 import { dbConfigured, migrate } from './db.mjs'
+import { ensureFoundingSchema, getFoundingStatus } from './founding.mjs'
+import { injectHtmlMeta, normalizeSeoPath } from './seo-meta.mjs'
 import {
   createCheckoutSession,
   handleStripeWebhook,
@@ -105,28 +107,55 @@ function safeJoin(base, reqPath) {
   return full
 }
 
+function sendIndexHtml(res, reqPath, statusOverride) {
+  const index = path.join(dist, 'index.html')
+  if (!fs.existsSync(index)) {
+    res.writeHead(404)
+    res.end('Not found')
+    return
+  }
+  const raw = fs.readFileSync(index, 'utf8')
+  const { html, status } = injectHtmlMeta(raw, reqPath)
+  const code = statusOverride ?? status
+  res.writeHead(code, {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Cache-Control': 'no-cache',
+    'X-Content-Type-Options': 'nosniff',
+  })
+  res.end(html)
+}
+
 async function serveStatic(req, res) {
-  const urlPath = req.url === '/' ? '/index.html' : req.url.split('?')[0]
-  let filePath = safeJoin(dist, urlPath)
-  if (!filePath) {
-    res.writeHead(400)
-    res.end('Bad request')
+  const urlPath = req.url === '/' ? '/' : req.url.split('?')[0]
+  const seoPath = normalizeSeoPath(urlPath)
+
+  // Asset / file request (has extension other than trailing SPA paths)
+  const looksLikeFile = /\.[a-zA-Z0-9]{1,8}$/.test(seoPath)
+  if (looksLikeFile) {
+    let filePath = safeJoin(dist, seoPath)
+    if (!filePath) {
+      res.writeHead(400)
+      res.end('Bad request')
+      return
+    }
+    if (fs.existsSync(filePath) && !fs.statSync(filePath).isDirectory()) {
+      const ext = path.extname(filePath).toLowerCase()
+      const immutable = ext === '.js' || ext === '.css' || ext === '.woff2' || ext === '.woff'
+      res.writeHead(200, {
+        'Content-Type': MIME[ext] || 'application/octet-stream',
+        'Cache-Control': immutable ? 'public, max-age=31536000, immutable' : 'public, max-age=3600',
+        'X-Content-Type-Options': 'nosniff',
+      })
+      fs.createReadStream(filePath).pipe(res)
+      return
+    }
+    res.writeHead(404)
+    res.end('Not found')
     return
   }
 
-  const trySend = (p) => {
-    if (!fs.existsSync(p) || fs.statSync(p).isDirectory()) return false
-    const ext = path.extname(p).toLowerCase()
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream' })
-    fs.createReadStream(p).pipe(res)
-    return true
-  }
-
-  if (trySend(filePath)) return
-  const index = path.join(dist, 'index.html')
-  if (trySend(index)) return
-  res.writeHead(404)
-  res.end('Not found')
+  // SPA routes — inject per-path meta; unknown paths get HTTP 404 (K75)
+  sendIndexHtml(res, seoPath)
 }
 
 async function parseJson(req) {
@@ -346,6 +375,26 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    // K72 — public founding counter (server source of truth)
+    if (req.method === 'GET' && url === '/api/founding') {
+      const status = await getFoundingStatus()
+      json(res, 200, status)
+      return
+    }
+
+    // Legacy sample-report → sample-shop (K60 / K75)
+    if (
+      (req.method === 'GET' || req.method === 'HEAD') &&
+      (url === '/sample-report' || url === '/sample-report/')
+    ) {
+      res.writeHead(301, {
+        Location: '/sample-shop',
+        'Cache-Control': 'public, max-age=86400',
+      })
+      res.end()
+      return
+    }
+
     if (req.method === 'GET' || req.method === 'HEAD') {
       await serveStatic(req, res)
       return
@@ -360,16 +409,22 @@ const server = http.createServer(async (req, res) => {
 })
 
 migrate()
-  .then((ok) => {
-    if (ok) console.info('[marginos] database migrated')
-    else console.warn('[marginos] DATABASE_URL missing — auth API disabled')
+  .then(async (ok) => {
+    if (ok) {
+      console.info('[margins365] database migrated')
+      try {
+        await ensureFoundingSchema()
+      } catch (e) {
+        console.warn('[margins365] founding schema', e)
+      }
+    } else console.warn('[margins365] DATABASE_URL missing — auth API disabled')
     server.listen(port, '0.0.0.0', () => {
-      console.info(`[marginos] listening on 0.0.0.0:${port}`)
+      console.info(`[margins365] listening on 0.0.0.0:${port}`)
     })
   })
   .catch((err) => {
-    console.error('[marginos] migrate failed', err)
+    console.error('[margins365] migrate failed', err)
     server.listen(port, '0.0.0.0', () => {
-      console.info(`[marginos] listening on 0.0.0.0:${port} (auth migrate failed)`)
+      console.info(`[margins365] listening on 0.0.0.0:${port} (auth migrate failed)`)
     })
   })

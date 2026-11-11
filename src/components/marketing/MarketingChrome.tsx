@@ -4,6 +4,7 @@ import { en } from '../../i18n/en'
 import { PRODUCT_NAME } from '../../lib/brand'
 import { hasPaidAccess, PRIMARY_TRIAL_CTA } from '../../lib/plans'
 import type { AppRoute } from '../../lib/routes'
+import { AccountMenu } from '../AccountMenu'
 import { BrandLockup } from '../BrandMark'
 import { Button } from '../ui'
 import { StickyOfferBanner } from './StickyOfferBanner'
@@ -79,12 +80,18 @@ export function MarketingChrome({ children }: { children: React.ReactNode }) {
               ))}
             </nav>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setAuthOpen(true)}>
-                {user ? 'Account' : 'Sign in'}
-              </Button>
-              <Button size="sm" onClick={primaryCta}>
-                {signedInPaid ? 'Go to Control room' : PRIMARY_TRIAL_CTA}
-              </Button>
+              {user ? (
+                <AccountMenu variant="marketing" />
+              ) : (
+                <Button variant="ghost" size="sm" onClick={() => setAuthOpen(true)}>
+                  Sign in
+                </Button>
+              )}
+              {!signedInPaid ? (
+                <Button size="sm" onClick={primaryCta}>
+                  {user ? 'Choose a plan' : PRIMARY_TRIAL_CTA}
+                </Button>
+              ) : null}
             </div>
           </div>
           <div className="flex gap-1 overflow-x-auto border-t border-border/60 px-4 py-2 md:hidden">

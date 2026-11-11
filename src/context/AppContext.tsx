@@ -273,7 +273,7 @@ interface AppContextValue {
   importPlatformOrders: (
     input: PlatformImportInput,
   ) => { ok: boolean; message: string }
-  /** Apply Margins 365 cost/ads template; returns Free deletion note when applicable (v16.4 F2). */
+  /** Apply Margins365 cost/ads template; returns Free deletion note when applicable (v16.4 F2). */
   replaceTemplate: (
     costs: ProductCostRow[],
     ads?: AdSpendEntry[],
@@ -325,8 +325,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     saved?.trialEntitlement ?? null,
   )
   const [accessEndsAt, setAccessEndsAt] = useState<string | null>(saved?.accessEndsAt ?? null)
-  const [foundingSold] = useState(saved?.foundingSold ?? saved?.earlyBirdSold ?? 0)
-  const [foundingEligible] = useState(saved?.foundingEligible ?? true)
+  const [foundingSold, setFoundingSold] = useState(saved?.foundingSold ?? saved?.earlyBirdSold ?? 0)
+  const [foundingEligible, setFoundingEligible] = useState(saved?.foundingEligible ?? true)
   const [trialUsed, setTrialUsed] = useState(saved?.trialUsed ?? false)
   const [theme] = useState<'light'>('light')
   const [currency, setCurrency] = useState<HomeCurrency>(saved?.currency ?? 'GBP')
@@ -453,6 +453,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const foundingLeft = foundingPlacesLeft(foundingSold)
   const entitlementPlan = entitlementPlanId(access, plan, trialEntitlement)
   const orderLimit = orderLimitFor(entitlementPlan ?? plan)
+
+  // K72 — sync founding counter from server (source of truth)
+  useEffect(() => {
+    let cancelled = false
+    void fetch('/api/founding')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { sold?: number; used?: number; placesLeft?: number; eligible?: boolean } | null) => {
+        if (cancelled || !data) return
+        const sold = Number(data.sold ?? data.used ?? 0)
+        if (Number.isFinite(sold)) setFoundingSold(sold)
+        if (typeof data.eligible === 'boolean') setFoundingEligible(data.eligible)
+        else if (typeof data.placesLeft === 'number') setFoundingEligible(data.placesLeft > 0)
+      })
+      .catch(() => {
+        /* keep local fallback */
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     document.documentElement.classList.remove('dark')
@@ -1471,7 +1491,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
             new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString(),
         )
         setTrialUsed(true)
-        // K42 — founding offer removed; never increment foundingSold for new checkouts
+        // K72 — mock/local: reserve a founding place when places remain
+        if (foundingEligible && foundingLeft > 0) {
+          setFoundingSold((n) => n + 1)
+        }
         setPaymentPending(false)
         setFreeClocks([])
         setFreeDataDeletedNotice(null)

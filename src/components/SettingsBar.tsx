@@ -38,6 +38,8 @@ export function SettingsBar() {
     monthlyOverheads === 0 ? '' : String(monthlyOverheads),
   )
   const [cancelOpen, setCancelOpen] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
+  const [cancelNote, setCancelNote] = useState('')
   const [suggestText, setSuggestText] = useState('')
   const [suggestMsg, setSuggestMsg] = useState<string | null>(null)
   const [suggestBusy, setSuggestBusy] = useState(false)
@@ -378,9 +380,24 @@ export function SettingsBar() {
         danger
         onCancel={() => setCancelOpen(false)}
         onConfirm={() => {
+          // K71 — optional reason; never required; never delays Confirm Cancel
+          try {
+            const payload = {
+              reason: cancelReason || null,
+              note: cancelNote.trim().slice(0, 500) || null,
+              at: new Date().toISOString(),
+              access,
+            }
+            const prev = JSON.parse(localStorage.getItem('m365_cancel_reasons') || '[]') as unknown[]
+            localStorage.setItem('m365_cancel_reasons', JSON.stringify([...prev, payload].slice(-50)))
+          } catch {
+            // ignore
+          }
           const res = cancelAccess()
           setStatusMsg(res.message)
           setCancelOpen(false)
+          setCancelReason('')
+          setCancelNote('')
         }}
       >
         <p className="text-sm text-ink">
@@ -388,6 +405,33 @@ export function SettingsBar() {
             ? `You will not be charged. You keep access until ${endLabel}. Your account will be closed and your data will be permanently deleted on ${endLabel}. Download your data before then. This cannot be undone.`
             : `Your subscription will not renew. You keep access until ${endLabel}. Your account will be closed and your data will be permanently deleted on ${endLabel}. Download your data before then. This cannot be undone.`}
         </p>
+        <label className="mt-3 block text-sm">
+          <span className="mb-1 block text-xs font-semibold text-subtle">
+            Why are you cancelling? (optional)
+          </span>
+          <select
+            className="h-11 w-full rounded-[10px] border border-border bg-elevated px-3"
+            value={cancelReason}
+            onChange={(e) => setCancelReason(e.target.value)}
+          >
+            <option value="">Prefer not to say</option>
+            <option value="too_expensive">Too expensive</option>
+            <option value="missing_feature">Missing a feature</option>
+            <option value="switching">Switching tool</option>
+            <option value="seasonal">Seasonal / pausing</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+        <label className="mt-2 block text-sm">
+          <span className="mb-1 block text-xs font-semibold text-subtle">Anything else? (optional)</span>
+          <textarea
+            className="min-h-20 w-full rounded-[10px] border border-border bg-elevated px-3 py-2 text-sm"
+            maxLength={500}
+            value={cancelNote}
+            onChange={(e) => setCancelNote(e.target.value)}
+            placeholder="Optional note"
+          />
+        </label>
       </ConfirmDialog>
     </section>
   )

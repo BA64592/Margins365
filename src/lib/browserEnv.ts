@@ -31,7 +31,7 @@ export function isLikelyUnsupportedBrowser(
 }
 
 export const SUPPORTED_BROWSERS_COPY =
-  'Margins 365 works best in the latest two versions of Safari, Chrome, Edge, Firefox, and Samsung Internet.'
+  'Margins365 works best in the latest two versions of Safari, Chrome, Edge, Firefox, and Samsung Internet.'
 
 export const IN_APP_BROWSER_COPY =
-  'You’re in an in-app browser. Email sign-in still works here. For Google sign-in, open Margins 365 in Safari or Chrome.'
+  'You’re in an in-app browser. Email sign-in still works here. For Google sign-in, open Margins365 in Safari or Chrome.'

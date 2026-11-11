@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext'
 import { PRODUCT_NAME } from '../lib/brand'
 import { en } from '../i18n/en'
 import {
+  FOUNDING_MONTHS,
   PLANS,
   PLAN_ORDER,
   PRIMARY_TRIAL_CTA,
@@ -11,6 +12,9 @@ import {
   TIKTOK_COMING_SOON,
   TRIAL_DAYS,
   formatGbp,
+  foundingAnnualGbp,
+  foundingOfferLine,
+  planPriceLabel,
   trialChargeDateLabel,
   type BillingInterval,
   type PlanId,
@@ -217,10 +221,12 @@ const FAQ = [
 ]
 
 export function PricingPage() {
-  const { setUpgradeOpen, setRoute, setAuthOpen, user } = useApp()
+  const { setUpgradeOpen, setRoute, setAuthOpen, user, foundingLeft } = useApp()
   const [interval, setInterval] = useState<BillingInterval>('month')
 
   const chargeHint = useMemo(() => trialChargeDateLabel(), [])
+  const foundingLine = foundingOfferLine(foundingLeft)
+  const showFounding = foundingLeft > 0
 
   return (
     <main>
@@ -242,6 +248,11 @@ export function PricingPage() {
             one click in Plan &amp; billing. All prices include VAT. Your trial includes the plan you choose
             (Scale trials include Scale). {TIKTOK_COMING_SOON}.
           </p>
+          {foundingLine ? (
+            <p className="mt-4 max-w-2xl rounded-[12px] border border-accent/30 bg-accent-soft/50 px-4 py-3 text-sm text-ink">
+              {foundingLine}
+            </p>
+          ) : null}
 
           <div className="mt-8 inline-flex rounded-[10px] bg-muted p-1">
             {(['month', 'year'] as BillingInterval[]).map((iv) => (
@@ -290,6 +301,8 @@ export function PricingPage() {
           {PLAN_ORDER.map((id) => {
             const def = PLANS[id]
             const price = interval === 'year' ? def.annualGbp : def.monthlyGbp
+            const foundingPrice =
+              interval === 'year' ? foundingAnnualGbp(id) : def.foundingMonthlyGbp
             return (
               <div
                 key={id}
@@ -322,13 +335,22 @@ export function PricingPage() {
                   ) : null}
                 </div>
                 <p className="mt-4 font-display text-3xl font-bold text-navy">
-                  {formatGbp(price)}
+                  {formatGbp(showFounding ? foundingPrice : price)}
                   <span className="text-sm font-medium text-subtle">
                     {interval === 'year' ? '/year' : '/month'}
                   </span>
                 </p>
+                {showFounding ? (
+                  <p className="mt-1 text-xs text-subtle">
+                    Founding · first {interval === 'year' ? 'year' : `${FOUNDING_MONTHS} months`}, then{' '}
+                    {planPriceLabel(id, interval, false)}
+                  </p>
+                ) : null}
                 <p className="mt-2 text-xs leading-relaxed text-subtle">
-                  14 days free, then {formatGbp(price)} {interval === 'year' ? 'a year' : 'a month'}{' '}
+                  14 days free, then{' '}
+                  {showFounding
+                    ? `${formatGbp(foundingPrice)} founding (${interval === 'year' ? '25% off year 1' : `50% off ${FOUNDING_MONTHS} months`}), then ${formatGbp(price)}`
+                    : `${formatGbp(price)} ${interval === 'year' ? 'a year' : 'a month'}`}{' '}
                   including VAT. You won’t be charged until {chargeHint}. Cancel any time before then in
                   one click.
                 </p>

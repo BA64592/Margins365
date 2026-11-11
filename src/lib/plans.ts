@@ -37,7 +37,7 @@ export interface PlanDefinition {
   mostPopular?: boolean
   monthlyGbp: number
   annualGbp: number
-  /** @deprecated K42 — founding offer removed; kept for legacy persisted state only. */
+  /** K72 — founding monthly GBP (50% off for first 6 months). */
   foundingMonthlyGbp: number
   orderLimit: number
   shops: number
@@ -48,11 +48,14 @@ export interface PlanDefinition {
   savedDatasetsTelemetryDefault: number | null
 }
 
-/** K42 — founding offer removed. Cap kept at 0 so no account receives a founding price. */
-export const FOUNDING_CAP = 0
+/** K72 — founding offer: 50% off first 6 monthly payments for first 100 paying accounts. */
+export const FOUNDING_CAP = 100
+export const FOUNDING_MONTHS = 6
+/** Annual founding = 25% off first year (half price for 6 of 12 months). */
+export const FOUNDING_ANNUAL_DISCOUNT = 0.25
 export const TRIAL_DAYS = 14
-/** @deprecated K42 */
-export const FOUNDING_MONTHLY_ONLY = true
+/** @deprecated — monthly founding is 6 invoices; annual uses 25% off year 1. */
+export const FOUNDING_MONTHLY_ONLY = false
 /** Recommended trial reminder lead days (configurable). */
 export const TRIAL_REMINDER_DAYS = 3
 
@@ -68,7 +71,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     name: 'Starter',
     monthlyGbp: 39,
     annualGbp: 390,
-    foundingMonthlyGbp: 39,
+    foundingMonthlyGbp: 19.5,
     orderLimit: 500,
     shops: 1,
     maxPlatforms: 1,
@@ -82,7 +85,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     name: 'Growth',
     monthlyGbp: 79,
     annualGbp: 790,
-    foundingMonthlyGbp: 79,
+    foundingMonthlyGbp: 39.5,
     orderLimit: 2000,
     shops: 1,
     // K53 — usable slots exclude TikTok until S47 (Q32: 1/2/3 of 3).
@@ -98,7 +101,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     mostPopular: true, // K54 — Most Popular moved from Growth to Pro
     monthlyGbp: 129,
     annualGbp: 1290,
-    foundingMonthlyGbp: 129,
+    foundingMonthlyGbp: 64.5,
     orderLimit: 5000,
     shops: 1,
     maxPlatforms: 3,
@@ -112,7 +115,7 @@ export const PLANS: Record<PlanId, PlanDefinition> = {
     name: 'Scale',
     monthlyGbp: 199,
     annualGbp: 1990,
-    foundingMonthlyGbp: 199,
+    foundingMonthlyGbp: 99.5,
     orderLimit: 15000,
     shops: 3,
     maxPlatforms: 3,
@@ -289,10 +292,20 @@ export function formatGbp(amount: number) {
   return formatMoney(amount, 'GBP', true)
 }
 
-export function planPriceLabel(plan: PlanId, interval: BillingInterval, _founding = false) {
+export function foundingAnnualGbp(plan: PlanId): number {
+  return Math.round(PLANS[plan].annualGbp * (1 - FOUNDING_ANNUAL_DISCOUNT) * 100) / 100
+}
+
+export function planPriceLabel(plan: PlanId, interval: BillingInterval, founding = false) {
   const def = PLANS[plan]
-  if (interval === 'year') return formatGbp(def.annualGbp)
-  return formatGbp(def.monthlyGbp)
+  if (interval === 'year') return formatGbp(founding ? foundingAnnualGbp(plan) : def.annualGbp)
+  return formatGbp(founding ? def.foundingMonthlyGbp : def.monthlyGbp)
+}
+
+/** Display line while founding places remain (K72). */
+export function foundingOfferLine(placesLeft: number): string | null {
+  if (placesLeft <= 0) return null
+  return `Founding offer: 50% off your first 6 months — for the first ${FOUNDING_CAP} paying customers. ${placesLeft} places left.`
 }
 
 export function trialCheckoutSummary(plan: PlanId, interval: BillingInterval, _founding = false) {
