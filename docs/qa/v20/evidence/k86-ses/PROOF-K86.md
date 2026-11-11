@@ -21,13 +21,13 @@ Files: this folder + `/opt/cursor/artifacts/k86-ses-proof/`.
 | MX `mail.margins365.com` → `10 feedback-smtp.eu-north-1.amazonses.com` | Pass |
 | TXT `mail.margins365.com` SPF `include:amazonses.com` | Pass |
 | TXT `_dmarc.margins365.com` | Pass (`p=none`) |
-| Apex TXT SPF on `margins365.com` | **Missing** |
+| Apex TXT SPF on `margins365.com` | **Proven** — `v=spf1 include:amazonses.com ~all` (live dig @8.8.8.8, 11 Nov 2026 ~21:20 UTC) |
 | SES production access (out of sandbox) | **Proven** — “You are in Production” / Production access granted (eu-north-1; 50k/day, 14/s) |
 | Inbox header proofs (Gmail / Outlook / iCloud) | **Not attached** |
 
 ## Verdict
 
-Identity + DKIM + MAIL FROM + **production access** are proven. Remaining for full ES/EML exit: apex SPF on `@`, and at least one external delivery header pass per provider (Gmail / Outlook / iCloud).
+Identity + DKIM + MAIL FROM + production access + **apex SPF** are proven. Remaining for full ES/EML exit: inbox header proofs (Gmail / Outlook / iCloud).
 
 
 ## Production access (Akthar, 11 Nov 2026 ~21:09 Europe/London)
@@ -38,3 +38,12 @@ Screenshots: `01a1cc74-6b4b-71db-9582-2470d3a7ee16.jpg`, `01a1cc74-6b69-7da1-a9c
 - Status: **Production access granted**
 - Quota: 50,000 / 24h · 14/s
 - Completed tasks include: verify email (`info.marginos@gmail.com`), verify domain (`margins365.com`), VDM Enabled, request production access Enabled
+
+
+## Apex SPF (Akthar, 11 Nov 2026 ~21:20 Europe/London)
+
+GoDaddy TXT on `@` / `margins365.com`:
+
+`v=spf1 include:amazonses.com ~all`
+
+Live dig (`@8.8.8.8` / `@1.1.1.1`) returned the same record.

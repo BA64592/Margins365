@@ -135,7 +135,7 @@ Akthar supplied AWS + GoDaddy screenshots (archived under `docs/qa/v20/evidence/
 | Easy DKIM Successful | Proven (live DNS matches) |
 | MAIL FROM `mail.margins365.com` Successful | Proven (live DNS matches) |
 | DMARC `p=none` | Present (monitoring only) |
-| Apex SPF on `margins365.com` | **Still open** — add TXT `@` `v=spf1 include:amazonses.com ~all` (or include existing senders) |
+| Apex SPF on `margins365.com` | **Proven** (live TXT `v=spf1 include:amazonses.com ~all`, 11 Nov ~21:20) |
 | SES production access | **Proven** (eu-north-1 Production access granted, 11 Nov ~21:09) |
 | External header proofs | **Still open** |
 
