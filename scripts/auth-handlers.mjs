@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs'
 import crypto from 'node:crypto'
 import { dbConfigured, query } from './db.mjs'
 import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2'
+import { SUPPORT_INBOX, sesFromAddress } from './support-inbox.mjs'
 
 const SESSION_DAYS = 30
 const VERIFY_HOURS = 24
@@ -145,7 +146,7 @@ export async function userFromRequest(req) {
 
 function sesMailer() {
   const region = process.env.AWS_SES_REGION || process.env.AWS_REGION || 'eu-north-1'
-  const from = process.env.SES_FROM_ADDRESS || process.env.SES_FROM_EMAIL || ''
+  const from = sesFromAddress()
   const accessKeyId = process.env.AWS_ACCESS_KEY_ID || ''
   const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY || ''
   if (!from || !accessKeyId || !secretAccessKey) return { error: 'SES is not configured' }
@@ -163,6 +164,7 @@ async function sendVerifyEmail(to, verifyUrl) {
     new SendEmailCommand({
       FromEmailAddress: cfg.from,
       Destination: { ToAddresses: [to] },
+      ReplyToAddresses: [SUPPORT_INBOX],
       Content: {
         Simple: {
           Subject: { Data: 'Verify your Margins365 email', Charset: 'UTF-8' },
@@ -605,7 +607,7 @@ export async function handleContactForm(req, body) {
     return { status: 400, body: { ok: false, message: 'Message must be 10–5,000 characters.' } }
   }
   const sessionUser = dbConfigured() ? await userFromRequest(req) : null
-  const inbox = process.env.CONTACT_INBOX || 'info.marginos@gmail.com'
+  const inbox = SUPPORT_INBOX
   const subject = `Margins365 contact: ${name} — ${businessName || '—'}`
   const when = new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })
   const sessionBits = sessionUser
@@ -631,6 +633,7 @@ export async function handleContactForm(req, body) {
     "We've received your message — Margins365",
     `${k88Line}${confirmExtra}\n\n— Margins365\n`,
     `<p>Hi ${name}, Thank you for contacting us, we aim to respond within 24 hours. You sent your message from the Margins365 Help centre on ${when}.</p>${mentionsCancel ? '<p>To cancel, the account owner uses Plan &amp; billing.</p>' : ''}<p>— Margins365</p>`,
+    SUPPORT_INBOX,
   )
   return {
     status: 200,
@@ -670,7 +673,7 @@ export async function handleFeatureSuggestion(req, body) {
       text.slice(0, 1000),
     ],
   )
-  const inbox = process.env.CONTACT_INBOX || 'info.marginos@gmail.com'
+  const inbox = SUPPORT_INBOX
   const biz = user.business_name || '—'
   const plan = user.plan || '—'
   const when = new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })
@@ -769,21 +772,21 @@ async function sendPasswordResetEmail(to, resetUrl) {
   const subject = 'Reset your Margins365 password'
   const text = `Reset your Margins365 password.\n\nSet a new password within ${RESET_MINUTES} minutes:\n${resetUrl}\n\nIf you did not ask for this, you can ignore this email.\n`
   const html = `<p>Reset your Margins365 password.</p><p><a href="${resetUrl}">Set a new password</a></p><p style="color:#555;font-size:14px">This link expires in ${RESET_MINUTES} minutes.</p><p style="color:#555;font-size:14px">${resetUrl}</p><p style="color:#555;font-size:14px">If you did not ask for this, you can ignore this email.</p>`
-  return sendSesSimple(to, subject, text, html)
+  return sendSesSimple(to, subject, text, html, SUPPORT_INBOX)
 }
 
 async function sendGoogleOnlyResetEmail(to) {
   const subject = 'Your Margins365 sign-in'
   const text = `You asked about a password for this Margins365 account. This account uses Google to sign in. Use Continue with Google on the sign-in screen — there is no password to reset. If you didn’t ask for this, you can ignore this email.\n`
   const html = `<p>You asked about a password for this <strong>Margins365</strong> account.</p><p>This account uses Google to sign in. Use <strong>Continue with Google</strong> on the sign-in screen — there is no password to reset.</p><p style="color:#555;font-size:14px">If you didn’t ask for this, you can ignore this email.</p>`
-  return sendSesSimple(to, subject, text, html)
+  return sendSesSimple(to, subject, text, html, SUPPORT_INBOX)
 }
 
 async function sendPasswordChangedEmail(to) {
   const subject = 'Your password was changed'
   const text = `Your Margins365 password was changed.\n\nAll other signed-in sessions were signed out. If you did not make this change, reply to this email or contact support from the privacy policy contact address.\n`
   const html = `<p>Your Margins365 password was changed.</p><p>All other signed-in sessions were signed out.</p><p style="color:#555;font-size:14px">If you did not make this change, reply to this email or use the privacy policy contact address.</p>`
-  return sendSesSimple(to, subject, text, html)
+  return sendSesSimple(to, subject, text, html, SUPPORT_INBOX)
 }
 
 /** K57 — request password reset (no account enumeration). */

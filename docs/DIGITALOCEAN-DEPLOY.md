@@ -32,7 +32,7 @@ Verification email needs a Node runtime for `POST /api/auth/send-verification`.
 | `AWS_SECRET_ACCESS_KEY` | SECRET |
 | `AWS_REGION` | `eu-north-1` |
 | `AWS_SES_REGION` | `eu-north-1` (alias; either works) |
-| `SES_FROM_EMAIL` | `noreply@marginos.online` |
+| `SES_FROM_EMAIL` | `no-reply@margins365.com` |
 | `SES_FROM_ADDRESS` | same (code accepts either) |
 
 Redeploy after setting secrets. Check `GET /api/health` → `{ "sesConfigured": true }`.

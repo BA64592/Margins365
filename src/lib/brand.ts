@@ -15,11 +15,11 @@ export const TARGET_PRODUCT_DOMAIN =
 
 export const SUPPORT_EMAIL =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPPORT_EMAIL) ||
-  `info.marginos@gmail.com`
+  `Margins365@gmail.com`
 
 export const NOREPLY_EMAIL =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_NOREPLY_EMAIL) ||
-  `noreply@${PRODUCT_DOMAIN}`
+  `no-reply@${PRODUCT_DOMAIN}`
 
 /**
  * Statement descriptor — ask Stripe to update from MARGINOS to Margins365 (K73).

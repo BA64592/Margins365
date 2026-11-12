@@ -5,7 +5,7 @@ This policy explains how Margins365 uses personal data, under the UK GDPR, the D
 2018 and, where it applies, the EU GDPR.
 1. Who we are and how to contact us
 Margins365 (“we”). We are the controller for the personal data described in section 3. For privacy 
-questions or to use your rights, write to info.marginos@gmail.com or use the Contact us form at 
+questions or to use your rights, write to Margins365@gmail.com or use the Contact us form at 
 margins365.com/help. You do not need an account to contact us.
 2. Our two roles
 • Controller: for your account, team, billing, support and security data. 
@@ -163,7 +163,7 @@ EU only (Germany
 and Finland)
 Google
 “Continue with Google” sign-in (independent controller for 
-your Google account); the info.marginos@gmail.com 
+your Google account); the Margins365@gmail.com 
 mailbox that receives contact-form messages
 Global, including 
 the United States

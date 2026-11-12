@@ -3,6 +3,7 @@
  */
 import { randomBytes } from 'node:crypto'
 import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2'
+import { SUPPORT_INBOX, sesFromAddress } from './support-inbox.mjs'
 import Stripe from 'stripe'
 import { userFromRequest } from './auth-handlers.mjs'
 import { dbConfigured, query } from './db.mjs'
@@ -27,7 +28,7 @@ const APP_ORIGIN = (
   'https://margins365.com'
 ).replace(/\/$/, '')
 const ORIGIN_URL = APP_ORIGIN.startsWith('http') ? APP_ORIGIN : `https://${APP_ORIGIN}`
-const CONTACT_INBOX = process.env.CONTACT_INBOX || 'info.marginos@gmail.com'
+const CONTACT_INBOX = SUPPORT_INBOX
 
 function stripe() {
   const secret = process.env.STRIPE_SECRET_KEY
@@ -39,7 +40,7 @@ function stripe() {
 
 function sesCfg() {
   const region = process.env.AWS_SES_REGION || process.env.AWS_REGION || 'eu-north-1'
-  const from = process.env.SES_FROM_ADDRESS || process.env.SES_FROM_EMAIL
+  const from = sesFromAddress()
   const accessKeyId = process.env.AWS_ACCESS_KEY_ID
   const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
   if (!from || !accessKeyId || !secretAccessKey) return null
