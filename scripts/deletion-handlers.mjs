@@ -107,6 +107,22 @@ export async function scheduleAccountDeletion(args) {
   return { ok: true, accessEndsAt: accessEndsAt.toISOString(), licenceState }
 }
 
+/** Clear a pending wipe after Keep my plan / resubscribe. */
+export async function clearScheduledDeletion(userId) {
+  if (!dbConfigured() || !userId) return { ok: false }
+  await ensureDeletionSchema()
+  await query(
+    `UPDATE users SET
+       deletion_due_at = NULL,
+       deletion_reason = NULL,
+       updated_at = NOW()
+     WHERE id = $1
+       AND account_closed_at IS NULL`,
+    [userId],
+  )
+  return { ok: true }
+}
+
 export async function wipeUserProductData(userId) {
   if (!dbConfigured() || !userId) return
   await query(`DELETE FROM shop_workspaces WHERE user_id = $1`, [userId]).catch(() => {})

@@ -168,7 +168,7 @@ export function Modal({
   // K80 — fit visible viewport (dvh), scroll inside, sticky title/Close, safe-area bottom
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-3 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[60] flex items-end justify-center p-3 sm:items-center sm:p-4"
       style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {
@@ -240,7 +240,7 @@ export function ConfirmDialog({
   if (!open) return null
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-3 sm:items-center sm:p-4"
+      className="fixed inset-0 z-[60] flex items-end justify-center p-3 sm:items-center sm:p-4"
       style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}
       onKeyDown={(e) => {
         if (e.key === 'Escape') {

@@ -211,14 +211,30 @@ export function SettingsBar() {
         method: 'POST',
         credentials: 'include',
       })
-      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; message?: string }
+      const data = (await res.json().catch(() => ({}))) as {
+        ok?: boolean
+        message?: string
+        title?: string
+      }
       if (!res.ok || !data.ok) {
-        setStatusMsg(data.message || 'Could not keep your plan. Try again.')
+        setResultFail(true)
+        setResultTitle('Could not keep your plan')
+        setResultBody(data.message || 'Nothing has changed. Please try again.')
+        setResultOpen(true)
         return
       }
-      window.location.reload()
+      setResultFail(false)
+      setResultTitle(data.title || 'You’re keeping your plan')
+      setResultBody(data.message || 'Your plan will continue. The end date is unchanged.')
+      setResultOpen(true)
+      window.setTimeout(() => {
+        window.location.reload()
+      }, 900)
     } catch {
-      setStatusMsg('Could not keep your plan. Try again.')
+      setResultFail(true)
+      setResultTitle('Could not keep your plan')
+      setResultBody('Nothing has changed. Please try again.')
+      setResultOpen(true)
     } finally {
       setResubBusy(false)
     }
@@ -282,40 +298,40 @@ export function SettingsBar() {
             : 'Start a 14-day free trial on any plan. Cancel before your trial ends (date shown at Checkout and in Plan & billing) and pay nothing.'}
         </p>
         <p className="mb-3 text-xs font-medium text-ink">{usageLine}</p>
-        <div className="mb-3 flex flex-wrap gap-2">
-          <Button size="sm" onClick={() => setUpgradeOpen(true)}>
-            {hasPaidAccess(access) ? 'Change plan' : 'View plans & start trial'}
-          </Button>
-          {hasPaidAccess(access) && access !== 'canceled_access' ? (
-            <Button size="sm" variant="danger" onClick={() => setCancelOpen(true)}>
-              {access === 'trial' ? 'Cancel trial' : 'Cancel subscription'}
+        {access === 'canceled_access' ? (
+          <div className="mb-3 space-y-3">
+            <p className="text-xs font-medium text-warn">
+              Cancelled — access until{' '}
+              {accessEndsAt
+                ? new Date(accessEndsAt).toLocaleString('en-GB', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short',
+                    timeZone: 'Europe/London',
+                  }) + ' Europe/London'
+                : 'the end of your period'}
+              {cancelRef ? ` · Reference ${cancelRef}` : ''}. You won’t be charged.
+            </p>
+            {stripeLine ? <p className="text-xs text-subtle">{stripeLine}</p> : null}
+            <p className="text-xs text-subtle">
+              Keep my plan undoes the cancellation in Stripe. Change plan is available again after
+              that.
+            </p>
+            <Button size="sm" disabled={resubBusy} onClick={() => void resubscribe()}>
+              {resubBusy ? 'Working…' : 'Keep my plan'}
             </Button>
-          ) : null}
-          {access === 'canceled_access' ? (
-            <>
-              <p className="text-xs font-medium text-warn">
-                Cancelled — access until{' '}
-                {accessEndsAt
-                  ? new Date(accessEndsAt).toLocaleString('en-GB', {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
-                      timeZone: 'Europe/London',
-                    }) + ' Europe/London'
-                  : 'the end of your period'}
-                {cancelRef ? ` · Reference ${cancelRef}` : ''}. You won’t be charged.
-              </p>
-              {stripeLine ? <p className="text-xs text-subtle">{stripeLine}</p> : null}
-              <Button
-                size="sm"
-                variant="secondary"
-                disabled={resubBusy}
-                onClick={() => void resubscribe()}
-              >
-                {resubBusy ? 'Working…' : 'Keep my plan'}
+          </div>
+        ) : (
+          <div className="mb-3 flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => setUpgradeOpen(true)}>
+              {hasPaidAccess(access) ? 'Change plan' : 'View plans & start trial'}
+            </Button>
+            {hasPaidAccess(access) ? (
+              <Button size="sm" variant="danger" onClick={() => setCancelOpen(true)}>
+                {access === 'trial' ? 'Cancel trial' : 'Cancel subscription'}
               </Button>
-            </>
-          ) : null}
-        </div>
+            ) : null}
+          </div>
+        )}
         <p className="text-xs text-subtle">
           Cancellation closes access at the end date and permanently deletes product data then.
           Download your data first.

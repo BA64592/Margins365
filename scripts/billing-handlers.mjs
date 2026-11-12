@@ -456,9 +456,26 @@ export async function handleBillingResubscribe(req) {
   if (!client) return { status: 503, body: { ok: false, message: 'Stripe is not configured.' } }
   const ip = req.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() || 'local'
 
-  const sub = await findSubscriptionForUser(client, user)
+  let sub
+  try {
+    sub = await findSubscriptionForUser(client, user)
+  } catch (err) {
+    await audit(user.id, 'resubscribe_failed', { detail: String(err), ip })
+    return {
+      status: 502,
+      body: { ok: false, message: 'We couldn’t keep your plan. Nothing has changed. Please try again.' },
+    }
+  }
+
   if (!sub || !sub.cancel_at_period_end) {
-    return { status: 409, body: { ok: false, message: 'Nothing to resubscribe.' } }
+    return {
+      status: 409,
+      body: {
+        ok: false,
+        message: 'Nothing to keep — this plan is not scheduled to end.',
+        code: 'none',
+      },
+    }
   }
   if (sub.cancel_at && sub.cancel_at * 1000 < Date.now()) {
     return {
@@ -467,45 +484,87 @@ export async function handleBillingResubscribe(req) {
     }
   }
 
-  const updated = await client.subscriptions.update(
-    sub.id,
-    { cancel_at_period_end: false },
-    { idempotencyKey: `resub:${user.id}:${sub.id}` },
-  )
-  const planId =
-    normalizePlanId(updated.metadata?.margins365_plan || updated.metadata?.marginos_plan || user.plan) ||
-    'pro'
-  const licenceState = updated.status === 'trialing' ? 'trialing' : 'active'
-  await query(
-    `UPDATE users SET
-       licence_state = $2,
-       plan = $3,
-       cancel_at = NULL,
-       cancel_reference = NULL,
-       cancel_at_period_end = FALSE,
-       updated_at = NOW()
-     WHERE id = $1`,
-    [user.id, licenceState, planId],
-  )
-  await audit(user.id, 'resubscribed', { planId, subscriptionId: updated.id, ip })
+  try {
+    const updated = await client.subscriptions.update(
+      sub.id,
+      { cancel_at_period_end: false },
+      { idempotencyKey: `resub:${user.id}:${sub.id}` },
+    )
+    if (updated.cancel_at_period_end) {
+      await audit(user.id, 'resubscribe_failed', {
+        subscriptionId: updated.id,
+        detail: 'stripe_still_canceling',
+        ip,
+      })
+      return {
+        status: 502,
+        body: {
+          ok: false,
+          message: 'We couldn’t keep your plan. Nothing has changed. Please try again.',
+        },
+      }
+    }
 
-  const planName = planId.charAt(0).toUpperCase() + planId.slice(1)
-  await sendMail(
-    user.email,
-    'Your Margins365 plan will continue',
-    `You’ve kept your ${planName} plan. The end date is unchanged — no new trial starts.\n\n— Margins365\n`,
-    `<p>You’ve kept your <strong>${planName}</strong> plan. The end date is unchanged — no new trial starts.</p><p>— Margins365</p>`,
-    CONTACT_INBOX,
-  )
+    const planId =
+      normalizePlanId(updated.metadata?.margins365_plan || updated.metadata?.marginos_plan || user.plan) ||
+      'pro'
+    const licenceState = updated.status === 'trialing' ? 'trialing' : 'active'
+    await query(
+      `UPDATE users SET
+         licence_state = $2,
+         plan = $3,
+         cancel_at = NULL,
+         cancel_reference = NULL,
+         cancel_at_period_end = FALSE,
+         updated_at = NOW()
+       WHERE id = $1`,
+      [user.id, licenceState, planId],
+    )
+    const { clearScheduledDeletion } = await import('./deletion-handlers.mjs')
+    await clearScheduledDeletion(user.id)
+    await audit(user.id, 'resubscribed', { planId, subscriptionId: updated.id, ip })
 
-  return {
-    status: 200,
-    body: {
-      ok: true,
-      planId,
-      licenceState,
-      message: `You’ve kept your ${planName} plan. The end date is unchanged.`,
-    },
+    const planName = planId.charAt(0).toUpperCase() + planId.slice(1)
+    const message = `You’ve kept your ${planName} plan. The end date is unchanged — no new trial starts.`
+    const mail = await sendMail(
+      user.email,
+      'Your Margins365 plan will continue',
+      `${message}\n\n— Margins365\n`,
+      `<p>${message.replace(`You’ve kept your ${planName} plan`, `You’ve kept your <strong>${planName}</strong> plan`)}</p><p>— Margins365</p>`,
+      CONTACT_INBOX,
+    )
+    if (!mail.ok) {
+      await audit(user.id, 'resubscribe_email_failed', {
+        planId,
+        subscriptionId: updated.id,
+        detail: mail.message,
+        ip,
+      })
+    }
+
+    return {
+      status: 200,
+      body: {
+        ok: true,
+        planId,
+        licenceState,
+        title: 'You’re keeping your plan',
+        message,
+      },
+    }
+  } catch (err) {
+    await audit(user.id, 'resubscribe_failed', {
+      subscriptionId: sub?.id,
+      detail: err instanceof Error ? err.message : String(err),
+      ip,
+    })
+    return {
+      status: 502,
+      body: {
+        ok: false,
+        message: 'We couldn’t keep your plan. Nothing has changed. Please try again.',
+      },
+    }
   }
 }
 

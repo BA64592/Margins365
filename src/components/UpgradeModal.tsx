@@ -67,7 +67,8 @@ export function UpgradeModal() {
     setPaymentPending,
     failDelayedPayment,
   } = useApp()
-  const changing = hasPaidAccess(access)
+  const canceled = access === 'canceled_access'
+  const changing = hasPaidAccess(access) && !canceled
   const [country, setCountry] = useState('GB')
   const [interval, setInterval] = useState<BillingInterval>('month')
   const [selected, setSelected] = useState<PlanId>('growth')
@@ -80,11 +81,15 @@ export function UpgradeModal() {
     setMessage(null)
     setBusy(false)
     setAcceptLegal(false)
+    if (canceled) {
+      setMessage('Keep your plan first in Plan & billing, then you can change plan.')
+      return
+    }
     if (changing) {
       if (isPlanId(plan)) setSelected(plan)
       if (billingInterval === 'year' || billingInterval === 'month') setInterval(billingInterval)
     }
-  }, [upgradeOpen, changing, plan, billingInterval])
+  }, [upgradeOpen, changing, canceled, plan, billingInterval])
 
   const chargeHint = useMemo(() => trialChargeDateLabel(), [])
   const entitlement = trialEntitlementFor(selected)
@@ -99,7 +104,7 @@ export function UpgradeModal() {
   const foundingLine = foundingOfferLine(foundingLeft)
 
   const changePlan = async () => {
-    if (busy) return
+    if (busy || canceled) return
     setBusy(true)
     setMessage(null)
     try {
@@ -114,7 +119,9 @@ export function UpgradeModal() {
         message?: string
       }
       if (!res.ok || !data.ok) {
-        setMessage(data.message || 'We couldn’t change your plan. Nothing has changed. Please try again.')
+        setMessage(
+          data.message || 'We couldn’t change your plan. Nothing has changed. Please try again.',
+        )
         return
       }
       setMessage(data.message || 'Plan updated.')
@@ -306,10 +313,14 @@ export function UpgradeModal() {
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button
           className="flex-1"
-          disabled={busy}
+          disabled={busy || canceled}
           onClick={() => {
             if (!user) {
               setMessage('Sign in with a verified email first.')
+              return
+            }
+            if (canceled) {
+              setMessage('Keep your plan first in Plan & billing, then you can change plan.')
               return
             }
             if (changing) {
@@ -323,10 +334,16 @@ export function UpgradeModal() {
             void unlockProDemo(country, selected, interval).then((res) => setMessage(res.message))
           }}
         >
-          {changing ? (busy ? 'Updating…' : `Change to ${PLANS[selected].name}`) : PRIMARY_TRIAL_CTA}
+          {canceled
+            ? 'Keep plan first'
+            : changing
+              ? busy
+                ? 'Updating…'
+                : `Change to ${PLANS[selected].name}`
+              : PRIMARY_TRIAL_CTA}
         </Button>
         <Button variant="secondary" className="flex-1" onClick={() => setUpgradeOpen(false)}>
-          Not now
+          {canceled ? 'Close' : 'Not now'}
         </Button>
       </div>
 
