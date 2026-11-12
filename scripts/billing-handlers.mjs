@@ -200,17 +200,28 @@ async function findSubscriptionForUser(client, user) {
   return live
 }
 
+/**
+ * Stripe Node SDK 19+ / API 2025-03-31+ removed invoices.retrieveUpcoming.
+ * Use invoices.createPreview; treat "no upcoming" as null (expected after trial cancel).
+ */
 async function upcomingInvoiceSafe(client, subscriptionId, customerId) {
+  const params = { customer: customerId, subscription: subscriptionId }
   try {
-    const inv = await client.invoices.retrieveUpcoming({
-      customer: customerId,
-      subscription: subscriptionId,
-    })
-    return inv
+    if (typeof client.invoices?.createPreview === 'function') {
+      return await client.invoices.createPreview(params)
+    }
+    // Older SDKs only — keep a soft fallback while deploys roll.
+    if (typeof client.invoices?.retrieveUpcoming === 'function') {
+      return await client.invoices.retrieveUpcoming(params)
+    }
+    return null
   } catch (err) {
     // Stripe throws when there is no upcoming invoice (desired after cancel_at_period_end on trial)
     const msg = err instanceof Error ? err.message : String(err)
-    if (/no upcoming invoices|No upcoming invoices/i.test(msg) || err?.code === 'invoice_upcoming_none') {
+    if (
+      /no upcoming invoices|No upcoming invoices/i.test(msg) ||
+      err?.code === 'invoice_upcoming_none'
+    ) {
       return null
     }
     throw err
@@ -832,14 +843,17 @@ export async function handleBillingChangePlan(req, body) {
       )
       if (!isTrial) {
         try {
-          const upcoming = await client.invoices.retrieveUpcoming({
-            customer: String(updated.customer),
-            subscription: updated.id,
-          })
-          const lines = (upcoming.lines?.data || []).filter((l) => l.proration)
-          prorationPence = lines.reduce((sum, l) => sum + Number(l.amount || 0), 0)
-          if (prorationPence !== 0) {
-            prorationLabel = `${moneyFromStripe(prorationPence, upcoming.currency)} (prorated adjustment)`
+          const upcoming = await upcomingInvoiceSafe(
+            client,
+            updated.id,
+            String(updated.customer),
+          )
+          if (upcoming) {
+            const lines = (upcoming.lines?.data || []).filter((l) => l.proration)
+            prorationPence = lines.reduce((sum, l) => sum + Number(l.amount || 0), 0)
+            if (prorationPence !== 0) {
+              prorationLabel = `${moneyFromStripe(prorationPence, upcoming.currency)} (prorated adjustment)`
+            }
           }
         } catch {
           /* optional */
