@@ -35,9 +35,9 @@ Per the Launch Readiness PDF: a gap is **Fixed** only after QA evidence. Until t
 | GAP-02 | P0 | **Built, awaiting QA** | Server owns 14-day trial |
 | GAP-03 | P0 | **Built, awaiting QA** | One trial / account |
 | GAP-04 | P0 | **Built, awaiting QA** | No second live subscription |
-| GAP-05 | P0 | **Built, awaiting QA** | Founding coupons; Checkout **fails** (no silent full-price) if coupon missing |
+| GAP-05 | P0 | **Fail (ops)** | Live Stripe has **0 coupons** (E2E run 12 Nov). Create `m365_founding_50_6mo` / `m365_founding_25_annual` (or env IDs). Checkout correctly refuses founding without coupon. |
 | GAP-06 | P0 | **Built, awaiting QA** | Atomic founding reserve under 100 |
-| GAP-07 | P0 | **Built, awaiting QA** | Webhooks incl. `invoice.paid`, trial_will_end, payment_failed, refund/dispute |
+| GAP-07 | P0 | **Fail (ops)** | Code handles events; Live webhook endpoint **missing** `invoice.paid` + `invoice.payment_action_required` (12 Nov E2E read-only). |
 | GAP-11 | P0 | **Built, awaiting QA** | Access end from Stripe `cancel_at` |
 | GAP-14 | P0 | **Built, awaiting QA** | Refund/dispute → wipe schedule |
 | GAP-16 | P0 | **Built, awaiting QA** | Legal acceptance recorded |
@@ -59,7 +59,7 @@ Per the Launch Readiness PDF: a gap is **Fixed** only after QA evidence. Until t
 | --- | --- | --- | --- |
 | GAP-08 / K93 | P1 | **Built, awaiting QA** | Change plan + SES |
 | GAP-09 | P1 | **Built, awaiting QA** | Interval change at renewal |
-| GAP-10 | P1 | **Built, awaiting QA** | `/api/billing/portal` + Plan & billing **Invoices & card** (needs Stripe portal on) |
+| GAP-10 | P1 | **Fail (ops)** | App portal button built. Owner reviewed Dashboard. Live API: **0 portal configurations** — save config (invoices+card on, cancel off). |
 | GAP-55 | P1 | **Built, awaiting QA** | Day-14 wording removed |
 | GAP-57 | P1 | **Built, awaiting QA** | Trial confirm after Stripe |
 | GAP-59 | P1 | **Built, awaiting QA** | `/sign-in`, `/reset-password`, `/welcome`, `/invite/:token` |
@@ -88,9 +88,10 @@ Per the Launch Readiness PDF: a gap is **Fixed** only after QA evidence. Until t
 ## Latest QA run (12 Nov 2026 Europe/London)
 
 - Report: `docs/qa/v20.1/QA-REPORT-v20.1.md`
+- **E2E attempt:** `docs/qa/v20.1/E2E-RUN-2026-11-12.md` + `evidence/e2e-run/`
 - Defects: `docs/qa/v20.1/DEFECT-LOG-v20.1.md`
 - Evidence: `docs/qa/v20.1/evidence/`
-- **Production smoke:** Pass (2 defects fixed in hotfix). **Full 640 / E2E:** Blocked — needs staging + Stripe Test.
+- **Production smoke:** Pass. **E2E-06 cancel:** Pass (all tiers). **E2E-05/10 + webhook events:** Fail (Stripe ops). **Rest of E2E-01–23:** Blocked — needs Stripe Test staging. **Launch:** not ready.
 
 ## Files
 

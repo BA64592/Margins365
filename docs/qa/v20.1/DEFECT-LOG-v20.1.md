@@ -13,3 +13,6 @@
 | ID | Sev | Summary | Status |
 | --- | --- | --- | --- |
 | DEF-QA-201-ENV | P0 | No staging + Stripe Test + test clocks + SES inboxes for E2E/GAP money suites | **Blocked** — owner setup |
+| DEF-QA-201-003 | P0 | Live Stripe has **0 founding coupons** (`m365_founding_*` 404) — GAP-05 / E2E-05 | **Open** |
+| DEF-QA-201-004 | P1 | Live Stripe Customer Portal **configurations = 0** — GAP-10 / E2E-10 (app button present; owner reviewed Dashboard) | **Open** |
+| DEF-QA-201-005 | P0 | Webhook missing `invoice.paid` + `invoice.payment_action_required` — GAP-07 | **Open** |

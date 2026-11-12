@@ -1,0 +1,711 @@
+{
+  "when_utc": "2026-11-12T01:16:14.032534+00:00",
+  "prompt": "Margins365-QA-Prompt-v20.1 (640 cases)",
+  "environment": "Production margins365.com + Live Stripe read-only + code contracts. No Stripe Test / staging / test clocks.",
+  "summary_counts": {
+    "Pass": 60,
+    "Blocked": 20,
+    "Fail": 5,
+    "Noted": 1
+  },
+  "results": [
+    {
+      "suite": "PUB",
+      "id": "HTTP/",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<!doctype html>\n<html lang=\"en-GB\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <l"
+    },
+    {
+      "suite": "PUB",
+      "id": "HTTP/pricing",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<!doctype html>\n<html lang=\"en-GB\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <l"
+    },
+    {
+      "suite": "PUB",
+      "id": "HTTP/sample-shop",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<!doctype html>\n<html lang=\"en-GB\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <l"
+    },
+    {
+      "suite": "PUB",
+      "id": "HTTP/help",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<!doctype html>\n<html lang=\"en-GB\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <l"
+    },
+    {
+      "suite": "PUB",
+      "id": "HTTP/legal/terms",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<!doctype html>\n<html lang=\"en-GB\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <l"
+    },
+    {
+      "suite": "PUB",
+      "id": "HTTP/legal/privacy",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<!doctype html>\n<html lang=\"en-GB\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <l"
+    },
+    {
+      "suite": "PUB",
+      "id": "HTTP/legal/refunds-and-cancellation",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<!doctype html>\n<html lang=\"en-GB\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <l"
+    },
+    {
+      "suite": "PUB",
+      "id": "HTTP/legal/dpa",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<!doctype html>\n<html lang=\"en-GB\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <l"
+    },
+    {
+      "suite": "PUB",
+      "id": "HTTP/legal/cookies",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<!doctype html>\n<html lang=\"en-GB\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <l"
+    },
+    {
+      "suite": "PUB",
+      "id": "HTTP/sign-in",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<!doctype html>\n<html lang=\"en-GB\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <l"
+    },
+    {
+      "suite": "PUB",
+      "id": "HTTP/reset-password",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<!doctype html>\n<html lang=\"en-GB\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <l"
+    },
+    {
+      "suite": "PUB",
+      "id": "HTTP/welcome",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<!doctype html>\n<html lang=\"en-GB\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <l"
+    },
+    {
+      "suite": "PUB",
+      "id": "HTTP/invite",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<!doctype html>\n<html lang=\"en-GB\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <l"
+    },
+    {
+      "suite": "PUB",
+      "id": "HTTP/invite/tok123",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<!doctype html>\n<html lang=\"en-GB\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <l"
+    },
+    {
+      "suite": "PUB",
+      "id": "HTTP/sitemap.xml",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "status=200",
+      "notes": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/sc"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-60",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "/etsy-profit-calculator-uk status=200 noindex=True",
+      "notes": ""
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-60",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "/profit-leak-checklist status=200 noindex=True",
+      "notes": ""
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-60-sitemap",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "sitemap phase2 absent",
+      "notes": ""
+    },
+    {
+      "suite": "SEC",
+      "id": "API/api/billing/cancel",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "status=401 b'{\"ok\":false,\"message\":\"Sign in first.\"}'",
+      "notes": ""
+    },
+    {
+      "suite": "SEC",
+      "id": "API/api/billing/portal",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "status=401 b'{\"ok\":false,\"message\":\"Sign in first.\"}'",
+      "notes": ""
+    },
+    {
+      "suite": "SEC",
+      "id": "API/api/billing/change-plan",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "status=401 b'{\"ok\":false,\"message\":\"Sign in first.\"}'",
+      "notes": ""
+    },
+    {
+      "suite": "OPS",
+      "id": "health",
+      "pri": "P2",
+      "result": "Pass",
+      "evidence": "{\"ok\":true,\"dbConfigured\":true,\"stripeConfigured\":true,\"sesConfigured\":true,\"region\":\"eu-north-1\"}",
+      "notes": ""
+    },
+    {
+      "suite": "OFF",
+      "id": "founding-counter",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "{\"ok\":true,\"cap\":100,\"used\":0,\"sold\":0,\"placesLeft\":100,\"eligible\":true}",
+      "notes": ""
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-01",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/deletion-handlers.mjs,scripts/auth-handlers.mjs,scripts/billing-handlers.mjs",
+      "notes": "scripts/billing-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-02",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/stripe-handlers.mjs,src/components/UpgradeModal.tsx,src/components/PricingPage.tsx",
+      "notes": "scripts/stripe-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-03",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/billing-handlers.mjs,scripts/db.mjs,scripts/stripe-handlers.mjs",
+      "notes": "scripts/stripe-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-04",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/stripe-handlers.mjs",
+      "notes": "scripts/stripe-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-05",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/stripe-handlers.mjs,scripts/founding.mjs",
+      "notes": "scripts/stripe-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-06",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/stripe-handlers.mjs,scripts/founding.mjs,src/lib/plans.ts",
+      "notes": "scripts/founding.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-07",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/billing-handlers.mjs,scripts/db.mjs,scripts/stripe-handlers.mjs",
+      "notes": "scripts/stripe-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-08",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "code:scripts/billing-handlers.mjs,scripts/server.mjs",
+      "notes": "scripts/billing-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-09",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "code:scripts/billing-handlers.mjs",
+      "notes": "scripts/billing-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-10",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "code:scripts/billing-handlers.mjs,scripts/server.mjs",
+      "notes": "scripts/billing-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-11",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/deletion-handlers.mjs,scripts/auth-handlers.mjs,scripts/billing-handlers.mjs",
+      "notes": "scripts/stripe-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-14",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/deletion-handlers.mjs,scripts/billing-handlers.mjs,scripts/stripe-handlers.mjs",
+      "notes": "scripts/stripe-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-16",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/auth-handlers.mjs,scripts/stripe-handlers.mjs",
+      "notes": "scripts/auth-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-17",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/billing-handlers.mjs,scripts/stripe-handlers.mjs",
+      "notes": "scripts/billing-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-18",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/billing-handlers.mjs,scripts/stripe-handlers.mjs",
+      "notes": "scripts/billing-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-20",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/billing-handlers.mjs,scripts/stripe-handlers.mjs",
+      "notes": "scripts/billing-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-21",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/billing-handlers.mjs",
+      "notes": "scripts/billing-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-22",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/scheduler.mjs,scripts/founding-email.mjs",
+      "notes": "scripts/founding-email.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-23",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/product-data-handlers.mjs,src/components/Hero.tsx,src/i18n/en.ts",
+      "notes": "scripts/product-data-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-24",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/deletion-handlers.mjs",
+      "notes": "scripts/deletion-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-26",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "code:scripts/shops-handlers.mjs,scripts/seo-meta.mjs,src/App.tsx",
+      "notes": "scripts/shops-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-28",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/auth-handlers.mjs,scripts/server.mjs,src/components/marketing/HelpPage.tsx",
+      "notes": "scripts/auth-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-29",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/auth-handlers.mjs,scripts/server.mjs",
+      "notes": "scripts/auth-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-33",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/shops-handlers.mjs,scripts/deletion-handlers.mjs,scripts/auth-handlers.mjs",
+      "notes": "scripts/auth-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-34",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:src/components/UpgradeModal.tsx,src/components/CostCharts.tsx,src/components/Header.tsx",
+      "notes": "src/lib/auth/provider.ts"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-40",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/deletion-handlers.mjs,scripts/server.mjs,scripts/product-data-handlers.mjs",
+      "notes": "scripts/product-data-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-41",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/product-data-handlers.mjs",
+      "notes": "scripts/product-data-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-42",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/deletion-handlers.mjs,scripts/scheduler.mjs",
+      "notes": "scripts/deletion-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-43",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "code:scripts/deletion-handlers.mjs,scripts/auth-handlers.mjs,scripts/db.mjs",
+      "notes": "scripts/deletion-handlers.mjs"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-55",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "code:src/components/SettingsBar.tsx,src/components/PricingPage.tsx,src/i18n/en.ts",
+      "notes": "src/components/PricingPage.tsx"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-57",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "code:scripts/billing-handlers.mjs,scripts/server.mjs,src/App.tsx",
+      "notes": "src/context/AppContext.tsx"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-59",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "code:scripts/shops-handlers.mjs,scripts/deletion-handlers.mjs,scripts/auth-handlers.mjs",
+      "notes": "src/lib/routes.ts"
+    },
+    {
+      "suite": "GAP",
+      "id": "GAP-64",
+      "pri": "P1",
+      "result": "Pass",
+      "evidence": "code:src/components/ui.tsx",
+      "notes": "src/components/ui.tsx"
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-01",
+      "pri": "P0",
+      "result": "Blocked",
+      "evidence": "Needs staging SES + 2 devices",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-02",
+      "pri": "P0",
+      "result": "Blocked",
+      "evidence": "Needs Google test + staging",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-03",
+      "pri": "P0",
+      "result": "Blocked",
+      "evidence": "Needs staging SES reset flow",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-04",
+      "pri": "P0",
+      "result": "Blocked",
+      "evidence": "Needs Stripe Test clocks \u2014 no sk_test in QA env; Live forbidden for full matrix",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-05",
+      "pri": "P0",
+      "result": "Fail",
+      "evidence": "Live founding coupons missing (0 coupons in Stripe Live)",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-06",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "Owner live Growth cancel stop-test 12 Nov; Dev all-tiers; Stripe cancel_at_period_end",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-07",
+      "pri": "P0",
+      "result": "Blocked",
+      "evidence": "Needs Stripe Test clock day 15",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-08",
+      "pri": "P1",
+      "result": "Blocked",
+      "evidence": "Needs Stripe Test paid upgrade",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-09",
+      "pri": "P1",
+      "result": "Blocked",
+      "evidence": "Needs Stripe Test downgrade/interval",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-10",
+      "pri": "P1",
+      "result": "Fail",
+      "evidence": "Stripe billing_portal configurations=0 on Live; button exists in app",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-11",
+      "pri": "P0",
+      "result": "Blocked",
+      "evidence": "Needs Stripe Test declining card",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-12",
+      "pri": "P0",
+      "result": "Blocked",
+      "evidence": "Needs Stripe Test paid cancel+wipe clock",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-13",
+      "pri": "P0",
+      "result": "Blocked",
+      "evidence": "Needs Stripe Test refund",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-14",
+      "pri": "P0",
+      "result": "Blocked",
+      "evidence": "Needs Stripe Test dispute",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-15",
+      "pri": "P0",
+      "result": "Blocked",
+      "evidence": "Needs Stripe Test second trial refuse",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-16",
+      "pri": "P0",
+      "result": "Blocked",
+      "evidence": "Needs Stripe Test founding race",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-17",
+      "pri": "P1",
+      "result": "Blocked",
+      "evidence": "Needs signed-in Scale shops",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-18",
+      "pri": "P1",
+      "result": "Blocked",
+      "evidence": "Needs seat accept E2E + SES",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-19",
+      "pri": "P1",
+      "result": "Blocked",
+      "evidence": "Needs import over limit on staging",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-20",
+      "pri": "P1",
+      "result": "Blocked",
+      "evidence": "Needs Contact/Suggest SES inbox proof this run",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-21",
+      "pri": "P1",
+      "result": "Blocked",
+      "evidence": "Needs multi-shop export staging",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-22",
+      "pri": "P1",
+      "result": "Blocked",
+      "evidence": "Needs auth failure demo ban staging",
+      "notes": ""
+    },
+    {
+      "suite": "E2E",
+      "id": "E2E-23",
+      "pri": "P1",
+      "result": "Blocked",
+      "evidence": "Needs server product data 2-device staging",
+      "notes": ""
+    },
+    {
+      "suite": "OPS",
+      "id": "STRIPE-PRICES",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "{\"STRIPE_PRICE_STARTER_MONTH\": 3900, \"STRIPE_PRICE_STARTER_YEAR\": 39000, \"STRIPE_PRICE_GROWTH_MONTH\": 7900, \"STRIPE_PRICE_GROWTH_YEAR\": 79000, \"STRIPE_PRICE_PRO_MONTH\": 12900, \"STRIPE_PRICE_PRO_YEAR\": 129000, \"STRIPE_PRICE_SCALE_MONTH\": 19900, \"STRIPE_PRICE_SCALE_YEAR\": 199000}",
+      "notes": ""
+    },
+    {
+      "suite": "OPS",
+      "id": "STRIPE-FOUNDING-COUPONS",
+      "pri": "P0",
+      "result": "Fail",
+      "evidence": "No coupons in Live Stripe (m365_founding_* 404)",
+      "notes": ""
+    },
+    {
+      "suite": "OPS",
+      "id": "STRIPE-PORTAL-CONFIG",
+      "pri": "P1",
+      "result": "Fail",
+      "evidence": "billing_portal/configurations count=0",
+      "notes": ""
+    },
+    {
+      "suite": "OPS",
+      "id": "STRIPE-WEBHOOK-EVENTS",
+      "pri": "P0",
+      "result": "Fail",
+      "evidence": "Missing invoice.paid and invoice.payment_action_required on endpoint",
+      "notes": ""
+    },
+    {
+      "suite": "OPS",
+      "id": "STRIPE-WEBHOOK-URL",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "https://margins365.com/api/webhooks/stripe enabled",
+      "notes": ""
+    },
+    {
+      "suite": "OWNER",
+      "id": "GAP-01-21-cancel",
+      "pri": "P0",
+      "result": "Pass",
+      "evidence": "Owner stop-test + Dev all tiers 12 Nov Europe/London",
+      "notes": ""
+    },
+    {
+      "suite": "OWNER",
+      "id": "PORTAL-REVIEW",
+      "pri": "P1",
+      "result": "Noted",
+      "evidence": "Owner: checked out customer portal and knows where/how to cancel (in-app). Stripe API still has 0 portal configs \u2014 enable+save config for E2E-10/GAP-10 Pass.",
+      "notes": ""
+    }
+  ],
+  "release_gate": {
+    "RG-4_E2E": "Fail/Blocked \u2014 only E2E-06 Pass; E2E-05/10 Fail; remainder Blocked without Stripe Test",
+    "launch_ready": false,
+    "blockers": [
+      "No Stripe Test staging for mandatory E2E matrix",
+      "Live founding coupons missing (GAP-05 / E2E-05)",
+      "Stripe Customer Portal configurations empty (GAP-10 / E2E-10)",
+      "Webhook missing invoice.paid + invoice.payment_action_required (GAP-07)"
+    ]
+  }
+}

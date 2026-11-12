@@ -1,0 +1,101 @@
+{
+  "prices": {
+    "STRIPE_PRICE_STARTER_MONTH": {
+      "id": "price_1UYyym0LXvIDuHeumYmEkwae",
+      "active": true,
+      "unit_amount": 3900,
+      "currency": "gbp",
+      "interval": "month",
+      "nickname": "Margins 365 Starter \u2014 monthly"
+    },
+    "STRIPE_PRICE_STARTER_YEAR": {
+      "id": "price_1UYyym0LXvIDuHeutOx9V68v",
+      "active": true,
+      "unit_amount": 39000,
+      "currency": "gbp",
+      "interval": "year",
+      "nickname": "Margins 365 Starter \u2014 annual"
+    },
+    "STRIPE_PRICE_GROWTH_MONTH": {
+      "id": "price_1UYyym0LXvIDuHeuyFlf4h1n",
+      "active": true,
+      "unit_amount": 7900,
+      "currency": "gbp",
+      "interval": "month",
+      "nickname": "Margins 365 Growth \u2014 monthly"
+    },
+    "STRIPE_PRICE_GROWTH_YEAR": {
+      "id": "price_1UYyyn0LXvIDuHeu55NwUZHi",
+      "active": true,
+      "unit_amount": 79000,
+      "currency": "gbp",
+      "interval": "year",
+      "nickname": "Margins 365 Growth \u2014 annual"
+    },
+    "STRIPE_PRICE_PRO_MONTH": {
+      "id": "price_1UYyyn0LXvIDuHeuUnoThJGq",
+      "active": true,
+      "unit_amount": 12900,
+      "currency": "gbp",
+      "interval": "month",
+      "nickname": "Margins 365 Pro \u2014 monthly"
+    },
+    "STRIPE_PRICE_PRO_YEAR": {
+      "id": "price_1UYyyn0LXvIDuHeuL6s2Ughh",
+      "active": true,
+      "unit_amount": 129000,
+      "currency": "gbp",
+      "interval": "year",
+      "nickname": "Margins 365 Pro \u2014 annual"
+    },
+    "STRIPE_PRICE_SCALE_MONTH": {
+      "id": "price_1UYyyo0LXvIDuHeuGAfqvkkL",
+      "active": true,
+      "unit_amount": 19900,
+      "currency": "gbp",
+      "interval": "month",
+      "nickname": "Margins 365 Scale \u2014 monthly"
+    },
+    "STRIPE_PRICE_SCALE_YEAR": {
+      "id": "price_1UYyyo0LXvIDuHeuQobIpfU5",
+      "active": true,
+      "unit_amount": 199000,
+      "currency": "gbp",
+      "interval": "year",
+      "nickname": "Margins 365 Scale \u2014 annual"
+    }
+  },
+  "coupons": {
+    "m365_founding_50_6mo": {
+      "error": "HTTP Error 404: Not Found"
+    },
+    "m365_founding_25_annual": {
+      "error": "HTTP Error 404: Not Found"
+    }
+  },
+  "portal": {
+    "count": 0,
+    "configs": []
+  },
+  "webhooks": [
+    {
+      "id": "we_1Ual4j0LXvIDuHeuTNgPxiyA",
+      "url": "https://margins365.com/api/webhooks/stripe",
+      "status": "enabled",
+      "enabled_events": [
+        "checkout.session.completed",
+        "customer.subscription.created",
+        "customer.subscription.updated",
+        "customer.subscription.deleted",
+        "customer.subscription.trial_will_end",
+        "invoice.payment_failed",
+        "charge.refunded",
+        "charge.dispute.created",
+        "charge.dispute.closed",
+        "payment_intent.payment_failed"
+      ]
+    }
+  ],
+  "livemode": true,
+  "when_utc": "2026-11-12T01:15:04.565463+00:00"
+}
