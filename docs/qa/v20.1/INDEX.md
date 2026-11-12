@@ -31,7 +31,7 @@ Per the Launch Readiness PDF: a gap is **Fixed** only after QA evidence. Until t
 
 | GAP | Sev | Code status | Notes |
 | --- | --- | --- | --- |
-| GAP-01 / K89 | P0 | **Built, awaiting QA** | Live cancel + Keep my plan proven on Growth trial (12 Nov). Full CAN/E2E suite still open. |
+| GAP-01 / K89 | P0 | **Fixed (owner live)** | Akthar stop-test 12 Nov 2026 Europe/London: 14-day trial cancel reached Stripe (`sub_1UabFD…` Growth, `cancel_at_period_end=true`, access until Wed 25 Nov 2026 13:07 UTC). Full CAN/E2E matrix still open on staging. |
 | GAP-02 | P0 | **Built, awaiting QA** | Server owns 14-day trial |
 | GAP-03 | P0 | **Built, awaiting QA** | One trial / account |
 | GAP-04 | P0 | **Built, awaiting QA** | No second live subscription |
@@ -44,7 +44,7 @@ Per the Launch Readiness PDF: a gap is **Fixed** only after QA evidence. Until t
 | GAP-17 / K90 | P0 | **Built, awaiting QA** | Trial-start SES + on-screen confirm |
 | GAP-18 | P0 | **Built, awaiting QA** | 3-day trial reminder via `trial_will_end` |
 | GAP-20 | P0 | **Built, awaiting QA** | Payment failed SES |
-| GAP-21 / K89 | P0 | **Built, awaiting QA** | Cancel SES |
+| GAP-21 / K89 | P0 | **Fixed (owner live)** | Same stop-test as GAP-01 (12 Nov). Confirm SES cancel mail in inbox if not already filed; Stripe cancel confirmed. |
 | GAP-22 | P0 | **Built, awaiting QA** | Founding ends-soon via cron |
 | GAP-23 | P0 | **Built, awaiting QA** | 80% order-limit SES (once / period) |
 | GAP-24 | P0 | **Built, awaiting QA** | Data deleted email on wipe |

@@ -31,6 +31,7 @@
 | Billing APIs reject signed-out cancel/portal/change-plan | Pass (401 Sign in first) | prod-smoke.json |
 | Security headers present (CSP / XFO / XCTO) | Pass | prod-smoke SEC_HEADERS |
 | GAP-01/21 prior live cancel (Growth) | Pass (owner live check 12 Nov) | Stripe `sub_1UabFD…` cancel_at_period_end after createPreview fix |
+| GAP-01/21 **stop test** (Akthar) | **Pass** (12 Nov 2026 Europe/London) | Owner: ran 14-day trial → cancelled subscription → worked. Stripe still shows `cancel_at_period_end=true`, `cancel_at` Wed 25 Nov 2026 13:07 UTC, plan growth |
 | GAP-32 / K86 SES | Pass (prior ops) | `docs/qa/v20/evidence/k86-ses/` |
 
 ## Fail (this run)
@@ -66,9 +67,18 @@ All suites that require Stripe Test, test clocks, SES receipt proof, or signed-i
 3. Run E2E-01–23; mark INDEX rows **Fixed** only with evidence.  
 4. Mobile re-test GA-64 after billing modals.
 
+## Owner live stop-test (billing cancel)
+
+**Akthar, 12 Nov 2026 Europe/London:** “I have run the stop test 14 day trial, cancelled the subscription, it worked.”
+
+Stripe check (same window): `sub_1UabFD0LXvIDuHeuhZeRxFsX` · status `trialing` · `cancel_at_period_end=true` · plan `growth` · cancels Wed 25 Nov 2026 13:07 UTC (Europe/London same as GMT in November).
+
+Marks **GAP-01 / GAP-21** as **Fixed (owner live)** for the Growth trial cancel path. Remaining tiers + full CAN/E2E still need staging Test mode.
+
 ## Sign-off
 
 | Role | Status |
 | --- | --- |
 | QA (this crawl) | Production smoke **complete**; full v20.1 **not** signed off |
+| GAP-01 / GAP-21 cancel | **Pass** — owner live stop-test |
 | Release | **Blocked** on staging E2E + owner portal/coupons/legal |
