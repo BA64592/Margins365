@@ -64,35 +64,66 @@ export const PUBLIC_META = {
     description: 'Cookie notice for Margins365 (v20.1).',
     h1: 'Cookie notice',
   },
+  // GA-60 / K76 — Phase 2 calculators + keyword landings held: reachable but noindex, not in sitemap
   '/etsy-profit-calculator-uk': {
     title: 'Etsy Profit Calculator UK | Margins365',
     description: 'Free Etsy UK profit calculator — fees, shipping and returns. Values stay in your browser.',
     h1: 'Etsy profit calculator (UK)',
+    noindex: true,
   },
   '/amazon-fee-calculator-uk': {
     title: 'Amazon Fee Calculator UK | Margins365',
     description: 'Free Amazon UK fee and profit calculator. Values stay in your browser.',
     h1: 'Amazon fee calculator (UK)',
+    noindex: true,
   },
   '/shopify-profit-calculator': {
     title: 'Shopify Profit Calculator | Margins365',
     description: 'Free Shopify profit calculator after payment fees and costs.',
     h1: 'Shopify profit calculator',
+    noindex: true,
   },
   '/ecommerce-profit-margin-calculator': {
     title: 'Ecommerce Profit Margin Calculator | Margins365',
     description: 'Free ecommerce profit margin calculator for online sellers.',
     h1: 'Ecommerce profit margin calculator',
+    noindex: true,
   },
   '/profit-leak-checklist': {
     title: 'Profit Leak Checklist | Margins365',
     description: 'Checklist to find where margin leaks for Shopify, Amazon and Etsy sellers.',
     h1: 'Profit leak checklist for online sellers',
+    noindex: true,
   },
   '/multi-channel-profit': {
     title: 'Multi-Channel Profit | Margins365',
     description: 'True profit across Shopify, Amazon and Etsy from the CSVs you already download.',
     h1: 'Multi-channel profit for Shopify, Amazon and Etsy',
+    noindex: true,
+  },
+  '/sign-in': {
+    title: 'Sign in | Margins365',
+    description: 'Sign in to Margins365.',
+    h1: 'Sign in',
+    noindex: true,
+  },
+  '/reset-password': {
+    title: 'Reset password | Margins365',
+    description: 'Set a new Margins365 password.',
+    h1: 'Reset password',
+    noindex: true,
+  },
+  '/welcome': {
+    title: 'Welcome | Margins365',
+    description: 'Welcome to Margins365.',
+    h1: 'Welcome',
+    noindex: true,
+  },
+  '/invite': {
+    title: 'Team invite | Margins365',
+    description: 'Accept a Margins365 team invite.',
+    h1: 'Team invite',
+    noindex: true,
   },
   '/404': {
     title: 'Page not found | Margins365',

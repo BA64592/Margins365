@@ -833,7 +833,8 @@ export async function handleRequestPasswordReset(body, req) {
   )
   // K85 — reset link built only from fixed APP_ORIGIN, never from browser-supplied origin
   const base = String(process.env.APP_ORIGIN || 'https://margins365.com').replace(/\/$/, '')
-  const resetUrl = `${base}/?reset=${encodeURIComponent(token)}`
+  // GA-59 — canonical reset path (legacy ?reset= on / still accepted by the SPA)
+  const resetUrl = `${base}/reset-password?token=${encodeURIComponent(token)}`
   const sent = await sendPasswordResetEmail(user.email, resetUrl)
   if (!sent.ok) {
     console.error('[password-reset] SES failed; token kept for retry', sent.message, user.id)

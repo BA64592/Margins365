@@ -1,12 +1,84 @@
 /**
  * GA-40 / GA-41 — server product data SoT + hard monthly order limits.
+ * GA-23 — 80% order-limit warning email (once per billing period).
  */
+import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2'
 import { userFromRequest } from './auth-handlers.mjs'
 import { dbConfigured, query } from './db.mjs'
 import { ensureShopsSchema } from './shops-handlers.mjs'
 
 const ORDER_LIMITS = { starter: 500, growth: 2000, pro: 5000, scale: 15000, legacy: 5000 }
+const PLAN_NEXT = { starter: 'Growth', growth: 'Pro', pro: 'Scale', scale: 'Scale', legacy: 'Scale' }
 const CLOSED = new Set(['ended', 'removed_full_refund', 'removed_lost_dispute'])
+const APP_ORIGIN = (
+  process.env.APP_ORIGIN ||
+  process.env.VITE_PRODUCT_DOMAIN ||
+  'https://margins365.com'
+).replace(/\/$/, '')
+const ORIGIN_URL = APP_ORIGIN.startsWith('http') ? APP_ORIGIN : `https://${APP_ORIGIN}`
+const CONTACT_INBOX = process.env.CONTACT_INBOX || 'info.marginos@gmail.com'
+
+async function sendLimitWarnMail(to, subject, text, html) {
+  const region = process.env.AWS_SES_REGION || process.env.AWS_REGION || 'eu-north-1'
+  const from = process.env.SES_FROM_ADDRESS || process.env.SES_FROM_EMAIL
+  const accessKeyId = process.env.AWS_ACCESS_KEY_ID
+  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
+  if (!from || !accessKeyId || !secretAccessKey) return { ok: false }
+  const client = new SESv2Client({
+    region,
+    credentials: { accessKeyId, secretAccessKey },
+  })
+  await client.send(
+    new SendEmailCommand({
+      FromEmailAddress: from,
+      Destination: { ToAddresses: [to] },
+      ReplyToAddresses: [CONTACT_INBOX],
+      Content: {
+        Simple: {
+          Subject: { Data: subject, Charset: 'UTF-8' },
+          Body: {
+            Text: { Data: text, Charset: 'UTF-8' },
+            Html: { Data: html, Charset: 'UTF-8' },
+          },
+        },
+      },
+    }),
+  )
+  return { ok: true }
+}
+
+async function maybeSendOrderLimitWarn({ user, used, limit, period }) {
+  if (!user?.email || !limit || used < Math.ceil(limit * 0.8)) return
+  await query(`
+    ALTER TABLE account_order_usage ADD COLUMN IF NOT EXISTS warn_80_sent_at TIMESTAMPTZ;
+  `).catch(() => {})
+  const { rows } = await query(
+    `SELECT warn_80_sent_at FROM account_order_usage WHERE user_id = $1 AND period_key = $2`,
+    [user.id, period],
+  )
+  if (rows[0]?.warn_80_sent_at) return
+  const plan = String(user.plan || 'starter').toLowerCase()
+  const next = PLAN_NEXT[plan] || 'Growth'
+  const subject = `You're at 80% of this month's order allowance`
+  const text = [
+    `You've used ${used.toLocaleString('en-GB')} of ${limit.toLocaleString('en-GB')} unique orders this billing month.`,
+    `Upgrade to ${next} in Plan & billing to analyse more: ${ORIGIN_URL}/account/billing`,
+    '',
+    '— Margins365',
+  ].join('\n')
+  const html = `<p>You've used <strong>${used.toLocaleString('en-GB')}</strong> of <strong>${limit.toLocaleString('en-GB')}</strong> unique orders this billing month.</p><p>Upgrade to <strong>${next}</strong> in <a href="${ORIGIN_URL}/account/billing">Plan &amp; billing</a> to analyse more.</p><p>— Margins365</p>`
+  try {
+    const mail = await sendLimitWarnMail(user.email, subject, text, html)
+    if (mail.ok) {
+      await query(
+        `UPDATE account_order_usage SET warn_80_sent_at = NOW() WHERE user_id = $1 AND period_key = $2`,
+        [user.id, period],
+      )
+    }
+  } catch (err) {
+    console.error('[order-limit-80] SES failed', err)
+  }
+}
 
 export async function ensureProductDataSchema() {
   if (!dbConfigured()) return false
@@ -217,6 +289,14 @@ export async function handlePutWorkspace(req, shopId, body) {
        updated_at = NOW()`,
     [user.id, period, JSON.stringify([...merged])],
   )
+
+  // GA-23 — one 80% warning email per billing period
+  await maybeSendOrderLimitWarn({
+    user,
+    used: merged.size,
+    limit,
+    period,
+  })
 
   return {
     status: 200,

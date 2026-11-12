@@ -2,7 +2,8 @@
 
 **Source:** `Margins365-QA-Prompt-v20.1.pdf` (11 Nov 2026, 20:55 Europe/London)  
 **Cases:** 640 (includes MOB/K87/K88–K90 + **66 GAP** + **23 E2E**)  
-**Companions:** Spec/Changes/SEO under `docs/v20.1/`
+**Companions:** Spec/Changes/SEO under `docs/v20.1/`  
+**Launch readiness PDF:** owner checklist (11 Nov 2026) — Dev status below.
 
 ## What’s new vs v20
 
@@ -18,51 +19,71 @@
 | ID | Decision | Status |
 | --- | --- | --- |
 | K91 | Pause live sign-ups / live-mode trials | **Rejected** — do not pause |
-| K92 | Stripe customer emails as stop-gap | **Yes — Live only** (saved 11 Nov 2026). **Test mode not mirrored** — do not expect Stripe receipt / fail / trial-ending / renewal mails in Test. See `docs/v20.1/K92-STRIPE-CUSTOMER-EMAILS.md`. |
-| K93 | Plan-change confirmation email | **Yes** — SES after Stripe confirms (`POST /api/billing/change-plan`). Built, awaiting QA. |
+| K92 | Stripe customer emails as stop-gap | **Yes — Live only** (saved 11 Nov 2026). **Test mode not mirrored**. See `docs/v20.1/K92-STRIPE-CUSTOMER-EMAILS.md`. |
+| K93 | Plan-change confirmation email | **Yes** — SES after Stripe confirms. Built, awaiting QA. |
 | K94 | Self-serve “Delete my account now” | **Not at launch** — privacy contact + admin |
 
-**QA note (K92):** Stripe’s own customer emails are Live-only by Akthar. E2E in Stripe **Test** still covers app SES (cancel, trial-start, plan-change) and Stripe Dashboard behaviour; skip asserting Stripe Dashboard “Customer emails” delivery in Test.
+## Launch readiness (Dev code vs QA Fixed)
 
-## GAP P0 — engineering status (code vs live QA)
+Per the Launch Readiness PDF: a gap is **Fixed** only after QA evidence. Until then: **Built, awaiting QA**.
+
+### P0 money / security / data / emails
 
 | GAP | Sev | Code status | Notes |
 | --- | --- | --- | --- |
-| GAP-01 | P0 | **Built, awaiting QA (K89)** | Stripe cancel + email |
-| GAP-02 | P0 | **Built, awaiting QA** | Server ignores client `trialDays` |
-| GAP-03 | P0 | **Built, awaiting QA** | Server refuses second trial (`trial_consumed`) |
-| GAP-04 | P0 | **Built, awaiting QA** | Server refuses Checkout if live sub |
-| GAP-05 | P0 | Partial / verify | Founding coupons at Checkout — confirm live Stripe |
-| GAP-06 | P0 | **Built, awaiting QA** | Atomic founding reserve under cap |
-| GAP-07 | P0 | Partial | More webhook events; add `trial_will_end` + `invoice.payment_failed` in Dashboard |
-| GAP-11 | P0 | **Built, awaiting QA** | `cancelAt` from Stripe → client `accessEndsAt` |
-| GAP-14 | P0 | **Built, awaiting QA** | Refund/dispute → access end + wipe schedule (never `plan=free`) |
-| GAP-16 | P0 | **Built, awaiting QA** | Terms+Refunds acceptance at signup & Checkout |
-| GAP-17 | P0 | **Built, awaiting QA (K90)** | Trial-start email |
-| GAP-18 | P0 | **Built, awaiting QA** | `trial_will_end` → SES 3-day reminder |
-| GAP-20 | P0 | **Built, awaiting QA** | `invoice.payment_failed` → SES (+ final failure) |
-| GAP-21 | P0 | **Built, awaiting QA (K89)** | Cancel email |
-| GAP-22 | P0 | **Built, awaiting QA** | Founding ends-soon SES via cron |
+| GAP-01 / K89 | P0 | **Built, awaiting QA** | Live cancel + Keep my plan proven on Growth trial (12 Nov). Full CAN/E2E suite still open. |
+| GAP-02 | P0 | **Built, awaiting QA** | Server owns 14-day trial |
+| GAP-03 | P0 | **Built, awaiting QA** | One trial / account |
+| GAP-04 | P0 | **Built, awaiting QA** | No second live subscription |
+| GAP-05 | P0 | **Built, awaiting QA** | Founding coupons; Checkout **fails** (no silent full-price) if coupon missing |
+| GAP-06 | P0 | **Built, awaiting QA** | Atomic founding reserve under 100 |
+| GAP-07 | P0 | **Built, awaiting QA** | Webhooks incl. `invoice.paid`, trial_will_end, payment_failed, refund/dispute |
+| GAP-11 | P0 | **Built, awaiting QA** | Access end from Stripe `cancel_at` |
+| GAP-14 | P0 | **Built, awaiting QA** | Refund/dispute → wipe schedule |
+| GAP-16 | P0 | **Built, awaiting QA** | Legal acceptance recorded |
+| GAP-17 / K90 | P0 | **Built, awaiting QA** | Trial-start SES + on-screen confirm |
+| GAP-18 | P0 | **Built, awaiting QA** | 3-day trial reminder via `trial_will_end` |
+| GAP-20 | P0 | **Built, awaiting QA** | Payment failed SES |
+| GAP-21 / K89 | P0 | **Built, awaiting QA** | Cancel SES |
+| GAP-22 | P0 | **Built, awaiting QA** | Founding ends-soon via cron |
+| GAP-23 | P0 | **Built, awaiting QA** | 80% order-limit SES (once / period) |
+| GAP-24 | P0 | **Built, awaiting QA** | Data deleted email on wipe |
 | GAP-32 | P0 | **Ops proven (K86)** | SES production + DNS |
-| GAP-33 | P0 | **Built, awaiting QA** | All auth email links from `APP_ORIGIN` only |
-| GAP-34 | P0 | **Built, awaiting QA** | No demo auth fallback on server failure |
-| GAP-40 | P0 | **Built, awaiting QA** | `shop_workspaces` + GET/PUT `/api/shops/:id/workspace` |
-| GAP-41 | P0 | **Built, awaiting QA** | Server unique-order limit on workspace PUT |
-| GAP-42 | P0 | **Built, awaiting QA** | `runDueDeletions` wipe + tombstone + data-deleted email |
-| GAP-43 | P0 | **Built, awaiting QA** | Account closure at wipe (`account_closed_at`, sessions killed) |
-| GAP-44 | P0 | **Built, awaiting QA** | Privacy claims match once GA-40/42 live; closed sign-in blocked |
+| GAP-33 | P0 | **Built, awaiting QA** | Reset links from `APP_ORIGIN` → `/reset-password?token=` |
+| GAP-34 | P0 | **Built, awaiting QA** | No demo auth fallback |
+| GAP-40–44 | P0 | **Built, awaiting QA** | Server shop workspaces, limits, wipe, closure |
 
-## Ops for Akthar
+### P1 features
 
-1. Stripe webhooks: `customer.subscription.trial_will_end`, `invoice.payment_failed` (done live).
-2. Set **`CRON_SECRET`** on DO and schedule daily `POST /api/internal/cron` — see `docs/v20.1/CRON-OPS.md`.
-3. Confirm DO Postgres backups retention ≤ 7 days (GA-42 backups).
+| GAP | Sev | Code status | Notes |
+| --- | --- | --- | --- |
+| GAP-08 / K93 | P1 | **Built, awaiting QA** | Change plan + SES |
+| GAP-09 | P1 | **Built, awaiting QA** | Interval change at renewal |
+| GAP-10 | P1 | **Built, awaiting QA** | `/api/billing/portal` + Plan & billing **Invoices & card** (needs Stripe portal on) |
+| GAP-55 | P1 | **Built, awaiting QA** | Day-14 wording removed |
+| GAP-57 | P1 | **Built, awaiting QA** | Trial confirm after Stripe |
+| GAP-59 | P1 | **Built, awaiting QA** | `/sign-in`, `/reset-password`, `/welcome`, `/invite/:token` |
+| GAP-60 | P1 | **Built, awaiting QA** | Calculators/landings held: removed from sitemap + `noindex` |
+| GAP-26 | P1 | **Built, awaiting QA** | Seat invite SES with `/invite/:token` |
+| GAP-49 / 50 / 52 / 53 | P1 | **Partial** | Shops/team APIs exist; full switcher + member billing gate still thin |
+| GAP-25 / 27 | P1 | **Partial / open** | Member fan-out on cancel / remove-member email |
+| GAP-12 / 13 | P1 | **Partial** | Licence sync exists; daily Stripe reconcile job not full |
+| GAP-45–48 | P1 | **Partial** | Cancel reason stored; full multi-shop export + privacy admin tool open (K94 admin) |
+| GAP-64 / K82 | P1 | **Built, awaiting QA** | Modal scroll-lock + top-of-page nav |
 
-## Exit criteria that still block release (high level)
+## Ops for Akthar (still required for release)
 
-17. K88–K90 suites + Stripe cancel with no upcoming invoice  
-18. Every P0/P1 **GAP** pass  
-19. **RG-1–RG-4** + full **E2E** in Stripe test mode (no live trial before this)
+1. Stripe Customer Portal **on** (card + invoices; cancellation **off**).
+2. Confirm founding coupons exist in **Live** (`m365_founding_50_6mo` / `m365_founding_25_annual` or env overrides).
+3. Statement descriptor Margins365; Terms/Privacy URLs on Stripe Checkout.
+4. DO Postgres backups retention ≤ 7 days.
+5. Company details + ICO number for legal pages (withheld — supply when ready).
+6. Hand QA: staging or Live + Stripe **Test** + test inboxes + full 640-case pass.
+
+## Exit criteria that still block release
+
+17–19: QA evidence for every P0/P1 GAP + E2E + RG-1–RG-4.  
+**Dev perspective:** core P0 money/security/data/email paths are built; remaining open rows are mostly QA Fixed + owner tasks + thinner P1s (member seats, reconcile, privacy admin).
 
 ## Files
 

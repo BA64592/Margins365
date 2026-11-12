@@ -13,6 +13,10 @@ export type AppRoute =
   | 'account-info'
   | 'account-billing'
   | 'account-data'
+  | 'sign-in'
+  | 'reset-password'
+  | 'welcome'
+  | 'invite'
   | 'calc-etsy'
   | 'calc-amazon'
   | 'calc-shopify'
@@ -37,6 +41,10 @@ const PATH_BY_ROUTE: Record<AppRoute, string> = {
   'account-info': '/account/info',
   'account-billing': '/account/billing',
   'account-data': '/account/data',
+  'sign-in': '/sign-in',
+  'reset-password': '/reset-password',
+  welcome: '/welcome',
+  invite: '/invite',
   'calc-etsy': '/etsy-profit-calculator-uk',
   'calc-amazon': '/amazon-fee-calculator-uk',
   'calc-shopify': '/shopify-profit-calculator',
@@ -64,7 +72,10 @@ export function normalizePathname(pathname: string): string {
 
 export function pathToRoute(pathname: string): AppRoute {
   const path = normalizePathname(pathname)
-  return ROUTE_BY_PATH[path] ?? 'not-found'
+  if (ROUTE_BY_PATH[path]) return ROUTE_BY_PATH[path]
+  // GA-59 — /invite/:token
+  if (path === '/invite' || path.startsWith('/invite/')) return 'invite'
+  return 'not-found'
 }
 
 export function routeToPath(route: AppRoute): string {
@@ -103,6 +114,14 @@ export function pageTitle(route: AppRoute): string {
       return 'Plan & billing | Margins365'
     case 'account-data':
       return 'Data & privacy | Margins365'
+    case 'sign-in':
+      return 'Sign in | Margins365'
+    case 'reset-password':
+      return 'Reset password | Margins365'
+    case 'welcome':
+      return 'Welcome | Margins365'
+    case 'invite':
+      return 'Team invite | Margins365'
     case 'calc-etsy':
       return 'Etsy Profit Calculator UK | Margins365'
     case 'calc-amazon':

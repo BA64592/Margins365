@@ -39,6 +39,7 @@ import {
   ensureBillingSchema,
   handleBillingCancel,
   handleBillingChangePlan,
+  handleBillingPortal,
   handleBillingResubscribe,
   handleTrialStatus,
 } from './billing-handlers.mjs'
@@ -429,6 +430,12 @@ const server = http.createServer(async (req, res) => {
         return
       }
       const result = await handleBillingChangePlan(req, body)
+      json(res, result.status, result.body)
+      return
+    }
+    // GA-10 — Stripe Customer Portal (invoices + card; cancel stays in-app)
+    if (req.method === 'POST' && url === '/api/billing/portal') {
+      const result = await handleBillingPortal(req)
       json(res, result.status, result.body)
       return
     }

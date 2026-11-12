@@ -52,6 +52,7 @@ export function SettingsBar() {
   const [suggestMsg, setSuggestMsg] = useState<string | null>(null)
   const [suggestBusy, setSuggestBusy] = useState(false)
   const [logoutAllBusy, setLogoutAllBusy] = useState(false)
+  const [portalBusy, setPortalBusy] = useState(false)
   const [statusMsg, setStatusMsg] = useState<string | null>(null)
 
   useEffect(() => {
@@ -203,6 +204,28 @@ export function SettingsBar() {
     }
   }
 
+  const openBillingPortal = async () => {
+    if (portalBusy) return
+    setPortalBusy(true)
+    setStatusMsg(null)
+    try {
+      const res = await fetch('/api/billing/portal', {
+        method: 'POST',
+        credentials: 'include',
+      })
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; url?: string; message?: string }
+      if (!res.ok || !data.ok || !data.url) {
+        setStatusMsg(data.message || 'Could not open invoices & card. Try again.')
+        return
+      }
+      window.location.href = data.url
+    } catch {
+      setStatusMsg('Could not open invoices & card. Try again.')
+    } finally {
+      setPortalBusy(false)
+    }
+  }
+
   const resubscribe = async () => {
     if (resubBusy) return
     setResubBusy(true)
@@ -330,11 +353,21 @@ export function SettingsBar() {
                 {access === 'trial' ? 'Cancel trial' : 'Cancel subscription'}
               </Button>
             ) : null}
+            {hasPaidAccess(access) ? (
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={portalBusy}
+                onClick={() => void openBillingPortal()}
+              >
+                {portalBusy ? 'Opening…' : 'Invoices & card'}
+              </Button>
+            ) : null}
           </div>
         )}
         <p className="text-xs text-subtle">
           Cancellation closes access at the end date and permanently deletes product data then.
-          Download your data first.
+          Download your data first. Invoices and card updates open in Stripe — cancel stays here.
         </p>
       </Card>
 

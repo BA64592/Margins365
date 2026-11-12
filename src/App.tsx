@@ -53,6 +53,60 @@ function TrialConfirmHost() {
   )
 }
 
+/** GA-59 — post-Checkout landing (trial confirm modal still driven by AppContext). */
+function WelcomePage() {
+  const { setRoute, user, setAuthOpen, trialConfirm } = useApp()
+  useEffect(() => {
+    if (!user) setAuthOpen(true)
+  }, [user, setAuthOpen])
+  return (
+    <main className="mx-auto max-w-lg px-4 py-16 sm:px-6">
+      <h1 className="font-display text-3xl font-semibold text-navy">Welcome to {PRODUCT_NAME}</h1>
+      <p className="mt-2 text-sm text-subtle">
+        {trialConfirm?.waiting
+          ? 'We’re confirming your trial with Stripe. No charge has been taken.'
+          : 'Your account is ready. Open the Control room to upload a shop file.'}
+      </p>
+      <div className="mt-6 flex flex-wrap gap-2">
+        <Button onClick={() => setRoute('app')}>Go to Control room</Button>
+        <Button variant="secondary" onClick={() => setRoute('account-billing')}>
+          Plan &amp; billing
+        </Button>
+      </div>
+    </main>
+  )
+}
+
+/** GA-59 — /invite/:token accept surface (sign in / create account with invite email). */
+function InviteAcceptPage() {
+  const { setAuthOpen, user, setRoute } = useApp()
+  const token =
+    typeof window !== 'undefined'
+      ? window.location.pathname.replace(/^\/invite\/?/, '').split('/')[0] || ''
+      : ''
+  useEffect(() => {
+    if (!user) setAuthOpen(true)
+  }, [user, setAuthOpen])
+  return (
+    <main className="mx-auto max-w-lg px-4 py-16 sm:px-6">
+      <h1 className="font-display text-3xl font-semibold text-navy">Team invite</h1>
+      <p className="mt-2 text-sm text-subtle">
+        {user
+          ? 'You’re signed in. Ask the account owner to confirm your seat is active, then open the Control room.'
+          : 'Sign in or create an account with the invited email to join this team.'}
+        {token ? ` Invite reference: ${token}.` : ''}
+      </p>
+      <div className="mt-6 flex flex-wrap gap-2">
+        {!user ? (
+          <Button onClick={() => setAuthOpen(true)}>Sign in</Button>
+        ) : (
+          <Button onClick={() => setRoute('app')}>Go to Control room</Button>
+        )}
+      </div>
+    </main>
+  )
+}
+
 /** K87 — after sign-in from Suggest a feature, open the form. */
 function AfterAuthRedirect() {
   const { user, setRoute, setAuthOpen } = useApp()
@@ -311,6 +365,37 @@ function AppShellRoutes() {
           <SettingsBar />
         </main>
       </AccountShell>
+    )
+  }
+  // GA-59 — canonical auth / invite / post-checkout routes (no more 404)
+  if (route === 'sign-in' || route === 'reset-password') {
+    return (
+      <MarketingShell>
+        <main className="mx-auto max-w-lg px-4 py-16 sm:px-6">
+          <h1 className="font-display text-3xl font-semibold text-navy">
+            {route === 'reset-password' ? 'Reset password' : 'Sign in'}
+          </h1>
+          <p className="mt-2 text-sm text-subtle">
+            {route === 'reset-password'
+              ? 'Use the form to set a new password. If the dialog did not open, refresh this page.'
+              : 'Use the sign-in dialog to continue. If it did not open, refresh this page.'}
+          </p>
+        </main>
+      </MarketingShell>
+    )
+  }
+  if (route === 'welcome') {
+    return (
+      <MarketingShell>
+        <WelcomePage />
+      </MarketingShell>
+    )
+  }
+  if (route === 'invite') {
+    return (
+      <MarketingShell>
+        <InviteAcceptPage />
+      </MarketingShell>
     )
   }
   if (route === 'app-shops') {

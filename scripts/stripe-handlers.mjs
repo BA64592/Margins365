@@ -249,8 +249,8 @@ export async function createCheckoutSession(body, req) {
     mode: 'subscription',
     client_reference_id: accountId,
     customer_email: email || undefined,
-    success_url: `${origin}/?checkout=success`,
-    cancel_url: `${origin}/?checkout=cancel`,
+    success_url: `${origin}/welcome?checkout=success`,
+    cancel_url: `${origin}/pricing?checkout=cancel`,
     line_items: [{ price: priceId, quantity: 1 }],
     subscription_data: {
       trial_period_days: trialDays > 0 ? trialDays : undefined,
@@ -283,30 +283,18 @@ export async function createCheckoutSession(body, req) {
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Checkout failed'
-    // If coupon missing, retry without discount rather than blocking checkout
+    // GA-05 — never silently charge full price when a founding place was reserved.
+    // Fail Checkout, release the place, and ask ops to fix the coupon.
     if (foundingReserved && /coupon|discount/i.test(String(message))) {
-      try {
-        const { discounts: _d, ...noDisc } = base
-        const session = await stripe.checkout.sessions.create({
-          ...noDisc,
-          managed_payments: { enabled: true },
-        })
-        return {
-          status: 200,
-          body: {
-            ok: true,
-            url: session.url,
-            sessionId: session.id,
-            planId,
-            interval,
-            founding: false,
-            foundingPlacesLeft,
-            message:
-              'Founding coupon not configured in Stripe — checkout continued at full price. Set STRIPE_COUPON_FOUNDING_MONTHLY / STRIPE_COUPON_FOUNDING_ANNUAL.',
-          },
-        }
-      } catch {
-        // fall through
+      if (accountId) await releaseFoundingPlace(accountId)
+      return {
+        status: 503,
+        body: {
+          ok: false,
+          code: 'founding_coupon_missing',
+          message:
+            'Founding price is temporarily unavailable. Nothing was charged. Please try again shortly, or contact support.',
+        },
       }
     }
     if (String(message).toLowerCase().includes('managed_payments')) {
@@ -643,6 +631,36 @@ export async function handleStripeWebhook(rawBody, signature) {
         if (email) {
           await maybeSendTrialReminderEmail({ userId: accountId, email, subscription: sub })
         }
+      }
+    } else if (event.type === 'invoice.paid') {
+      // GA-07 — paid invoice confirms access + founding place
+      const inv = event.data.object
+      const accountId =
+        inv.subscription_details?.metadata?.margins365_account_id ||
+        inv.metadata?.margins365_account_id ||
+        inv.metadata?.marginos_account_id ||
+        ''
+      if (accountId && dbConfigured()) {
+        const planId =
+          normalizePlanId(inv.subscription_details?.metadata?.margins365_plan) ||
+          normalizePlanId(inv.metadata?.margins365_plan) ||
+          'pro'
+        const billingReason = String(inv.billing_reason || '')
+        // First paid invoice (or subsequent) → active; confirm founding when money collected
+        if (billingReason !== 'subscription_create' || Number(inv.amount_paid || 0) > 0) {
+          if (Number(inv.amount_paid || 0) > 0) {
+            await setUserPlan(accountId, planId, 'active')
+            await confirmFoundingPlace(accountId)
+          }
+        }
+        await query(
+          `UPDATE users SET
+             stripe_customer_id = COALESCE(stripe_customer_id, $2),
+             payment_failed_email_sent_at = NULL,
+             updated_at = NOW()
+           WHERE id = $1`,
+          [accountId, inv.customer ? String(inv.customer) : null],
+        ).catch(() => {})
       }
     } else if (event.type === 'invoice.payment_failed') {
       const inv = event.data.object

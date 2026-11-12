@@ -664,13 +664,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Email verification + password reset + Stripe return deep links
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const resetToken = params.get('reset')
-    if (resetToken) {
+    // GA-59 — /reset-password?token=… (preferred) and legacy /?reset=
+    const resetToken = params.get('token') || params.get('reset')
+    const onResetPath = window.location.pathname.replace(/\/+$/, '') === '/reset-password'
+    if (resetToken && (onResetPath || params.get('reset'))) {
       setPasswordResetToken(resetToken)
       setAuthOpen(true)
       params.delete('reset')
+      params.delete('token')
       const next = `${window.location.pathname}${params.toString() ? `?${params}` : ''}${window.location.hash}`
       window.history.replaceState({}, '', next)
+    } else if (onResetPath) {
+      setAuthOpen(true)
+    }
+    if (window.location.pathname.replace(/\/+$/, '') === '/sign-in') {
+      setAuthOpen(true)
     }
     const token = params.get('verify')
     if (token) {

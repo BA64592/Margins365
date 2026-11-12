@@ -1095,6 +1095,66 @@ export async function handleBillingChangePlan(req, body) {
   }
 }
 
+/**
+ * GA-10 — POST /api/billing/portal
+ * Stripe Customer Portal for invoices + card update. Cancellation stays in-app.
+ */
+export async function handleBillingPortal(req) {
+  if (!dbConfigured()) {
+    return { status: 503, body: { ok: false, message: 'Database is not configured.' } }
+  }
+  const user = await userFromRequest(req)
+  if (!user) return { status: 401, body: { ok: false, message: 'Sign in first.' } }
+  const client = stripe()
+  if (!client) return { status: 503, body: { ok: false, message: 'Stripe is not configured.' } }
+
+  let customerId = user.stripe_customer_id || null
+  try {
+    if (!customerId) {
+      const sub = await findSubscriptionForUser(client, user)
+      if (sub?.customer) customerId = String(sub.customer)
+    }
+  } catch (err) {
+    return {
+      status: 502,
+      body: {
+        ok: false,
+        message: 'We couldn’t open billing details. Please try again.',
+        detail: String(err),
+      },
+    }
+  }
+  if (!customerId) {
+    return {
+      status: 409,
+      body: { ok: false, message: 'No Stripe customer on this account yet. Start a plan first.' },
+    }
+  }
+
+  try {
+    const session = await client.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${ORIGIN_URL}/account/billing`,
+    })
+    if (!session.url) {
+      return { status: 502, body: { ok: false, message: 'Stripe portal session failed.' } }
+    }
+    return { status: 200, body: { ok: true, url: session.url } }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    return {
+      status: 502,
+      body: {
+        ok: false,
+        message:
+          /portal|configuration/i.test(msg)
+            ? 'Billing portal is not enabled in Stripe yet. Card and invoices will be available once it is turned on.'
+            : 'We couldn’t open billing details. Please try again.',
+      },
+    }
+  }
+}
+
 /** K90 — GET /api/billing/trial-status — poll after Checkout return. */
 export async function handleTrialStatus(req) {
   if (!dbConfigured()) {

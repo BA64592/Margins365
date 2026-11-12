@@ -1,13 +1,51 @@
 /**
  * K68 / DEF-SHOP-001 — shops + seat invites (server source of truth).
+ * GA-26 — seat invitation email with /invite/:token link.
  */
 import crypto from 'node:crypto'
+import { SESv2Client, SendEmailCommand } from '@aws-sdk/client-sesv2'
 import { userFromRequest } from './auth-handlers.mjs'
 import { dbConfigured, query } from './db.mjs'
 
 const PLAN_SHOPS = { starter: 1, growth: 1, pro: 1, scale: 3, legacy: 1 }
 const PLAN_SEATS = { starter: 1, growth: 1, pro: 2, scale: 5, legacy: 2 }
 const PAID = new Set(['trialing', 'active', 'legacy', 'canceled_access'])
+const APP_ORIGIN = (
+  process.env.APP_ORIGIN ||
+  process.env.VITE_PRODUCT_DOMAIN ||
+  'https://margins365.com'
+).replace(/\/$/, '')
+const ORIGIN_URL = APP_ORIGIN.startsWith('http') ? APP_ORIGIN : `https://${APP_ORIGIN}`
+const CONTACT_INBOX = process.env.CONTACT_INBOX || 'info.marginos@gmail.com'
+
+async function sendInviteMail(to, subject, text, html) {
+  const region = process.env.AWS_SES_REGION || process.env.AWS_REGION || 'eu-north-1'
+  const from = process.env.SES_FROM_ADDRESS || process.env.SES_FROM_EMAIL
+  const accessKeyId = process.env.AWS_ACCESS_KEY_ID
+  const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY
+  if (!from || !accessKeyId || !secretAccessKey) return { ok: false, message: 'SES not configured' }
+  const client = new SESv2Client({
+    region,
+    credentials: { accessKeyId, secretAccessKey },
+  })
+  await client.send(
+    new SendEmailCommand({
+      FromEmailAddress: from,
+      Destination: { ToAddresses: [to] },
+      ReplyToAddresses: [CONTACT_INBOX],
+      Content: {
+        Simple: {
+          Subject: { Data: subject, Charset: 'UTF-8' },
+          Body: {
+            Text: { Data: text, Charset: 'UTF-8' },
+            Html: { Data: html, Charset: 'UTF-8' },
+          },
+        },
+      },
+    }),
+  )
+  return { ok: true }
+}
 
 export async function ensureShopsSchema() {
   if (!dbConfigured()) return false
@@ -253,7 +291,19 @@ export async function handleCreateInvite(req, body) {
     }
     throw err
   }
-  // Email delivery of invite links lands with full seats EML suite; record is SoT now.
+  // GA-26 — SES invite with /invite/:token (route is live; accept completes membership in a later seat pass)
+  const inviteUrl = `${ORIGIN_URL}/invite/${encodeURIComponent(id)}`
+  const ownerName = user.full_name || user.business_name || user.email || 'A Margins365 account owner'
+  try {
+    await sendInviteMail(
+      email,
+      `${ownerName} invited you to Margins365`,
+      `${ownerName} invited you to join their Margins365 team.\n\nOpen this link to continue:\n${inviteUrl}\n\nThis invite expires in 7 days.\n\n— Margins365\n`,
+      `<p><strong>${ownerName}</strong> invited you to join their Margins365 team.</p><p><a href="${inviteUrl}">Accept invite</a></p><p>This invite expires in 7 days.</p><p>— Margins365</p>`,
+    )
+  } catch (err) {
+    console.error('[seat-invite] SES failed', err)
+  }
   return handleListTeam(req)
 }
 
