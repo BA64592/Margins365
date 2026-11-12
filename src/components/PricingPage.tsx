@@ -189,13 +189,13 @@ export function PricingPage() {
         <div className="mx-auto w-full max-w-6xl">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">Pricing</p>
           <h1 className="mt-3 max-w-3xl font-[family-name:var(--font-marketing)] text-[1.75rem] font-semibold tracking-tight text-navy sm:text-4xl lg:text-5xl">
-            {PRODUCT_NAME} plans — {TRIAL_DAYS} days free on every tier
+            {PRODUCT_NAME} plans — {TRIAL_DAYS}-day free trial on every tier
           </h1>
           <p className="mt-4 max-w-2xl text-base text-subtle sm:text-lg">
-            14 days free, then your chosen plan. You won’t be charged until{' '}
-            <span className="font-semibold text-ink">{chargeHint}</span>. Cancel any time before then in
-            one click in Plan &amp; billing. All prices include VAT. Your trial includes the plan you choose
-            (Scale trials include Scale). {TIKTOK_COMING_SOON}.
+            {TRIAL_DAYS}-day free trial, then your chosen plan. You won’t be charged until{' '}
+            <span className="font-semibold text-ink">{chargeHint}</span>. Cancel before your trial ends
+            (date shown at Checkout and in Plan &amp; billing). All prices include VAT. Your trial includes
+            the plan you choose (Scale trials include Scale). {TIKTOK_COMING_SOON}.
           </p>
           {foundingLine ? (
             <p className="mt-4 max-w-2xl rounded-[12px] border border-accent/30 bg-accent-soft/50 px-4 py-3 text-sm text-ink">
@@ -296,12 +296,12 @@ export function PricingPage() {
                   </p>
                 ) : null}
                 <p className="mt-2 text-xs leading-relaxed text-subtle">
-                  14 days free, then{' '}
+                  {TRIAL_DAYS}-day free trial, then{' '}
                   {showFounding
                     ? `${formatGbp(foundingPrice)} founding (${interval === 'year' ? '25% off year 1' : `50% off ${FOUNDING_MONTHS} months`}), then ${formatGbp(price)}`
                     : `${formatGbp(price)} ${interval === 'year' ? 'a year' : 'a month'}`}{' '}
-                  including VAT. You won’t be charged until {chargeHint}. Cancel any time before then in
-                  one click.
+                  including VAT. You won’t be charged until {chargeHint}. Cancel before your trial ends
+                  (date shown at Checkout and in Plan &amp; billing).
                 </p>
                 <ul className="mt-5 flex-1 space-y-2 text-sm text-ink">
                   <li>{def.orderLimit.toLocaleString('en-GB')} unique orders / month</li>

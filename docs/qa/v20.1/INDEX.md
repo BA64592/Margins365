@@ -85,6 +85,13 @@ Per the Launch Readiness PDF: a gap is **Fixed** only after QA evidence. Until t
 17–19: QA evidence for every P0/P1 GAP + E2E + RG-1–RG-4.  
 **Dev perspective:** core P0 money/security/data/email paths are built; remaining open rows are mostly QA Fixed + owner tasks + thinner P1s (member seats, reconcile, privacy admin).
 
+## Latest QA run (12 Nov 2026 Europe/London)
+
+- Report: `docs/qa/v20.1/QA-REPORT-v20.1.md`
+- Defects: `docs/qa/v20.1/DEFECT-LOG-v20.1.md`
+- Evidence: `docs/qa/v20.1/evidence/`
+- **Production smoke:** Pass (2 defects fixed in hotfix). **Full 640 / E2E:** Blocked — needs staging + Stripe Test.
+
 ## Files
 
 - PDF: `docs/qa/v20.1/Margins365-QA-Prompt-v20.1.pdf`

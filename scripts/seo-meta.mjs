@@ -20,7 +20,7 @@ export const PUBLIC_META = {
     title: 'Margins365 Pricing | Plans from £39/mo',
     description:
       'Starter, Growth, Pro and Scale plans from £39 a month including VAT. 14-day free trial on every plan.',
-    h1: 'Margins365 plans — 14 days free on every tier',
+    h1: 'Margins365 plans — 14-day free trial on every tier',
   },
   '/sample-shop': {
     title: 'Margins365 Sample Shop | See a Margin Diagnosis',
@@ -145,6 +145,17 @@ export function normalizeSeoPath(pathname) {
 export function metaForPath(pathname) {
   const path = normalizeSeoPath(pathname)
   if (PUBLIC_META[path]) return { path, ...PUBLIC_META[path], known: true }
+  // GA-59 — /invite/:token must be a real 200 SPA route (not HTTP 404)
+  if (path === '/invite' || path.startsWith('/invite/')) {
+    return {
+      path,
+      title: 'Team invite | Margins365',
+      description: 'Accept a Margins365 team invite.',
+      h1: 'Team invite',
+      noindex: true,
+      known: true,
+    }
+  }
   if (APP_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`))) {
     return {
       path,
