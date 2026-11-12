@@ -73,12 +73,14 @@ All suites that require Stripe Test, test clocks, SES receipt proof, or signed-i
 
 Stripe check (same window): `sub_1UabFD0LXvIDuHeuhZeRxFsX` · status `trialing` · `cancel_at_period_end=true` · plan `growth` · cancels Wed 25 Nov 2026 13:07 UTC (Europe/London same as GMT in November).
 
-Marks **GAP-01 / GAP-21** as **Fixed (owner live)** for the Growth trial cancel path. Remaining tiers + full CAN/E2E still need staging Test mode.
+**Dev (relayed by Akthar, same night):** cancel is done for **all tiers** (Starter / Growth / Pro / Scale). Code review agrees — one plan-agnostic `handleBillingCancel` path.
+
+Marks **GAP-01 / GAP-21** as **Fixed (all tiers)**. Full CAN/E2E matrix on staging Test still optional for screenshots per tier.
 
 ## Sign-off
 
 | Role | Status |
 | --- | --- |
 | QA (this crawl) | Production smoke **complete**; full v20.1 **not** signed off |
-| GAP-01 / GAP-21 cancel | **Pass** — owner live stop-test |
+| GAP-01 / GAP-21 cancel | **Pass — all tiers** (Dev) + Growth owner live stop-test |
 | Release | **Blocked** on staging E2E + owner portal/coupons/legal |
