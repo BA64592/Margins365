@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useApp } from '../../context/AppContext'
 import { Button, Input, SectionHeading } from '../ui'
 
-/** K70 — Info (business profile). Phone optional. */
+/** Account Info (business profile). Phone required. */
 export function AccountInfoPage() {
   const { user, setAuthOpen, updateProfile, setRoute } = useApp()
   const [fullName, setFullName] = useState('')
@@ -35,8 +35,8 @@ export function AccountInfoPage() {
 
   const save = async () => {
     setMsg(null)
-    if (!fullName.trim() || !businessName.trim()) {
-      setMsg('Name and business name are required.')
+    if (!fullName.trim() || !businessName.trim() || !phone.trim()) {
+      setMsg('Name, business name and phone number are required.')
       return
     }
     setBusy(true)
@@ -67,7 +67,7 @@ export function AccountInfoPage() {
       <SectionHeading
         eyebrow="Account"
         title="Info"
-        description="Business profile and sign-in details. Phone is optional."
+        description="Business profile and sign-in details."
       />
       <div className="grid gap-3">
         <label className="text-sm">
@@ -83,8 +83,8 @@ export function AccountInfoPage() {
           <Input value={user.email} disabled />
         </label>
         <label className="text-sm">
-          <span className="mb-1 block text-xs font-semibold text-subtle">Phone (optional)</span>
-          <Input value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <span className="mb-1 block text-xs font-semibold text-subtle">Phone number</span>
+          <Input value={phone} onChange={(e) => setPhone(e.target.value)} type="tel" />
         </label>
         <label className="text-sm">
           <span className="mb-1 block text-xs font-semibold text-subtle">Country</span>

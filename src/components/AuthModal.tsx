@@ -1,3 +1,4 @@
+import { Eye, EyeOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useApp } from '../context/AppContext'
 import { en } from '../i18n/en'
@@ -17,6 +18,7 @@ export function AuthModal() {
   const {
     authOpen,
     setAuthOpen,
+    authPreferredMode,
     signInEmail,
     signInGoogle,
     requestVerificationEmail,
@@ -34,6 +36,7 @@ export function AuthModal() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [fullName, setFullName] = useState('')
   const [businessName, setBusinessName] = useState('')
   const [phone, setPhone] = useState('')
@@ -49,12 +52,20 @@ export function AuthModal() {
   )
 
   useEffect(() => {
+    if (!authOpen || user || passwordResetToken) return
+    setMode(authPreferredMode === 'create' ? 'create' : 'signIn')
+    setShowPassword(false)
+    setConfirmPassword('')
+  }, [authOpen, authPreferredMode, user, passwordResetToken])
+
+  useEffect(() => {
     if (passwordResetToken && authOpen) {
       setMode('reset')
       setError(null)
       setStatus(null)
       setPassword('')
       setConfirmPassword('')
+      setShowPassword(false)
       setCanResendReset(false)
     }
   }, [passwordResetToken, authOpen])
@@ -107,8 +118,8 @@ export function AuthModal() {
 
   const submitProfile = async () => {
     resetFeedback()
-    if (!fullName.trim() || !businessName.trim()) {
-      setError('Name and business name are required.')
+    if (!fullName.trim() || !businessName.trim() || !phone.trim()) {
+      setError('Name, business name and phone number are required.')
       return
     }
     if (platforms.length < 1) {
@@ -194,8 +205,12 @@ export function AuthModal() {
       setError('Password must be at least 15 characters.')
       return
     }
+    if (mode === 'create' && password !== confirmPassword) {
+      setError('Passwords do not match.')
+      return
+    }
     if (mode === 'create' && !acceptLegal) {
-      setError('Accept the Terms and Refunds policy to create an account.')
+      setError('Accept the Terms to create an account.')
       return
     }
     setBusy(true)
@@ -337,7 +352,7 @@ export function AuthModal() {
               </label>
               <label className="block text-sm">
                 <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-subtle">
-                  Phone number (optional)
+                  Phone number
                 </span>
                 <Input
                   value={phone}
@@ -346,6 +361,7 @@ export function AuthModal() {
                   autoComplete="tel"
                   inputMode="tel"
                   placeholder="+44…"
+                  required
                 />
               </label>
               <div>
@@ -592,17 +608,45 @@ export function AuthModal() {
                 <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-subtle">
                   Password
                 </span>
-                <Input
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value)
-                    resetFeedback()
-                  }}
-                  type="password"
-                  autoComplete={mode === 'create' ? 'new-password' : 'current-password'}
-                  placeholder="At least 15 characters"
-                />
+                <div className="relative">
+                  <Input
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      resetFeedback()
+                    }}
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete={mode === 'create' ? 'new-password' : 'current-password'}
+                    placeholder="At least 15 characters"
+                    className="pr-12"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 flex min-w-11 items-center justify-center text-subtle hover:text-ink"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowPassword((v) => !v)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </label>
+              {mode === 'create' ? (
+                <label className="block text-sm">
+                  <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-subtle">
+                    Confirm password
+                  </span>
+                  <Input
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value)
+                      resetFeedback()
+                    }}
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    placeholder="Repeat password"
+                  />
+                </label>
+              ) : null}
               {mode === 'signIn' ? (
                 <button
                   type="button"
@@ -631,10 +675,6 @@ export function AuthModal() {
                     I agree to the{' '}
                     <a className="text-accent underline-offset-2 hover:underline" href="/legal/terms">
                       Terms
-                    </a>{' '}
-                    and{' '}
-                    <a className="text-accent underline-offset-2 hover:underline" href="/legal/refunds">
-                      Refunds policy
                     </a>
                     .
                   </span>

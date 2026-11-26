@@ -141,6 +141,7 @@ export async function stripeStartCheckout(args: CheckoutArgs): Promise<CheckoutR
   try {
     const res = await fetch('/api/checkout', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         accountId: args.accountId,
@@ -156,11 +157,23 @@ export async function stripeStartCheckout(args: CheckoutArgs): Promise<CheckoutR
         cancelUrl: `${window.location.origin}/?checkout=cancel`,
       }),
     })
-    const data = (await res.json()) as { ok?: boolean; message?: string; url?: string }
+    const raw = await res.text()
+    let data: { ok?: boolean; message?: string; url?: string; code?: string } = {}
+    try {
+      data = raw ? (JSON.parse(raw) as typeof data) : {}
+    } catch {
+      return {
+        ok: false,
+        message:
+          'Checkout is temporarily unavailable. Nothing was charged. Please try again shortly.',
+      }
+    }
     if (!res.ok || !data.ok || !data.url) {
       return {
         ok: false,
-        message: data.message || 'Stripe Checkout is not available. Complete live keys and prices.',
+        message:
+          data.message ||
+          'Checkout is temporarily unavailable. Nothing was charged. Please try again shortly.',
       }
     }
     return {
@@ -171,7 +184,8 @@ export async function stripeStartCheckout(args: CheckoutArgs): Promise<CheckoutR
   } catch {
     return {
       ok: false,
-      message: 'Could not reach Stripe checkout API.',
+      message:
+        'Checkout is temporarily unavailable. Nothing was charged. Please try again shortly.',
     }
   }
 }

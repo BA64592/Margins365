@@ -43,10 +43,11 @@ export interface AuthUser {
 
 export function isProfileComplete(user: AuthUser | null | undefined): boolean {
   if (!user) return false
-  // K70 — phone optional; name + business + verified email + platforms required
+  // Phone required (matches /api/auth/profile); name + business + verified email + platforms
   return Boolean(
     user.fullName?.trim() &&
       user.businessName?.trim() &&
+      user.phone?.trim() &&
       user.emailVerified &&
       user.enabledPlatforms &&
       user.enabledPlatforms.length > 0,

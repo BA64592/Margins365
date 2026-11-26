@@ -242,7 +242,9 @@ interface AppContextValue {
   paymentPending: boolean
   setPaymentPending: (v: boolean) => void
   setUpgradeOpen: (v: boolean) => void
-  setAuthOpen: (v: boolean) => void
+  /** Open or close auth. Pass `create` to land on Create account (e.g. trial CTA when signed out). */
+  setAuthOpen: (v: boolean, mode?: 'signIn' | 'create') => void
+  authPreferredMode: 'signIn' | 'create'
   setSelectedSku: (sku: string | null) => void
   toggleTheme: () => void
   setCurrency: (c: HomeCurrency) => void
@@ -454,7 +456,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [inactivityNotice, setInactivityNotice] = useState<string | null>(null)
   const [nowTick, setNowTick] = useState(() => Date.now())
   const [upgradeOpen, setUpgradeOpen] = useState(false)
-  const [authOpen, setAuthOpen] = useState(false)
+  const [authOpen, setAuthOpenState] = useState(false)
+  const [authPreferredMode, setAuthPreferredMode] = useState<'signIn' | 'create'>('signIn')
+  const setAuthOpen = (v: boolean, mode?: 'signIn' | 'create') => {
+    if (v && mode) setAuthPreferredMode(mode)
+    if (!v) setAuthPreferredMode('signIn')
+    setAuthOpenState(v)
+  }
   const [trialConfirm, setTrialConfirm] = useState<{
     open: boolean
     title: string
@@ -1063,6 +1071,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setPaymentPending,
     setUpgradeOpen,
     setAuthOpen,
+    authPreferredMode,
     setSelectedSku,
     toggleTheme: () => {
       document.documentElement.classList.remove('dark')

@@ -202,17 +202,21 @@ export async function createCheckoutSession(body, req) {
     }
   }
 
-  // GA-16 — Checkout requires Terms + Refunds acceptance on this session
+  // GA-16 — Checkout requires Terms acceptance on this session
   if (userRow && body.acceptLegal) {
     const ip = req?.headers?.['x-forwarded-for']?.toString().split(',')[0]?.trim() || 'local'
-    await recordLegalAcceptance(accountId, 'checkout', ip)
+    try {
+      await recordLegalAcceptance(accountId, 'checkout', ip)
+    } catch (err) {
+      console.warn('[checkout] legal acceptance', err instanceof Error ? err.message : err)
+    }
   } else if (userRow) {
     return {
       status: 400,
       body: {
         ok: false,
         code: 'legal_required',
-        message: 'Accept the Terms and Refunds policy before Checkout.',
+        message: 'Accept the Terms before Checkout.',
       },
     }
   }
@@ -222,9 +226,13 @@ export async function createCheckoutSession(body, req) {
   let foundingReserved = false
   let foundingPlacesLeft = 0
   if (wantFounding && accountId) {
-    const reservation = await reserveFoundingPlace(accountId, planId, interval)
-    foundingReserved = Boolean(reservation.reserved)
-    foundingPlacesLeft = Number(reservation.placesLeft || 0)
+    try {
+      const reservation = await reserveFoundingPlace(accountId, planId, interval)
+      foundingReserved = Boolean(reservation.reserved)
+      foundingPlacesLeft = Number(reservation.placesLeft || 0)
+    } catch (err) {
+      console.warn('[checkout] founding reserve', err instanceof Error ? err.message : err)
+    }
   }
 
   const origin = defaultOriginUrl()
@@ -261,13 +269,55 @@ export async function createCheckoutSession(body, req) {
     expires_at: Math.floor(Date.now() / 1000) + 30 * 60,
   }
 
+  const mapStripeCheckoutError = (err) => {
+    const message = err instanceof Error ? err.message : 'Checkout failed'
+    const code = err && typeof err === 'object' && 'code' in err ? String(err.code || '') : ''
+    const statusCode =
+      err && typeof err === 'object' && 'statusCode' in err ? Number(err.statusCode || 0) : 0
+    const expired =
+      code === 'api_key_expired' ||
+      /expired api key|invalid api key|api_key_expired/i.test(message) ||
+      statusCode === 401
+    if (expired) {
+      return {
+        status: 503,
+        body: {
+          ok: false,
+          code: 'stripe_key_expired',
+          message:
+            'Checkout is temporarily unavailable (billing keys need updating). Nothing was charged. Please try again shortly, or contact support from Help.',
+        },
+      }
+    }
+    if (foundingReserved && /coupon|discount/i.test(message)) {
+      return {
+        status: 503,
+        body: {
+          ok: false,
+          code: 'founding_coupon_missing',
+          message:
+            'Founding price is temporarily unavailable. Nothing was charged. Please try again shortly, or contact support.',
+        },
+      }
+    }
+    return {
+      status: 503,
+      body: {
+        ok: false,
+        code: 'checkout_failed',
+        message: message || 'Checkout failed. Nothing was charged.',
+      },
+    }
+  }
+
   try {
-    const session = await stripe.checkout.sessions.create({
-      ...base,
-      managed_payments: { enabled: true },
-    })
-    if (!session.url) {
-      return { status: 502, body: { ok: false, message: 'Stripe Checkout Session failed.' } }
+    // Standard Checkout first. Avoid HTTP 502 (DO edge replaces app 502 with HTML).
+    const session = await stripe.checkout.sessions.create(base)
+    if (!session?.url) {
+      return {
+        status: 503,
+        body: { ok: false, code: 'checkout_failed', message: 'Stripe Checkout Session failed.' },
+      }
     }
     return {
       status: 200,
@@ -282,50 +332,50 @@ export async function createCheckoutSession(body, req) {
       },
     }
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Checkout failed'
-    // GA-05 — never silently charge full price when a founding place was reserved.
-    // Fail Checkout, release the place, and ask ops to fix the coupon.
-    if (foundingReserved && /coupon|discount/i.test(String(message))) {
-      if (accountId) await releaseFoundingPlace(accountId)
-      return {
-        status: 503,
-        body: {
-          ok: false,
-          code: 'founding_coupon_missing',
-          message:
-            'Founding price is temporarily unavailable. Nothing was charged. Please try again shortly, or contact support.',
-        },
-      }
-    }
-    if (String(message).toLowerCase().includes('managed_payments')) {
+    const message = err instanceof Error ? err.message : ''
+    if (/managed_payments/i.test(message)) {
       try {
-        const stripe2 = stripeClient()
-        const session = await stripe2.checkout.sessions.create(base)
-        return {
-          status: 200,
-          body: {
-            ok: true,
-            url: session.url,
-            sessionId: session.id,
-            planId,
-            interval,
-            founding: foundingReserved,
-            foundingPlacesLeft,
-            managedPayments: false,
-            message:
-              'Checkout created without managed_payments (enable SMP in Stripe Dashboard when eligible).',
-          },
+        const session = await stripe.checkout.sessions.create({
+          ...base,
+          managed_payments: { enabled: true },
+        })
+        if (session?.url) {
+          return {
+            status: 200,
+            body: {
+              ok: true,
+              url: session.url,
+              sessionId: session.id,
+              planId,
+              interval,
+              founding: foundingReserved,
+              foundingPlacesLeft,
+              managedPayments: true,
+            },
+          }
         }
       } catch (err2) {
-        if (foundingReserved && accountId) await releaseFoundingPlace(accountId)
-        return {
-          status: 502,
-          body: { ok: false, message: err2 instanceof Error ? err2.message : message },
+        console.warn('[checkout] stripe', err2 instanceof Error ? err2.message : err2)
+        if (foundingReserved && accountId) {
+          try {
+            await releaseFoundingPlace(accountId)
+          } catch (releaseErr) {
+            console.warn('[checkout] release founding', releaseErr)
+          }
         }
+        return mapStripeCheckoutError(err2)
       }
     }
-    if (foundingReserved && accountId) await releaseFoundingPlace(accountId)
-    return { status: 502, body: { ok: false, message } }
+    console.warn('[checkout] stripe', message || err)
+    // GA-05 — never silently charge full price when a founding place was reserved.
+    if (foundingReserved && accountId) {
+      try {
+        await releaseFoundingPlace(accountId)
+      } catch (releaseErr) {
+        console.warn('[checkout] release founding', releaseErr)
+      }
+    }
+    return mapStripeCheckoutError(err)
   }
 }
 
