@@ -335,7 +335,7 @@ const serverAuthProvider: AuthProvider = {
             data.code === 'google_only'
               ? 'This account uses Google Sign-In. Please use Continue with Google above.'
               : data.code === 'legal_required'
-                ? data.message || 'Accept the Terms and Refunds policy to create an account.'
+                ? data.message || 'Accept the Terms to create an account.'
                 : data.message || 'Sign-in failed.',
           code: data.code,
         }

@@ -397,8 +397,17 @@ const server = http.createServer(async (req, res) => {
         json(res, 400, { ok: false, message: 'Invalid JSON' })
         return
       }
-      const result = await createCheckoutSession(body, req)
-      json(res, result.status, result.body)
+      try {
+        const result = await createCheckoutSession(body, req)
+        json(res, result.status, result.body)
+      } catch (err) {
+        console.error('[checkout] unhandled', err instanceof Error ? err.message : err)
+        json(res, 503, {
+          ok: false,
+          code: 'checkout_failed',
+          message: 'Checkout is temporarily unavailable. Nothing was charged.',
+        })
+      }
       return
     }
 
@@ -588,6 +597,21 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(301, {
         ...securityHeaders({
           Location: '/sample-shop',
+          'Cache-Control': 'public, max-age=86400',
+        }),
+      })
+      res.end()
+      return
+    }
+
+    // Dead checkbox href /legal/refunds → Refunds & cancellation
+    if (
+      (req.method === 'GET' || req.method === 'HEAD') &&
+      (url === '/legal/refunds' || url === '/legal/refunds/')
+    ) {
+      res.writeHead(301, {
+        ...securityHeaders({
+          Location: '/legal/refunds-and-cancellation',
           'Cache-Control': 'public, max-age=86400',
         }),
       })

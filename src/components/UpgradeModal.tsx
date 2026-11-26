@@ -57,6 +57,7 @@ export function UpgradeModal() {
   const {
     upgradeOpen,
     setUpgradeOpen,
+    setAuthOpen,
     unlockProDemo,
     user,
     access,
@@ -299,16 +300,16 @@ export function UpgradeModal() {
             <a className="text-accent underline-offset-2 hover:underline" href="/legal/terms">
               Terms
             </a>{' '}
-            and{' '}
-            <a className="text-accent underline-offset-2 hover:underline" href="/legal/refunds">
-              Refunds policy
-            </a>{' '}
             before starting Checkout.
           </span>
         </label>
       ) : null}
 
-      {message ? <p className="mb-3 text-sm text-subtle">{message}</p> : null}
+      {message ? (
+        <p className={`mb-3 text-sm ${/unavailable|failed|could not|error/i.test(message) ? 'text-danger' : 'text-subtle'}`}>
+          {message}
+        </p>
+      ) : null}
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <Button
@@ -316,7 +317,8 @@ export function UpgradeModal() {
           disabled={busy || canceled}
           onClick={() => {
             if (!user) {
-              setMessage('Sign in with a verified email first.')
+              setUpgradeOpen(false)
+              setAuthOpen(true, 'create')
               return
             }
             if (canceled) {
@@ -328,7 +330,7 @@ export function UpgradeModal() {
               return
             }
             if (!acceptLegal) {
-              setMessage('Accept the Terms and Refunds policy before Checkout.')
+              setMessage('Accept the Terms before Checkout.')
               return
             }
             void unlockProDemo(country, selected, interval).then((res) => setMessage(res.message))

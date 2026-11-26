@@ -382,7 +382,7 @@ export async function handleAuthContinue(body, req) {
         body: {
           ok: false,
           code: 'legal_required',
-          message: 'Accept the Terms and Refunds policy to create an account.',
+          message: 'Accept the Terms to create an account.',
         },
       }
     }

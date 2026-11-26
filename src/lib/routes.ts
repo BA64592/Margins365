@@ -63,10 +63,11 @@ const ROUTE_BY_PATH: Record<string, AppRoute> = Object.fromEntries(
   Object.entries(PATH_BY_ROUTE).map(([route, path]) => [path, route as AppRoute]),
 ) as Record<string, AppRoute>
 
-/** Legacy Sample report → Sample shop (K60). */
+/** Legacy Sample report → Sample shop (K60). Dead /legal/refunds → real policy URL. */
 export function normalizePathname(pathname: string): string {
   const raw = pathname.replace(/\/+$/, '') || '/'
   if (raw === '/sample-report') return '/sample-shop'
+  if (raw === '/legal/refunds') return '/legal/refunds-and-cancellation'
   return raw
 }
 
