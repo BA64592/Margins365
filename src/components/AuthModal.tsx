@@ -37,6 +37,7 @@ export function AuthModal() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [fullName, setFullName] = useState('')
   const [businessName, setBusinessName] = useState('')
   const [phone, setPhone] = useState('')
@@ -55,6 +56,7 @@ export function AuthModal() {
     if (!authOpen || user || passwordResetToken) return
     setMode(authPreferredMode === 'create' ? 'create' : 'signIn')
     setShowPassword(false)
+    setShowConfirmPassword(false)
     setConfirmPassword('')
   }, [authOpen, authPreferredMode, user, passwordResetToken])
 
@@ -66,6 +68,7 @@ export function AuthModal() {
       setPassword('')
       setConfirmPassword('')
       setShowPassword(false)
+      setShowConfirmPassword(false)
       setCanResendReset(false)
     }
   }, [passwordResetToken, authOpen])
@@ -460,31 +463,53 @@ export function AuthModal() {
                 <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-subtle">
                   New password
                 </span>
-                <Input
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value)
-                    resetFeedback()
-                  }}
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="At least 15 characters"
-                />
+                <div className="relative">
+                  <Input
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      resetFeedback()
+                    }}
+                    type={showPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    placeholder="At least 15 characters"
+                    className="pr-12"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 flex min-w-11 items-center justify-center text-subtle hover:text-ink"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    onClick={() => setShowPassword((v) => !v)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </label>
               <label className="block text-sm">
                 <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-subtle">
                   Confirm password
                 </span>
-                <Input
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value)
-                    resetFeedback()
-                  }}
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Repeat password"
-                />
+                <div className="relative">
+                  <Input
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value)
+                      resetFeedback()
+                    }}
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    placeholder="Repeat password"
+                    className="pr-12"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 flex min-w-11 items-center justify-center text-subtle hover:text-ink"
+                    aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </label>
               {error ? (
                 <p className="rounded-[10px] bg-danger-soft px-3 py-2 text-sm text-danger" role="alert">
@@ -635,16 +660,27 @@ export function AuthModal() {
                   <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-subtle">
                     Confirm password
                   </span>
-                  <Input
-                    value={confirmPassword}
-                    onChange={(e) => {
-                      setConfirmPassword(e.target.value)
-                      resetFeedback()
-                    }}
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    placeholder="Repeat password"
-                  />
+                  <div className="relative">
+                    <Input
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value)
+                        resetFeedback()
+                      }}
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      autoComplete="new-password"
+                      placeholder="Repeat password"
+                      className="pr-12"
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 flex min-w-11 items-center justify-center text-subtle hover:text-ink"
+                      aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                      onClick={() => setShowConfirmPassword((v) => !v)}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </label>
               ) : null}
               {mode === 'signIn' ? (
